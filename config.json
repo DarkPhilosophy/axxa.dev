@@ -203,7 +203,12 @@
             "message_placeholder": "Spune-mi despre proiectul tău...",
             "btn_send": "Trimite Mesaj"
         },
-        "footer_rights": "Toate drepturile rezervate."
+        "footer_rights": "Toate drepturile rezervate.",
+        "emailjs": {
+            "service_id": "YOUR_SERVICE_ID",
+            "template_id": "YOUR_TEMPLATE_ID",
+            "public_key": "YOUR_PUBLIC_KEY"
+        }
     },
     "admin": {
         "secret_combo_info": "Press 'Ctrl + Shift + X' to open config editor",

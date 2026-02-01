@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initProjectFilters();
         initModals();
         initAdmin();
+        initContact();
         updateTime();
         setInterval(updateTime, 60000);
     } catch (error) {
@@ -562,6 +563,51 @@ function setNestedValue(obj, path, value) {
     target[last] = value;
 }
 
+
+
+function initContact() {
+    const config = siteConfig.contact?.emailjs;
+    // Check if config exists and has valid values (not placeholders)
+    if (!config || !config.public_key || config.public_key.startsWith('YOUR')) {
+        console.warn('EmailJS not fully configured.');
+        return;
+    }
+
+    try {
+        emailjs.init(config.public_key);
+    } catch (e) {
+        console.error('EmailJS init failed', e);
+        return;
+    }
+
+    const form = document.getElementById('contact-form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            // Loading State
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            emailjs.sendForm(config.service_id, config.template_id, this)
+                .then(() => {
+                    showToast('Message sent successfully!', 'success');
+                    form.reset();
+                }, (error) => {
+                    console.error('FAILED...', error);
+                    showToast('Failed to send message.', 'error');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                });
+        });
+    }
+}
 
 // --- UTILS ---
 function updateTime() {
