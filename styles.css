@@ -28,7 +28,7 @@
 #splash-screen h1,
 .glitch-text {
     font-size: 5rem;
-    letter-spacing: 0.5rem;
+    letter-spacing: 0.15rem;
     margin: 0;
     text-transform: uppercase;
     position: relative;
@@ -81,6 +81,96 @@
     z-index: 10;
 }
 
+/* New top logo animation: neon scan + flicker */
+.brand-neo {
+    position: relative;
+    display: inline-block;
+}
+
+.brand-neo-text {
+    position: relative;
+    text-shadow: 0 0 0 rgba(0, 255, 136, 0);
+    animation: brand-neo-flicker 4.8s infinite;
+}
+
+@keyframes brand-neo-flicker {
+    0%, 100% { text-shadow: 0 0 0 rgba(0, 255, 136, 0); }
+    12% { text-shadow: 0 0 6px rgba(0, 255, 136, 0.35); }
+    24% { text-shadow: 0 0 0 rgba(0, 255, 136, 0); }
+    40% { text-shadow: -1px 0 rgba(255, 0, 193, 0.6), 1px 0 rgba(0, 255, 249, 0.6); }
+    55% { text-shadow: 0 0 0 rgba(0, 255, 136, 0); }
+    70% { text-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+    85% { text-shadow: -1px 0 rgba(255, 0, 193, 0.4), 1px 0 rgba(0, 255, 249, 0.4); }
+}
+
+
+/* Always-on subtle glitch for brand text (layer slices, low blur) */
+.brand-glitch {
+    position: relative;
+    display: inline-block;
+    animation: brand-glitch-blur 3.5s infinite;
+}
+
+.brand-glitch::before,
+.brand-glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.55;
+    mix-blend-mode: screen;
+}
+
+.brand-glitch::before {
+    color: #00fff9;
+    animation: brand-glitch-slice-1 4.2s infinite linear;
+}
+
+.brand-glitch::after {
+    color: #ff00c1;
+    animation: brand-glitch-slice-2 3.6s infinite linear;
+}
+
+@keyframes brand-glitch-blur {
+    0%, 100% { filter: none; }
+    25% { filter: blur(0.2px); }
+    50% { filter: none; }
+    75% { filter: blur(0.25px); }
+}
+
+@keyframes brand-glitch-slice-1 {
+    0% { clip-path: inset(0 0 80% 0); transform: translate(0, 0); }
+    20% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, -1px); }
+    40% { clip-path: inset(35% 0 35% 0); transform: translate(1px, 0); }
+    60% { clip-path: inset(65% 0 10% 0); transform: translate(-1px, 1px); }
+    80% { clip-path: inset(80% 0 0 0); transform: translate(1px, -1px); }
+    100% { clip-path: inset(0 0 80% 0); transform: translate(0, 0); }
+}
+
+@keyframes brand-glitch-slice-2 {
+    0% { clip-path: inset(80% 0 0 0); transform: translate(0, 0); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(1px, 1px); }
+    40% { clip-path: inset(35% 0 35% 0); transform: translate(-1px, 0); }
+    60% { clip-path: inset(10% 0 60% 0); transform: translate(1px, -1px); }
+    80% { clip-path: inset(0 0 80% 0); transform: translate(-1px, 1px); }
+    100% { clip-path: inset(80% 0 0 0); transform: translate(0, 0); }
+}
+
+/* Mouse spotlight */
+.mouse-spotlight {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(280px 280px at var(--spot-x, 50%) var(--spot-y, 50%),
+        rgba(0, 255, 136, 0.18),
+        rgba(0, 255, 136, 0.0) 60%);
+}
+
+body:hover .mouse-spotlight {
+    opacity: 1;
+}
+
 /* Increase specificity to override #splash-screen h1 (1,0,1) with (1,2,0) */
 #splash-screen .glitch-text.layer1,
 #splash-screen .glitch-text.layer2 {
@@ -93,6 +183,7 @@
     z-index: 20; /* Sit on top to be visible */
     z-index: 20; /* Sit on top to be visible */
     pointer-events: none; /* Let clicks pass through */
+
 }
 
 #splash-screen .glitch-text.layer1::after,
@@ -103,7 +194,7 @@
 .glitch-text.layer1 {
     left: 2px;
     text-shadow: -1px 0 #ff00c1;
-    /* clip: rect(44px, 450px, 56px, 0); Deprecated */
+    /*clip: rect(44px, 450px, 56px, 0); /* Deprecated */
     clip-path: inset(10% 0 10% 0); /* Fallback */
     animation: glitch-anim 5s infinite linear alternate-reverse;
 }
@@ -111,7 +202,7 @@
 .glitch-text.layer2 {
     left: -2px;
     text-shadow: -1px 0 #00fff9;
-    /* clip: rect(44px, 450px, 56px, 0); Deprecated */
+    /*clip: rect(44px, 450px, 56px, 0); /* Deprecated */
     clip-path: inset(10% 0 80% 0); /* Fallback */
     animation: glitch-anim2 5s infinite linear alternate-reverse;
 }
@@ -137,13 +228,17 @@
 /* Brand Styling: Overlapping XX */
 /* UPDATED QUESTIONS based on user feedback */
 .brand-overlap-xx {
-    font-family: 'Sixtyfour Convergence', monospace !important;
-    letter-spacing: -0.20em !important; /* Relaxed from -0.25em */
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: -0.30em !important; /* Relaxed from -0.25em */
     margin-right: 0.45em !important;    /* Increased space after XX slightly */
-    margin-left: 0.05em !important;
+    margin-left: 0.15em !important;
     display: inline-block;
     position: relative;
-    z-index: 1;
+    z-index: -1;
+}
+
+.brand-overlap-xx--front {
+    z-index: 0;
 }
 
 /* Modern Clip Path Animations */
@@ -277,9 +372,38 @@
     transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
 }
 
-.reveal-on-scroll.visible {
+.reveal-on-scroll.revealed {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Auto-scrolling tech marquee */
+.tech-marquee-track {
+    width: 100%;
+    overflow: hidden;
+    opacity: 0.2;
+}
+
+.tech-marquee {
+    display: inline-flex;
+    gap: 2rem;
+    white-space: nowrap;
+    will-change: transform;
+    animation: tech-marquee-scroll 12s linear infinite;
+}
+
+.tech-marquee-text {
+    display: inline-block;
+    padding-right: 2rem;
+}
+
+@keyframes tech-marquee-scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 /* Magnet Effect */
@@ -343,4 +467,3 @@
     color: #000;
     border-color: #00ff88;
 }
-

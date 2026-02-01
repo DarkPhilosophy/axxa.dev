@@ -1,11 +1,20 @@
 {
+    "i18n": {
+        "default": "ro",
+        "supported": ["ro", "en"],
+        "fallback": "ro",
+        "locales": {
+            "ro": "ro-RO",
+            "en": "en-US"
+        }
+    },
     "meta": {
         "title": "AXXA.DEV | Adalbert Alexandru Ungureanu",
         "description": "Portofoliul lui Adalbert Alexandru Ungureanu, Developer Creativ și Arhitect de Sisteme.",
         "keywords": "Creative Developer, System Architect, Frontend Developer, Linux, Open Source, Portofoliu"
     },
     "splash": {
-        "title": "A<span class='brand-overlap-xx'>XX</span>A.DEV",
+        "title": "A<span class='brand-overlap-xx'>XX</span>A<span class='text-primary'>.DEV</span>",
         "subtitle": "Sistem Pregătit",
         "instruction": "Click sau Apasă Enter"
     },
@@ -135,7 +144,7 @@
                 "id": "p3",
                 "title": "Portofoliu",
                 "category": "Branding • Website",
-                "image": "images/Capture d'écran 2025-10-22 182207.png",
+                "image": "images/Portofoliu.png",
                 "desc": "Un rebranding complet pentru o firmă de arhitectură. Layout minimalist și animații subtile.",
                 "filter_cat": "design",
                 "tech": ["HTML/CSS", "GSAP", "Design"]
@@ -154,6 +163,18 @@
     "writing": {
         "title": "Articole<br>Recente<span class=\"text-primary\">.</span>",
         "link_text": "VEZI TOATE ARTICOLELE →",
+        "list_title": "Toate Articolele",
+        "back_to_top": "Înapoi sus",
+        "search_placeholder": "Caută articole...",
+        "no_results": "Nu am găsit articole.",
+        "pagination_prev": "Înapoi",
+        "pagination_next": "Înainte",
+        "page_info": "Pagina {current} din {total}",
+        "read_more": "CITEȘTE ARTICOLUL",
+        "recent_label": "Recent",
+        "just_now": "Chiar acum",
+        "read_time_fallback": "5 min citire",
+        "content_coming": "Conținut în curând...",
         "items": [
             {
                 "id": "react-server-components-2026",
@@ -213,7 +234,11 @@
             "name_placeholder": "Numele Tău",
             "email_placeholder": "email@exemplu.com",
             "message_placeholder": "Spune-mi despre proiectul tău...",
-            "btn_send": "Trimite Mesaj"
+            "btn_send": "Trimite Mesaj",
+            "sending": "Se trimite...",
+            "send_success": "Mesaj trimis cu succes!",
+            "send_fail": "Eroare la trimitere. Te rog încearcă din nou.",
+            "rate_limit": "Te rog așteaptă {hours}h {minutes}m înainte să trimiți un alt mesaj."
         },
         "footer_rights": "Toate drepturile rezervate.",
         "emailjs": {
@@ -223,11 +248,257 @@
         }
     },
     "admin": {
-        "secret_combo_info": "Press 'Ctrl + Shift + X' to open config editor",
-        "login_title": "Admin Config",
-        "pass_placeholder": "Enter Password",
-        "btn_login": "Unlock",
-        "btn_save": "Download Config",
-        "btn_close": "Close"
+        "secret_combo_info": "Apasă 'Ctrl + Shift + L' pentru Admin",
+        "login_title": "Configurare Admin",
+        "pass_placeholder": "Introdu parola",
+        "btn_login": "Deblochează",
+        "btn_save": "Descarcă Config",
+        "btn_close": "Închide"
+    },
+    "translations": {
+        "en": {
+            "meta": {
+                "title": "AXXA.DEV | Adalbert Alexandru Ungureanu",
+                "description": "Portfolio of Adalbert Alexandru Ungureanu, Creative Developer and Systems Architect.",
+                "keywords": "Creative Developer, System Architect, Frontend Developer, Linux, Open Source, Portfolio"
+            },
+            "splash": {
+                "title": "A<span class='brand-overlap-xx'>XX</span>A<span class='text-primary'>.DEV</span>",
+                "subtitle": "System Ready",
+                "instruction": "Click or Press Enter"
+            },
+            "hero": {
+                "badge": "Available for 2026",
+                "heading": {
+                    "line1": "Creative",
+                    "line2": "Systems",
+                    "line3": "Architect."
+                },
+                "description": "I'm Adalbert Alexandru Ungureanu. I turn complex ideas into stunning digital experiences with a Cyberpunk twist.",
+                "btn_work": "See My Work",
+                "floating_cards": {
+                    "experience": {
+                        "label": "Experience",
+                        "value": "7+ Years"
+                    },
+                    "projects": {
+                        "label": "Projects",
+                        "value": "100+ Done"
+                    }
+                }
+            },
+            "nav": {
+                "home": "Home",
+                "about": "About",
+                "work": "Projects",
+                "writing": "Writing",
+                "contact": "Contact",
+                "hire": "Hire Me"
+            },
+            "about": {
+                "title": "My <span class=\"text-primary\">Arsenal.</span>",
+                "cards": {
+                    "tech": {
+                        "title": "Core Technologies",
+                        "subtitle": "The tools I use.",
+                        "marquee": "REACT NEXTJS TAILWIND TYPESCRIPT FIGMA WEBGL GSAP FIREBASE HTML CSS C JAVA"
+                    },
+                    "location": {
+                        "title": "Based in",
+                        "value": "Romania",
+                        "time_label": "Local Time"
+                    },
+                    "status": {
+                        "label": "Open for Work"
+                    },
+                    "quote": {
+                        "text": "\"Design is not just what it looks like and feels like. Design is how it works.\"",
+                        "author": "— Adalbert"
+                    }
+                }
+            },
+            "services": {
+                "title": "Skills<span class=\"text-primary\">.</span>",
+                "description": "I deliver complete digital solutions to help your business grow.",
+                "items": [
+                    {
+                        "icon": "fas fa-layer-group",
+                        "title": "UI/UX Design",
+                        "desc": "Creating intuitive and visually engaging interfaces focused on smooth user experience."
+                    },
+                    {
+                        "icon": "fas fa-code",
+                        "title": "Web Development",
+                        "desc": "Building responsive, high-performance websites and web apps with React, Next.js, and Tailwind CSS."
+                    },
+                    {
+                        "icon": "fas fa-mobile-alt",
+                        "title": "Mobile App Development",
+                        "desc": "Developing cross-platform mobile apps using Flutter or React Native."
+                    }
+                ]
+            },
+            "experience": {
+                "title": "Experience<span class=\"text-primary\">.</span>",
+                "items": [
+                    {
+                        "role": "Frontend Developer",
+                        "year": "2024",
+                        "company": "Tech",
+                        "desc": "Led a team of 5 frontend developers building a SaaS platform. Implemented a micro-frontend architecture."
+                    },
+                    {
+                        "role": "UI/UX Designer",
+                        "year": "2021 - 2023",
+                        "company": "Creative Studio",
+                        "desc": "Designed user interfaces for multiple web and mobile apps, ensuring an optimal user experience."
+                    },
+                    {
+                        "role": "Web Developer",
+                        "year": "2024 - 2026",
+                        "company": "Web",
+                        "desc": "Built and maintained websites for international clients, optimizing performance and SEO."
+                    }
+                ]
+            },
+            "projects": {
+                "title": "Selected<br>Projects<span class=\"text-primary\">.</span>",
+                "subtitle": "A blend of business strategy, aesthetic design, and clean code.",
+                "filters": {
+                    "all": "All",
+                    "web": "Web",
+                    "design": "Design",
+                    "mobile": "Mobile"
+                },
+                "items": [
+                    {
+                        "id": "p1",
+                        "title": "E-commerce Web",
+                        "category": "UI/UX Design • Development",
+                        "image": "images/Cleveroad.jpg",
+                        "desc": "A premium fashion e-commerce platform. Headless CMS architecture with a Next.js frontend.",
+                        "filter_cat": "web design",
+                        "tech": ["Next.js", "Stripe", "Tailwind"]
+                    },
+                    {
+                        "id": "p2",
+                        "title": "Gaming Dashboard",
+                        "category": "Dashboard • React App",
+                        "image": "images/Game Dashboard Design.jpg",
+                        "desc": "A real-time financial dashboard. Interactive data visualizations built with D3.js.",
+                        "filter_cat": "web",
+                        "tech": ["React", "D3.js", "Firebase"]
+                    },
+                    {
+                        "id": "p3",
+                        "title": "Portfolio",
+                        "category": "Branding • Website",
+                        "image": "images/Portofoliu.png",
+                        "desc": "A full rebrand for an architecture firm. Minimal layout and subtle animations.",
+                        "filter_cat": "design",
+                        "tech": ["HTML/CSS", "GSAP", "Design"]
+                    },
+                    {
+                        "id": "p4",
+                        "title": "FitTrack Pro",
+                        "category": "Mobile Design • Flutter",
+                        "image": "images/Task manager app.jpg",
+                        "desc": "Fitness app with gamification and GPS tracking. Built with Flutter.",
+                        "filter_cat": "mobile design",
+                        "tech": ["Flutter", "Dart", "Firebase"]
+                    }
+                ]
+            },
+            "writing": {
+                "title": "Recent<br>Writing<span class=\"text-primary\">.</span>",
+                "link_text": "VIEW ALL ARTICLES →",
+                "list_title": "All Articles",
+                "back_to_top": "Back to top",
+                "search_placeholder": "Search articles...",
+                "no_results": "No articles found.",
+                "pagination_prev": "Previous",
+                "pagination_next": "Next",
+                "page_info": "Page {current} of {total}",
+                "read_more": "READ ARTICLE",
+                "recent_label": "Recent",
+                "just_now": "Just now",
+                "read_time_fallback": "5 min read",
+                "content_coming": "Content coming soon...",
+                "items": [
+                    {
+                        "id": "react-server-components-2026",
+                        "category": "Development",
+                        "title": "Mastering React Server Components in 2026",
+                        "excerpt": "Exploring the new server data-fetching paradigm to improve performance.",
+                        "image": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                        "date": "Oct 12, 2025",
+                        "read_time": "8 min read",
+                        "content": "<p>React Server Components (RSC) have fundamentally changed how we build web apps. In 2026, they're no longer a novelty, but the standard.</p><h3>Why RSC?</h3><p>RSC lets you render components exclusively on the server, reducing the JavaScript bundle sent to the client. This means faster load times and a smoother experience.</p><blockquote>The future of the web is hybrid. Server and client work together more closely than ever.</blockquote><h3>Practical Implementation</h3><p>Using Next.js 15+, integration is seamless. We can query the database directly in a component:</p><pre><code>async function Page() { const data = await db.query(); return <div>{data}</div>; }</code></pre>"
+                    },
+                    {
+                        "id": "micro-interactions-psychology",
+                        "category": "Design",
+                        "title": "The Psychology of Micro-Interactions",
+                        "excerpt": "How tiny animations and feedback can significantly increase user engagement.",
+                        "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                        "date": "Sep 28, 2025",
+                        "read_time": "5 min read",
+                        "content": "<p>Details aren’t just details. They make the design. Micro-interactions are those subtle moments that guide users and provide feedback.</p><h3>Visual Feedback</h3><p>When a user clicks a button, they expect a response. A simple color change or press animation confirms the action and reduces uncertainty.</p><h3>Continuity</h3><p>Fluid transitions between states maintain spatial context. Users understand where elements come from and where they go, creating a mental map of the app.</p>"
+                    },
+                    {
+                        "id": "journey-junior-to-senior",
+                        "category": "Career",
+                        "title": "From Junior to Senior: A 3-Year Journey",
+                        "excerpt": "Lessons learned, mistakes made, and key skills that helped me grow.",
+                        "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                        "date": "Aug 15, 2025",
+                        "read_time": "10 min read",
+                        "content": "<p>The software development path isn’t linear. It’s full of bugs, imposter syndrome, and eureka moments.</p><h3>Beyond Code</h3><p>The difference between a junior and a senior isn’t just typing speed, but the ability to see the bigger picture. Seniors understand how technical decisions impact the business.</p><h3>Communication Is Key</h3><p>The hardest problems aren’t technical, but human. Explaining complex concepts to non-technical people is a superpower.</p>"
+                    }
+                ]
+            },
+            "testimonials": {
+                "title": "What<span class=\"text-primary\"> Clients Say.</span>",
+                "items": [
+                    {
+                        "text": "“Alex is an extremely detail-oriented developer. He doesn’t just write code—he thinks about business and UX too. The final result exceeded our expectations.”",
+                        "author": "James Wilson",
+                        "role": "CEO, Tech.",
+                        "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                    },
+                    {
+                        "text": "“It was a pleasure working with Alex. His design skills are top-notch and he understands user needs. Engagement increased significantly after the redesign.”",
+                        "author": "Sarah Jenkins",
+                        "role": "Artistry",
+                        "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                    }
+                ]
+            },
+            "contact": {
+                "title": "Let's build something amazing.<br><span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary\">Legendary.</span>",
+                "description": "Whether you have a project in mind or just want to say hello, my inbox is always open.",
+                "email": "alexa@axxa.dev",
+                "location": "Romania",
+                "form": {
+                    "name_placeholder": "Your Name",
+                    "email_placeholder": "email@example.com",
+                    "message_placeholder": "Tell me about your project...",
+                    "btn_send": "Send Message",
+                    "sending": "Sending...",
+                    "send_success": "Message sent successfully!",
+                    "send_fail": "Failed to send message. Please try again.",
+                    "rate_limit": "Please wait {hours}h {minutes}m before sending another message."
+                },
+                "footer_rights": "All rights reserved."
+            },
+            "admin": {
+                "secret_combo_info": "Press 'Ctrl + Shift + L' to open config editor",
+                "login_title": "Admin Config",
+                "pass_placeholder": "Enter Password",
+                "btn_login": "Unlock",
+                "btn_save": "Download Config",
+                "btn_close": "Close"
+            }
+        }
     }
 }

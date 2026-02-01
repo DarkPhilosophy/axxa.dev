@@ -118,6 +118,7 @@
         <div class="absolute top-[20%] right-[30%] w-[20%] h-[20%] rounded-full bg-blue-500/5 blur-[100px] animate-pulse-slow"></div>
         <div class="bg-grid-pattern absolute inset-0 opacity-[0.4]"></div>
         <div class="bg-noise absolute inset-0 opacity-[0.03]"></div>
+        <div id="mouse-spotlight" class="mouse-spotlight"></div>
     </div>
 
     <!-- Navigation -->
@@ -125,8 +126,8 @@
         <div class="container mx-auto px-6 h-20 flex justify-between items-center">
             
             <!-- Logo -->
-            <a href="#" class="relative group">
-                <span class="font-mono text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
+            <a href="#" class="relative group brand-neo">
+                <span class="brand-neo-text font-mono text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
                     A<span class="brand-overlap-xx text-slate-800 dark:text-white group-hover:text-primary transition-colors">XX</span>A<span class="text-primary">.DEV</span>
                 </span>
                 <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
@@ -138,8 +139,20 @@
                 <a href="#about" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.about">ABOUT</a>
                 <a href="#services" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="services.title">SERVICES</a> <!-- Fallback or separate key if overly specific -->
                 <a href="#projects" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
+                <a href="#writing" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
                 <a href="#contact" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.contact">CONTACT</a>
                 
+                <!-- Language Menu -->
+                <div class="relative">
+                    <button id="lang-menu-btn" class="magnetic-btn px-3 py-2 rounded-full border border-slate-200 dark:border-white/10 hover:border-primary text-slate-600 dark:text-slate-400 hover:text-primary transition-all duration-300 text-xs font-bold tracking-wider">
+                        RO
+                    </button>
+                    <div id="lang-menu" class="hidden absolute right-0 mt-2 min-w-[120px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface shadow-xl overflow-hidden">
+                        <button class="lang-option w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-white/5" data-lang="ro">RO</button>
+                        <button class="lang-option w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-white/5" data-lang="en">EN</button>
+                    </div>
+                </div>
+
                 <!-- Theme Toggle -->
                 <button id="theme-toggle" class="magnetic-btn w-10 h-10 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 hover:border-primary text-slate-600 dark:text-slate-400 hover:text-primary transition-all duration-300">
                     <i class="fas fa-moon"></i>
@@ -163,7 +176,12 @@
         <a href="#about" class="mobile-link text-3xl font-bold hover:text-primary transition-colors" data-i18n="nav.about">ABOUT</a>
         <a href="#services" class="mobile-link text-3xl font-bold hover:text-primary transition-colors" data-i18n="services.title">SERVICES</a>
         <a href="#projects" class="mobile-link text-3xl font-bold hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
+        <a href="#writing" class="mobile-link text-3xl font-bold hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
         <a href="#contact" class="mobile-link text-3xl font-bold hover:text-primary transition-colors" data-i18n="nav.contact">CONTACT</a>
+        <div class="flex items-center gap-3 pt-6">
+            <button class="lang-option px-4 py-2 rounded-full border border-slate-200 dark:border-white/10 text-sm font-bold" data-lang="ro">RO</button>
+            <button class="lang-option px-4 py-2 rounded-full border border-slate-200 dark:border-white/10 text-sm font-bold" data-lang="en">EN</button>
+        </div>
     </div>
 
     <!-- Hero Section -->
@@ -282,8 +300,11 @@
                     <h3 class="text-xl font-bold mb-3" data-i18n="about.cards.tech.title">Tech</h3>
                     <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6" data-i18n="about.cards.tech.subtitle"></p>
                     <div class="absolute bottom-8 left-0 right-0 w-full overflow-hidden">
-                         <div class="flex gap-8 animate-[scroll_10s_linear_infinite] w-max whitespace-nowrap opacity-20">
-                             <span class="text-4xl font-mono font-bold" data-i18n="about.cards.tech.marquee"></span>
+                         <div class="tech-marquee-track">
+                             <div class="tech-marquee">
+                                 <span class="tech-marquee-text text-4xl font-mono font-bold" data-i18n="about.cards.tech.marquee"></span>
+                                 <span class="tech-marquee-text text-4xl font-mono font-bold" data-i18n="about.cards.tech.marquee"></span>
+                             </div>
                          </div>
                     </div>
                 </div>
@@ -298,7 +319,7 @@
                      </div>
                      <div>
                         <p class="text-xs text-slate-500 uppercase tracking-widest mb-1" data-i18n="about.cards.location.time_label">Local Time</p>
-                        <p id="local-time" class="text-2xl font-mono font-bold">00:00</p>
+                        <p class="local-time text-2xl font-mono font-bold">00:00</p>
                      </div>
                 </div>
 
@@ -322,10 +343,10 @@
                  <div class="spotlight-card col-span-1 md:col-span-2 bg-gradient-to-br from-primary to-secondary text-white rounded-2xl p-8 flex flex-col justify-center relative overflow-hidden reveal-on-scroll delay-300">
                     <div class="spotlight-overlay"></div>
                     <i class="fas fa-quote-right absolute top-8 right-8 text-6xl text-white/10"></i>
-                    <h3 class="text-2xl font-bold leading-tight relative z-10 max-w-lg" data-i18n="about.cards.quote.text">
+                    <h3 class="text-2xl font-bold leading-tight relative z-10 max-w-lg text-black" data-i18n="about.cards.quote.text">
                         "Design..."
                     </h3>
-                    <p class="mt-4 text-white/80 text-sm font-mono relative z-10" data-i18n="about.cards.quote.author">— Adalbert</p>
+                    <p class="mt-4 text-black/80 text-sm font-mono relative z-10" data-i18n="about.cards.quote.author">— Adalbert</p>
                 </div>
             </div>
         </div>
@@ -386,13 +407,30 @@
          <div class="container mx-auto px-6 max-w-6xl">
              <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 reveal-on-scroll">
                  <h2 class="text-4xl font-bold text-slate-900 dark:text-white" data-i18n="writing.title">Writing</h2>
-                 <a href="#" class="text-slate-500 text-sm font-bold hover:text-primary transition-colors hoverable magnetic-btn" data-i18n="writing.link_text">VIEW ALL</a>
+                 <a href="#writing-list" class="text-slate-500 text-sm font-bold hover:text-primary transition-colors hoverable magnetic-btn" data-i18n="writing.link_text">VIEW ALL</a>
              </div>
              
              <div id="writing-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
                  <!-- Populated by JS -->
              </div>
-         </div>
+             <div id="writing-list" class="mt-16">
+                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                     <h3 class="text-2xl font-bold text-slate-900 dark:text-white" data-i18n="writing.list_title">Toate Articolele</h3>
+                     <div class="flex items-center gap-3 w-full md:w-auto">
+                         <input id="writing-search" type="text" class="w-full md:w-72 bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Caută articole..." data-i18n-attr="placeholder:writing.search_placeholder">
+                         <a href="#home" class="text-slate-500 text-sm font-bold hover:text-primary transition-colors whitespace-nowrap" data-i18n="writing.back_to_top">Înapoi sus</a>
+                     </div>
+                 </div>
+                 <div id="writing-list-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <!-- Full writing list injected by JS -->
+                 </div>
+                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+                     <button id="writing-prev" class="px-4 py-2 rounded-full border border-slate-200 dark:border-white/10 text-sm font-bold hover:border-primary hover:text-primary transition-all" data-i18n="writing.pagination_prev">Previous</button>
+                     <span id="writing-page-info" class="text-sm text-slate-500" data-i18n="writing.page_info">Page 1 of 1</span>
+                     <button id="writing-next" class="px-4 py-2 rounded-full border border-slate-200 dark:border-white/10 text-sm font-bold hover:border-primary hover:text-primary transition-all" data-i18n="writing.pagination_next">Next</button>
+                 </div>
+             </div>
+        </div>
     </section>
 
     <!-- Testimonials Section -->
@@ -460,20 +498,21 @@
         <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="text-center md:text-left">
                 <div class="mb-4 md:mb-0">
-                <span class="font-mono text-xl font-bold tracking-tighter text-slate-800 dark:text-white">
-                     A<span class="brand-overlap-xx text-slate-800 dark:text-white">XX</span>A.DEV
+                <span class="font-mono text-xl font-bold tracking-tighter text-slate-800 dark:text-white brand-glitch" data-text="AXXA.DEV">
+                     A<span class="brand-overlap-xx brand-overlap-xx--front text-slate-800 dark:text-white">XX</span>A<span class="text-primary">.DEV</span>
                 </span>
                 <p class="text-sm text-slate-500">© <span id="year"></span> <span data-i18n="contact.footer_rights">All rights reserved.</span></p>
             </div>
+            </div>
 
             <div class="flex gap-6">
-                <span class="text-xs text-slate-500" data-i18n="admin.secret_combo_info">Press 'Ctrl+Shift+L' for Admin</span>
+                <span class="text-xs text-slate-500/50" data-i18n="admin.secret_combo_info">Apasă 'Ctrl + Shift + L' pentru Admin</span>
             </div>
 
             <!-- Time Widget -->
             <div class="font-mono text-sm text-slate-500 bg-slate-100 dark:bg-surface px-4 py-2 rounded-lg border border-slate-200 dark:border-white/5 flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span id="local-time">00:00</span>
+                <span class="local-time">00:00</span>
             </div>
         </div>
     </footer>
@@ -535,40 +574,24 @@
         </div>
     </div>
 
-    <!-- Blog List Modal (Archive) -->
-    <div id="blog-list-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center pointer-events-none">
-        <div id="blog-list-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-auto"></div>
-        <div id="blog-list-content" class="pointer-events-auto relative w-full max-w-4xl bg-slate-50 dark:bg-[#0a0a0a] h-[85vh] sm:h-[80vh] sm:rounded-3xl shadow-2xl transform translate-y-full sm:translate-y-10 opacity-0 transition-all duration-500 flex flex-col overflow-hidden border border-white/5">
-            <div class="p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white/50 dark:bg-white/5 backdrop-blur-md z-10">
-                <h2 class="text-2xl font-bold">All Articles</h2>
-                <button id="close-blog-list" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="blog-list-grid" class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 content-start custom-scrollbar">
-                <!-- Items populated here -->
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[110] flex flex-col gap-3 pointer-events-none"></div>
 
     <!-- ADMIN OVERLAY -->
     <div id="admin-overlay" class="fixed inset-0 z-[10000] bg-black/90 hidden flex items-center justify-center backdrop-blur-md">
-        <div class="bg-surface border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+        <div class="bg-surface border border-white/10 p-6 md:p-10 rounded-2xl w-full h-full max-w-[1200px] max-h-[90vh] shadow-2xl relative mx-4">
             <button id="admin-close" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
             <h2 class="text-2xl font-bold text-white mb-6" data-i18n="admin.login_title">Admin Config</h2>
             
             <!-- Login Form -->
             <div id="admin-login-form" class="space-y-4">
-                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary outline-none" placeholder="Enter Password">
+                <input type="password" id="admin-pass" class="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary outline-none" placeholder="Introdu parola" data-i18n-attr="placeholder:admin.pass_placeholder">
                 <p id="login-error" class="text-red-500 text-sm hidden">Invalid Password</p>
                 <button id="btn-admin-login" class="w-full bg-primary text-black font-bold py-3 rounded-lg hover:bg-green-400 transition-colors" data-i18n="admin.btn_login">Unlock</button>
             </div>
 
             <!-- Editor (Hidden initially) -->
-            <div id="admin-editor" class="hidden flex flex-col h-[70vh]">
+            <div id="admin-editor" class="hidden flex flex-col h-full">
                 <p class="text-slate-400 text-sm mb-4">Click below to edit configuration. Scroll down to save.</p>
                 
                 <div id="json-editor-container" class="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1 mb-4">

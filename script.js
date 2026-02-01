@@ -3,7 +3,15 @@
  * Handles Dynamic Config Loading, Admin Interface, and Interactions
  */
 
+let baseConfig = {};
 let siteConfig = {};
+let currentLang = 'ro';
+const writingListState = {
+    query: '',
+    page: 1,
+    pageSize: 12,
+};
+let revealObserver = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -15,9 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initTheme();
         initNavigation();
         initAnimations();
-        initProjectFilters();
-        initModals();
-        initAdmin();
+        initMouseSpotlight();
         initModals();
         initAdmin();
         initContact();
@@ -53,11 +59,10 @@ setTimeout(() => {
 async function loadConfig() {
     try {
         const response = await fetch('config.json');
-        siteConfig = await response.json();
-        
-        // Populate DOM
-        populateText();
-        populateLists();
+        baseConfig = await response.json();
+
+        initI18n();
+        applyLanguage(currentLang);
         
         console.log('Config loaded successfully');
     } catch (error) {
@@ -66,12 +71,105 @@ async function loadConfig() {
     }
 }
 
+function initI18n() {
+    const i18n = baseConfig.i18n || {};
+    const supported = getSupportedLangs();
+    const fallback = (i18n.fallback || i18n.default || supported[0] || 'ro').toLowerCase();
+    const saved = localStorage.getItem('axxa_lang');
+    const browser = navigator.language || navigator.userLanguage || '';
+
+    currentLang = normalizeLang(saved || browser || fallback, supported, fallback);
+    if (!saved) {
+        localStorage.setItem('axxa_lang', currentLang);
+    }
+
+    bindLanguageMenu();
+    updateLanguageUI();
+}
+
+function getSupportedLangs() {
+    const supported = baseConfig.i18n?.supported;
+    if (Array.isArray(supported) && supported.length > 0) {
+        return supported.map(l => String(l).toLowerCase());
+    }
+    return ['ro', 'en'];
+}
+
+function normalizeLang(lang, supported, fallback) {
+    const lc = String(lang || '').toLowerCase();
+    if (supported.includes(lc)) return lc;
+    const short = lc.split('-')[0];
+    if (supported.includes(short)) return short;
+    return fallback;
+}
+
+function bindLanguageMenu() {
+    const menuBtn = document.getElementById('lang-menu-btn');
+    const menu = document.getElementById('lang-menu');
+
+    if (menuBtn && menu) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target) && e.target !== menuBtn) {
+                menu.classList.add('hidden');
+            }
+        });
+    }
+
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.getAttribute('data-lang');
+            if (lang) setLanguage(lang);
+            if (menu) menu.classList.add('hidden');
+        });
+    });
+}
+
+function setLanguage(lang) {
+    const supported = getSupportedLangs();
+    const fallback = (baseConfig.i18n?.fallback || baseConfig.i18n?.default || supported[0] || 'ro').toLowerCase();
+    const normalized = normalizeLang(lang, supported, fallback);
+    if (normalized === currentLang) return;
+    currentLang = normalized;
+    localStorage.setItem('axxa_lang', currentLang);
+    applyLanguage(currentLang);
+}
+
+function applyLanguage(lang) {
+    const translations = baseConfig.translations?.[lang] || {};
+    siteConfig = deepMerge(baseConfig, translations);
+    document.documentElement.setAttribute('lang', lang);
+
+    populateText();
+    populateLists();
+    renderWritingList();
+    observeRevealElements();
+    revealVisibleNow();
+    updateTime();
+    updateLanguageUI();
+}
+
+function updateLanguageUI() {
+    const menuBtn = document.getElementById('lang-menu-btn');
+    if (menuBtn) {
+        menuBtn.textContent = currentLang.toUpperCase();
+    }
+    document.querySelectorAll('.lang-option').forEach(btn => {
+        const lang = btn.getAttribute('data-lang');
+        btn.classList.toggle('text-primary', lang === currentLang);
+    });
+}
+
 function populateText() {
     // 1. Text Content (data-i18n)
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         const value = getNestedValue(siteConfig, key);
-        if (value) {
+        if (value !== null && value !== undefined) {
             if (el.tagName === 'META') {
                 // Special case for meta tags? No, usually handled by attributes, but let's see.
                 // Actually meta tags use content attribute usually.
@@ -88,7 +186,7 @@ function populateText() {
         const mapping = el.getAttribute('data-i18n-attr');
         const [attr, key] = mapping.split(':');
         const value = getNestedValue(siteConfig, key);
-        if (value) {
+        if (value !== null && value !== undefined) {
             el.setAttribute(attr, value);
         }
     });
@@ -121,7 +219,7 @@ function populateLists() {
         if (container) {
             container.innerHTML = siteConfig.experience.items.map(item => `
                 <div class="relative pl-8 md:pl-0 reveal-on-scroll">
-                    <div class="hidden md:block absolute left-[-60px] top-0 text-right w-40 pr-6 pt-1">
+                    <div class="hidden md:block absolute left-[-60px] top-0 text-right w-40 pr-6 pt-1 z-20">
                         <span class="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded inline-block text-xs">${item.year}</span>
                     </div>
                     
@@ -192,6 +290,7 @@ function populateLists() {
     if(siteConfig.writing?.items) {
         const container = document.getElementById('writing-grid');
         if (container) {
+            const readLabel = getNestedValue(siteConfig, 'writing.read_more') || 'READ ARTICLE';
             container.innerHTML = siteConfig.writing.items.map(item => `
                  <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="group block bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all reveal-on-scroll">
                      <div class="h-48 overflow-hidden relative">
@@ -204,12 +303,14 @@ function populateLists() {
                          <h3 class="text-xl font-bold mb-3 leading-tight group-hover:text-primary transition-colors">${item.title}</h3>
                          <p class="text-slate-500 text-sm line-clamp-2">${item.excerpt}</p>
                          <div class="mt-4 flex items-center gap-2 text-xs font-bold text-slate-400 group-hover:text-white transition-colors">
-                             READ ARTICLE <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                             ${readLabel} <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                          </div>
                      </div>
                  </a>
             `).join('');
         }
+
+        renderWritingList();
     }
     
     // Testimonials
@@ -223,7 +324,7 @@ function populateLists() {
                         ${item.text}
                     </p>
                     <div class="flex items-center gap-4">
-                        <img src="${item.image}" alt="${item.author}" class="w-12 h-12 rounded-full border-2 border-primary/20">
+                        <img src="${item.image}" alt="${item.author}" class="w-12 h-12 rounded-full border-2 border-primary/20 object-cover object-center">
                         <div>
                             <div class="font-bold text-slate-900 dark:text-white">${item.author}</div>
                             <div class="text-xs text-primary font-bold uppercase">${item.role}</div>
@@ -233,6 +334,9 @@ function populateLists() {
             `).join('');
         }
     }
+
+    observeRevealElements();
+    revealVisibleNow();
 }
 
 
@@ -320,21 +424,38 @@ function initNavigation() {
 
 // --- UI: ANIMATIONS (Observer) ---
 function initAnimations() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
+    if (!revealObserver) {
+        revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+    }
 
+    observeRevealElements();
+    revealVisibleNow();
+}
+
+function observeRevealElements() {
+    if (!revealObserver) return;
     document.querySelectorAll('.reveal-on-scroll').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
-        observer.observe(el);
+        if (el.dataset.revealBound) return;
+        el.dataset.revealBound = 'true';
+        revealObserver.observe(el);
+    });
+}
+
+function revealVisibleNow() {
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+        if (el.classList.contains('revealed')) return;
+        const rect = el.getBoundingClientRect();
+        if (rect.top < viewportH * 0.9 && rect.bottom > 0) {
+            el.classList.add('revealed');
+        }
     });
 }
 
@@ -460,7 +581,7 @@ function initAdmin() {
         if (passInput.value === 'admin123') { // Secret Password
             loginForm.classList.add('hidden');
             editor.classList.remove('hidden');
-            generateForm(siteConfig, container);
+            generateForm(baseConfig, container);
         } else {
             errorMsg.classList.remove('hidden');
             passInput.classList.add('border-red-500');
@@ -469,7 +590,7 @@ function initAdmin() {
 
     // Save Logic
     saveBtn.addEventListener('click', () => {
-        const text = JSON.stringify(siteConfig, null, 4);
+        const text = JSON.stringify(baseConfig, null, 4);
         const blob = new Blob([text], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -485,7 +606,7 @@ function initAdmin() {
 }
 
 // Recursive function to generate inputs for JSON
-function generateForm(data, parent, prefix = '') {
+function generateForm(data, parent, prefix = '', targetConfig = baseConfig) {
     parent.innerHTML = '';
     
     // Helper for recursion
@@ -519,10 +640,8 @@ function generateForm(data, parent, prefix = '') {
                 input.addEventListener('change', (e) => {
                     try {
                         const parsed = JSON.parse(e.target.value);
-                        setNestedValue(siteConfig, path, parsed);
-                        // Optional: Live update DOM
-                        populateText(); 
-                        populateLists();
+                        setNestedValue(targetConfig, path, parsed);
+                        applyLanguage(currentLang);
                     } catch(err) {
                         alert('Invalid JSON for array');
                     }
@@ -545,8 +664,8 @@ function generateForm(data, parent, prefix = '') {
                 input.value = val;
                 
                 input.addEventListener('input', (e) => {
-                    setNestedValue(siteConfig, path, e.target.value);
-                    populateText(); // Live preview for text!
+                    setNestedValue(targetConfig, path, e.target.value);
+                    applyLanguage(currentLang);
                 });
 
                 wrapper.appendChild(label);
@@ -603,7 +722,11 @@ function initContact() {
                     const hours = Math.floor(remaining / (1000 * 60 * 60));
                     const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
                     
-                    showToast(`Please wait ${hours}h ${minutes}m before sending another message.`, 'error');
+                    const rateLimitMsg = formatTemplate(
+                        t('contact.form.rate_limit', 'Please wait {hours}h {minutes}m before sending another message.'),
+                        { hours, minutes }
+                    );
+                    showToast(rateLimitMsg, 'error');
                     return; // Stop execution
                 }
             }
@@ -613,7 +736,7 @@ function initContact() {
             const originalText = btn.innerHTML;
             
             // Loading State
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('contact.form.sending', 'Sending...')}`;
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
 
@@ -622,19 +745,19 @@ function initContact() {
                 name: form.querySelector('[name="from_name"]').value,
                 email: form.querySelector('[name="from_email"]').value,
                 message: form.querySelector('[name="message"]').value,
-                time: new Date().toLocaleString('ro-RO')
+                time: new Date().toLocaleString(getLocaleForLang(currentLang))
             };
 
             emailjs.send(config.service_id, config.template_id, params)
                 .then(() => {
-                    showToast('Message sent successfully!', 'success');
+                    showToast(t('contact.form.send_success', 'Message sent successfully!'), 'success');
                     // Set Timestamp on Success
                     console.log(`[RateLimit] Setting timestamp: ${Date.now()}`);
                     localStorage.setItem('axxa_msg_ts', Date.now().toString());
                     form.reset();
                 }, (error) => {
                     console.error('FAILED...', error);
-                    showToast('Failed to send message. Please try again.', 'error');
+                    showToast(t('contact.form.send_fail', 'Failed to send message. Please try again.'), 'error');
                 })
                 .finally(() => {
                     btn.innerHTML = originalText;
@@ -652,29 +775,39 @@ function initBlog() {
     if (viewAllBtn) {
         viewAllBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            openBlogList();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
         });
     }
 
-    // 2. Blog List Modal Logic
-    const blogListModal = document.getElementById('blog-list-modal');
-    if (blogListModal) {
-        const closeBtn = document.getElementById('close-blog-list');
-        const backdrop = document.getElementById('blog-list-backdrop');
+    // 2. Writing list controls
+    const searchInput = document.getElementById('writing-search');
+    const prevBtn = document.getElementById('writing-prev');
+    const nextBtn = document.getElementById('writing-next');
 
-        const closeList = () => {
-             document.getElementById('blog-list-content').classList.remove('translate-y-0', 'opacity-100');
-             document.getElementById('blog-list-content').classList.add('translate-y-full', 'sm:translate-y-10', 'opacity-0');
-             backdrop.classList.remove('opacity-100');
-             setTimeout(() => {
-                 blogListModal.classList.add('hidden');
-                 toggleScrollLock(false);
-             }, 300);
-        };
-
-        closeBtn?.addEventListener('click', closeList);
-        backdrop?.addEventListener('click', closeList);
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce((e) => {
+            writingListState.query = e.target.value || '';
+            writingListState.page = 1;
+            renderWritingList();
+        }, 200));
     }
+
+    prevBtn?.addEventListener('click', () => {
+        if (writingListState.page > 1) {
+            writingListState.page -= 1;
+            renderWritingList();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    nextBtn?.addEventListener('click', () => {
+        const totalPages = getWritingTotalPages();
+        if (writingListState.page < totalPages) {
+            writingListState.page += 1;
+            renderWritingList();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
 
     // 3. Article Modal Logic
     const articleModal = document.getElementById('article-modal');
@@ -689,10 +822,7 @@ function initBlog() {
             setTimeout(() => {
                 articleModal.classList.add('hidden');
                 
-                // Only unlock if blog list is CLOSED
-                if (document.getElementById('blog-list-modal').classList.contains('hidden')) {
-                     toggleScrollLock(false);
-                }
+                toggleScrollLock(false);
                 
                 // Remove hash but keep scroll position
                 history.pushState("", document.title, window.location.pathname + window.location.search);
@@ -727,49 +857,20 @@ function toggleScrollLock(active) {
     }
 }
 
-function openBlogList() {
-    const listModal = document.getElementById('blog-list-modal');
-    const container = document.getElementById('blog-list-grid');
-    
-    // Populate List
-    if (container && siteConfig.writing?.items) {
-        container.innerHTML = siteConfig.writing.items.map(item => `
-            <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="flex gap-4 group">
-                <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
-                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                </div>
-                <div>
-                    <span class="text-xs font-bold text-primary uppercase">${item.category}</span>
-                    <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">${item.title}</h4>
-                    <span class="text-xs text-slate-500 mt-1 block">${item.date || 'Recent'}</span>
-                </div>
-            </a>
-        `).join('');
-    }
-
-    // Show Modal
-    listModal.classList.remove('hidden');
-    toggleScrollLock(true);
-
-    // Force layout reflow
-    void listModal.offsetWidth;
-    
-    document.getElementById('blog-list-backdrop').classList.add('opacity-100');
-    const content = document.getElementById('blog-list-content');
-    content.classList.remove('translate-y-full', 'sm:translate-y-10', 'opacity-0');
-    content.classList.add('translate-y-0', 'opacity-100');
-}
-
 window.openArticle = function(id) {
     const article = siteConfig.writing?.items.find(i => i.id === id);
     if (!article) return;
 
+    const justNowLabel = getNestedValue(siteConfig, 'writing.just_now') || 'Just now';
+    const readTimeFallback = getNestedValue(siteConfig, 'writing.read_time_fallback') || '5 min read';
+    const contentFallback = getNestedValue(siteConfig, 'writing.content_coming') || 'Content coming soon...';
+
     // Populate Data
     document.getElementById('article-img').src = article.image;
     document.getElementById('article-title').innerHTML = article.title;
-    document.getElementById('article-date').textContent = article.date || 'Just now';
-    document.getElementById('article-read').textContent = article.read_time || '5 min read';
-    document.getElementById('article-body').innerHTML = article.content || '<p>Content coming soon...</p>';
+    document.getElementById('article-date').textContent = article.date || justNowLabel;
+    document.getElementById('article-read').textContent = article.read_time || readTimeFallback;
+    document.getElementById('article-body').innerHTML = article.content || `<p>${contentFallback}</p>`;
 
     // Show Modal
     const modal = document.getElementById('article-modal');
@@ -792,8 +893,8 @@ window.openArticle = function(id) {
 
 function updateTime() {
     const now = new Date();
-    const timeString = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-    document.querySelectorAll('#local-time').forEach(el => el.textContent = timeString);
+    const timeString = now.toLocaleTimeString(getLocaleForLang(currentLang), { hour: '2-digit', minute: '2-digit' });
+    document.querySelectorAll('.local-time').forEach(el => el.textContent = timeString);
     const yearEl = document.getElementById('year');
     if(yearEl) yearEl.textContent = now.getFullYear();
 }
@@ -815,4 +916,142 @@ function showToast(msg, type = 'info') {
         toast.classList.add('toast-exit-active');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function initMouseSpotlight() {
+    const spotlight = document.getElementById('mouse-spotlight');
+    if (!spotlight) return;
+
+    let rafId = null;
+    const update = (x, y) => {
+        spotlight.style.setProperty('--spot-x', `${x}px`);
+        spotlight.style.setProperty('--spot-y', `${y}px`);
+    };
+
+    const onMove = (e) => {
+        if (rafId) return;
+        const { clientX, clientY } = e;
+        rafId = requestAnimationFrame(() => {
+            update(clientX, clientY);
+            rafId = null;
+        });
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+}
+
+function formatTemplate(str, vars = {}) {
+    if (!str || typeof str !== 'string') return '';
+    return str.replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
+}
+
+function renderWritingList() {
+    const listContainer = document.getElementById('writing-list-grid');
+    const pageInfo = document.getElementById('writing-page-info');
+    const prevBtn = document.getElementById('writing-prev');
+    const nextBtn = document.getElementById('writing-next');
+    if (!listContainer || !siteConfig.writing?.items) return;
+
+    const recentLabel = getNestedValue(siteConfig, 'writing.recent_label') || 'Recent';
+    const noResultsLabel = getNestedValue(siteConfig, 'writing.no_results') || 'No articles found.';
+    const pageInfoTemplate = getNestedValue(siteConfig, 'writing.page_info') || 'Page {current} of {total}';
+
+    const query = writingListState.query.trim().toLowerCase();
+    const items = siteConfig.writing.items.filter(item => {
+        if (!query) return true;
+        const hay = [
+            item.title,
+            item.excerpt,
+            item.category,
+            item.date,
+            stripHtml(item.content || ''),
+        ].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(query);
+    });
+
+    const totalPages = Math.max(1, Math.ceil(items.length / writingListState.pageSize));
+    if (writingListState.page > totalPages) writingListState.page = totalPages;
+    const start = (writingListState.page - 1) * writingListState.pageSize;
+    const slice = items.slice(start, start + writingListState.pageSize);
+
+    if (slice.length === 0) {
+        listContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">${noResultsLabel}</div>`;
+    } else {
+        listContainer.innerHTML = slice.map(item => `
+            <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="flex gap-4 group bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl p-4 hover:border-primary/50 transition-all reveal-on-scroll">
+                <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xs font-bold text-primary uppercase">${item.category}</span>
+                    <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">${item.title}</h4>
+                    <span class="text-xs text-slate-500 mt-1 block">${item.date || recentLabel}</span>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    if (pageInfo) {
+        pageInfo.textContent = formatTemplate(pageInfoTemplate, {
+            current: writingListState.page,
+            total: totalPages,
+        });
+    }
+    if (prevBtn) prevBtn.disabled = writingListState.page <= 1;
+    if (nextBtn) nextBtn.disabled = writingListState.page >= totalPages;
+
+    observeRevealElements();
+    revealVisibleNow();
+}
+
+function getWritingTotalPages() {
+    if (!siteConfig.writing?.items) return 1;
+    const query = writingListState.query.trim().toLowerCase();
+    const count = siteConfig.writing.items.filter(item => {
+        if (!query) return true;
+        const hay = [
+            item.title,
+            item.excerpt,
+            item.category,
+            item.date,
+            stripHtml(item.content || ''),
+        ].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(query);
+    }).length;
+    return Math.max(1, Math.ceil(count / writingListState.pageSize));
+}
+
+function stripHtml(html) {
+    return String(html).replace(/<[^>]*>/g, ' ');
+}
+
+function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+}
+
+function deepMerge(base, override) {
+    if (Array.isArray(override)) return override.slice();
+    if (override && typeof override === 'object') {
+        const result = Array.isArray(base) ? [] : { ...(base || {}) };
+        Object.keys(override).forEach(key => {
+            result[key] = deepMerge(base ? base[key] : undefined, override[key]);
+        });
+        return result;
+    }
+    return override !== undefined ? override : base;
+}
+
+function getLocaleForLang(lang) {
+    const localeMap = baseConfig.i18n?.locales || {};
+    return localeMap[lang] || localeMap[currentLang] || 'ro-RO';
+}
+
+function t(path, fallback = '') {
+    const val = getNestedValue(siteConfig, path);
+    if (val === null || val === undefined) return fallback;
+    return val;
 }
