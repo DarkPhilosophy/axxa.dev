@@ -19,6 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initAdmin();
     updateTime();
     setInterval(updateTime, 60000);
+
+    // 3. Hide Preloader
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+        preloader.style.opacity = '0';
+        setTimeout(() => preloader.remove(), 500);
+    }
 });
 
 // --- CORE: CONFIG LOADER ---
