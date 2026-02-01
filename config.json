@@ -1,0 +1,216 @@
+{
+    "meta": {
+        "title": "AXXA.DEV | Adalbert Alexandru Ungureanu",
+        "description": "Portofoliul lui Adalbert Alexandru Ungureanu, Developer Creativ și Arhitect de Sisteme.",
+        "keywords": "Creative Developer, System Architect, Frontend Developer, Linux, Open Source, Portofoliu"
+    },
+    "splash": {
+        "title": "AXXA.DEV",
+        "subtitle": "Sistem Pregătit",
+        "instruction": "Click sau Apasă Enter"
+    },
+    "hero": {
+        "badge": "Disponibil pentru 2026",
+        "heading": {
+            "line1": "Arhitect",
+            "line2": "de Sisteme",
+            "line3": "Creativ."
+        },
+        "description": "Sunt Adalbert Alexandru Ungureanu. Transform idei complexe în experiențe digitale uimitoare cu o notă Cyberpunk.",
+        "btn_work": "Vezi Lucrările Mele",
+        "floating_cards": {
+            "experience": {
+                "label": "Experiență",
+                "value": "7+ Ani"
+            },
+            "projects": {
+                "label": "Proiecte",
+                "value": "100+ Finalizate"
+            }
+        }
+    },
+    "nav": {
+        "home": "Acasă",
+        "about": "Despre",
+        "work": "Proiecte",
+        "writing": "Articole",
+        "contact": "Contact",
+        "hire": "Angajează-mă"
+    },
+    "about": {
+        "title": "Arsenalul <span class=\"text-primary\">Meu.</span>",
+        "cards": {
+            "tech": {
+                "title": "Tehnologii Principale",
+                "subtitle": "Uneltele pe care le folosesc.",
+                "marquee": "REACT NEXTJS TAILWIND TYPESCRIPT FIGMA WEBGL GSAP FIREBASE HTML CSS C JAVA"
+            },
+            "location": {
+                "title": "Localizat în",
+                "value": "România",
+                "time_label": "Ora Locală"
+            },
+            "status": {
+                "label": "Deschis pentru Proiecte"
+            },
+            "quote": {
+                "text": "\"Designul nu este doar cum arată și cum se simte. Designul este cum funcționează.\"",
+                "author": "— Adalbert"
+            }
+        }
+    },
+    "services": {
+        "title": "Abilități<span class=\"text-primary\">.</span>",
+        "description": "Ofer soluții digitale complete pentru a ajuta afacerea ta să crească.",
+        "items": [
+            {
+                "icon": "fas fa-layer-group",
+                "title": "Design UI/UX",
+                "desc": "Crearea de interfețe intuitive și atractive vizual, axate pe o experiență de utilizare fluidă."
+            },
+            {
+                "icon": "fas fa-code",
+                "title": "Dezvoltare Web",
+                "desc": "Construirea de site-uri și aplicații web receptive și performante folosind React, Next.js și Tailwind CSS."
+            },
+            {
+                "icon": "fas fa-mobile-alt",
+                "title": "Dezvoltare Aplicații Mobile",
+                "desc": "Dezvoltarea de aplicații mobile multi-platformă folosind Flutter sau React Native."
+            }
+        ]
+    },
+    "experience": {
+        "title": "Experiență<span class=\"text-primary\">.</span>",
+        "items": [
+            {
+                "role": "Frontend Developer",
+                "year": "2024",
+                "company": "Tech",
+                "desc": "Conducerea unei echipe de 5 developeri frontend în construirea unei platforme SaaS. Implementarea unei arhitecturi micro-frontend."
+            },
+            {
+                "role": "Designer UI/UX",
+                "year": "2021 - 2023",
+                "company": "Creative Studio",
+                "desc": "Proiectarea interfețelor utilizator pentru diverse aplicații web și mobile, asigurând o experiență utilizator optimă."
+            },
+            {
+                "role": "Web Developer",
+                "year": "2024 - 2026",
+                "company": "Web",
+                "desc": "Dezvoltarea și menținerea site-urilor web pentru clienți internaționali, optimizarea performanței și SEO."
+            }
+        ]
+    },
+    "projects": {
+        "title": "Proiecte<br>Selectate<span class=\"text-primary\">.</span>",
+        "subtitle": "O combinație de strategie de afaceri, design estetic și cod curat.",
+        "filters": {
+            "all": "Toate",
+            "web": "Web",
+            "design": "Design",
+            "mobile": "Mobile"
+        },
+        "items": [
+            {
+                "id": "p1",
+                "title": "E-commerce Web",
+                "category": "Design UI/UX • Development",
+                "image": "images/Cleveroad.jpg",
+                "desc": "O platformă premium de e-commerce pentru modă. Arhitectură CMS headless cu frontend Next.js.",
+                "filter_cat": "web design",
+                "tech": ["Next.js", "Stripe", "Tailwind"]
+            },
+            {
+                "id": "p2",
+                "title": "Dashboard Jocuri",
+                "category": "Dashboard • React App",
+                "image": "images/Game Dashboard Design.jpg",
+                "desc": "Un dashboard financiar în timp real. Vizualizări de date interactive construite cu D3.js.",
+                "filter_cat": "web",
+                "tech": ["React", "D3.js", "Firebase"]
+            },
+            {
+                "id": "p3",
+                "title": "Portofoliu",
+                "category": "Branding • Website",
+                "image": "images/Capture d'écran 2025-10-22 182207.png",
+                "desc": "Un rebranding complet pentru o firmă de arhitectură. Layout minimalist și animații subtile.",
+                "filter_cat": "design",
+                "tech": ["HTML/CSS", "GSAP", "Design"]
+            },
+            {
+                "id": "p4",
+                "title": "FitTrack Pro",
+                "category": "Design Mobile • Flutter",
+                "image": "images/Task manager app.jpg",
+                "desc": "Aplicație de fitness cu gamification și urmărire GPS. Dezvoltată cu Flutter.",
+                "filter_cat": "mobile design",
+                "tech": ["Flutter", "Dart", "Firebase"]
+            }
+        ]
+    },
+    "writing": {
+        "title": "Articole<br>Recente<span class=\"text-primary\">.</span>",
+        "link_text": "VEZI TOATE ARTICOLELE →",
+        "items": [
+            {
+                "category": "Development",
+                "title": "Stăpânirea React Server Components în 2026",
+                "excerpt": "Explorarea noii paradigme de preluare a datelor pe server pentru a îmbunătăți performanța.",
+                "image": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                "category": "Design",
+                "title": "Psihologia Micro-Interacțiunilor",
+                "excerpt": "Cum animațiile mici și feedback-ul pot crește semnificativ implicarea utilizatorilor.",
+                "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                "category": "Carieră",
+                "title": "De la Junior la Senior: O Călătorie de 3 Ani",
+                "excerpt": "Lecții învățate, greșeli făcute și abilități cheie care m-au ajutat să avansez.",
+                "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            }
+        ]
+    },
+    "testimonials": {
+        "title": "Ce Spun<span class=\"text-primary\"> Clienții.</span>",
+        "items": [
+            {
+                "text": "“Alex este un developer extrem de atent la detalii. Nu scrie doar cod—se gândește și la partea de business și UX. Rezultatul final a depășit așteptările noastre.”",
+                "author": "James Wilson",
+                "role": "CEO, Tech.",
+                "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+            },
+            {
+                "text": "“A fost o plăcere să lucrez cu Alex. Abilitățile sale de design sunt de top și înțelege nevoile utilizatorilor. Implicarea utilizatorilor a crescut semnificativ după redesign.”",
+                "author": "Sarah Jenkins",
+                "role": "Artistry",
+                "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+            }
+        ]
+    },
+    "contact": {
+        "title": "Hai să construim ceva uimitor.<br><span class=\"text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary\">Legendar.</span>",
+        "description": "Fie că ai un proiect în minte sau doar vrei să saluți, inbox-ul meu este mereu deschis.",
+        "email": "alexa@axxa.dev",
+        "location": "România",
+        "form": {
+            "name_placeholder": "Numele Tău",
+            "email_placeholder": "email@exemplu.com",
+            "message_placeholder": "Spune-mi despre proiectul tău...",
+            "btn_send": "Trimite Mesaj"
+        },
+        "footer_rights": "Toate drepturile rezervate."
+    },
+    "admin": {
+        "secret_combo_info": "Press 'Ctrl + Shift + X' to open config editor",
+        "login_title": "Admin Config",
+        "pass_placeholder": "Enter Password",
+        "btn_login": "Unlock",
+        "btn_save": "Download Config",
+        "btn_close": "Close"
+    }
+}
