@@ -291,7 +291,16 @@
 
 /* Filter Buttons */
 .filter-btn.active {
-    background-color: #00ff88;
     color: #000;
     border-color: #00ff88;
+}
+
+/* Brand Styling: Overlapping XX */
+.brand-overlap-xx {
+    letter-spacing: -0.4em; /* Aggressive overlap */
+    margin-right: 0.15em;   /* Compensate for the lost width */
+    margin-left: 0.05em;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
 }
