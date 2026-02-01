@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Courier+New&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sixtyfour+Convergence&display=swap');
 
 /* =========================================
    SPLASH SCREEN STYLES (From Original)
@@ -67,7 +68,6 @@
     letter-spacing: 0.1rem;
 }
 
-/* Glitch Effect */
 /* Glitch Effect (DOM Based) */
 .glitch-wrapper {
     position: relative;
@@ -80,8 +80,6 @@
     margin: 0;
     z-index: 10;
 }
-
-
 
 /* Increase specificity to override #splash-screen h1 (1,0,1) with (1,2,0) */
 #splash-screen .glitch-text.layer1,
@@ -139,7 +137,7 @@
 /* Brand Styling: Overlapping XX */
 /* UPDATED QUESTIONS based on user feedback */
 .brand-overlap-xx {
-    font-family: 'Courier New', monospace !important;
+    font-family: 'Sixtyfour Convergence', monospace !important;
     letter-spacing: -0.20em !important; /* Relaxed from -0.25em */
     margin-right: 0.45em !important;    /* Increased space after XX slightly */
     margin-left: 0.05em !important;
@@ -346,14 +344,3 @@
     border-color: #00ff88;
 }
 
-/* Brand Styling: Overlapping XX */
-/* PLAY WITH THESE VALUES HERE */
-.brand-overlap-xx {
-    font-family: 'Courier New', monospace; /* Force mono */
-    letter-spacing: -0.25em; /* <--- ADJUST THIS: Overlap amount (e.g. -0.2em to -0.5em) */
-    margin-right: 0.35em;    /* <--- ADJUST THIS: Space after XX (e.g. 0.2em to 0.5em) */
-    margin-left: 0.05em;     /* Space before XX */
-    display: inline-block;
-    position: relative;
-    z-index: 1;
-}
