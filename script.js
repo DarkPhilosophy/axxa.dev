@@ -612,7 +612,15 @@ function initContact() {
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
 
-            emailjs.sendForm(config.service_id, config.template_id, this)
+            // Construct secure params + dynamic data
+            const params = {
+                name: form.querySelector('[name="from_name"]').value,
+                email: form.querySelector('[name="from_email"]').value,
+                message: form.querySelector('[name="message"]').value,
+                time: new Date().toLocaleString('ro-RO')
+            };
+
+            emailjs.send(config.service_id, config.template_id, params)
                 .then(() => {
                     showToast('Message sent successfully!', 'success');
                     // Set Timestamp on Success
