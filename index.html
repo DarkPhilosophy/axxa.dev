@@ -73,6 +73,7 @@
         /* Glitch effect for the logo */
         .glitch {
             position: relative;
+            display: inline-block;
             color: var(--text-color);
         }
         
@@ -84,6 +85,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            background: var(--bg-color); /* Mask background for cleaner clip */
         }
 
         .glitch::before {
@@ -136,7 +138,9 @@
 <body>
     <div class="bg-grid"></div>
     <div class="container">
-        <h1 class="glitch" data-text="AXXA">A<span class="xx">XX</span>A</h1>
+        <h1>
+            <span class="glitch" data-text="A">A</span><span class="xx glitch" data-text="XX">XX</span><span class="glitch" data-text="A">A</span>
+        </h1>
         <p>ADALBERT ALEXANDRU UNGUREANU</p>
         <div class="status">SYSTEM ONLINE // BUILT BY ME</div>
     </div>
