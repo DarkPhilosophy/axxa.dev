@@ -100,8 +100,9 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
     /* background: #0a0a0a; REMOVED to avoid triple blocky text */
+    /* RESTORED: Needed to hide the main text behind the glitch slice to prevent 'triple text' ghosting */
+    background: #0a0a0a;
     z-index: 20; /* Sit on top to be visible */
     pointer-events: none; /* Let clicks pass through */
 }
@@ -142,8 +143,8 @@
 /* UPDATED VALUES based on user feedback */
 .brand-overlap-xx {
     font-family: 'Courier New', monospace;
-    letter-spacing: -0.15em; /* Less overlap (-0.4 was too much) */
-    margin-right: 0.45em;    /* More space after XX */
+    letter-spacing: -0.25em; /* Middle ground: -0.15 was too loose ("A X X A"), -0.4 too tight */
+    margin-right: 0.40em;    /* Balanced space */
     margin-left: 0.05em;
     display: inline-block;
     position: relative;
