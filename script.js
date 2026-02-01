@@ -587,11 +587,13 @@ function initContact() {
             event.preventDefault();
 
             // --- RATE LIMITING START ---
-            const lastSent = localStorage.getItem('last_contact_ts');
+            const lastSent = localStorage.getItem('axxa_msg_ts');
             if (lastSent) {
                 const now = Date.now();
                 const diff = now - parseInt(lastSent);
-                const cooldown = 24 * 60 * 60 * 1000; // 24 Hours in ms
+                const cooldown = 24 * 60 * 60 * 1000; // 24 Hours
+
+                console.log(`[RateLimit] Checked: ${lastSent}, Diff: ${diff}, Cooldown: ${cooldown}`);
 
                 if (diff < cooldown) {
                     const remaining = cooldown - diff;
@@ -624,7 +626,8 @@ function initContact() {
                 .then(() => {
                     showToast('Message sent successfully!', 'success');
                     // Set Timestamp on Success
-                    localStorage.setItem('last_contact_ts', Date.now().toString());
+                    console.log(`[RateLimit] Setting timestamp: ${Date.now()}`);
+                    localStorage.setItem('axxa_msg_ts', Date.now().toString());
                     form.reset();
                 }, (error) => {
                     console.error('FAILED...', error);
