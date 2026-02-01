@@ -501,6 +501,51 @@
         </div>
     </div>
 
+    <!-- Article Modal (Full Screen Read) -->
+    <div id="article-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+        <div id="article-backdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+        <div id="article-content" class="relative bg-white dark:bg-surface w-full max-w-3xl h-[90vh] mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 flex flex-col">
+            <!-- Header -->
+            <div class="relative h-64 shrink-0">
+                <img id="article-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                <button id="close-article" class="absolute top-6 right-6 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-primary hover:text-black transition-colors z-20">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="absolute bottom-8 left-8 right-8 z-10">
+                    <div class="flex items-center gap-4 mb-3 text-sm text-slate-300">
+                        <span id="article-date">Date</span>
+                        <span class="w-1 h-1 bg-primary rounded-full"></span>
+                        <span id="article-read">Read Time</span>
+                    </div>
+                    <h1 id="article-title" class="text-3xl md:text-4xl font-bold text-white leading-tight">Title</h1>
+                </div>
+            </div>
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
+                <div id="article-body" class="prose prose-lg dark:prose-invert max-w-none">
+                    <!-- HTML Content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog List Modal (Archive) -->
+    <div id="blog-list-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center pointer-events-none">
+        <div id="blog-list-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-auto"></div>
+        <div id="blog-list-content" class="pointer-events-auto relative w-full max-w-4xl bg-slate-50 dark:bg-[#0a0a0a] h-[85vh] sm:h-[80vh] sm:rounded-3xl shadow-2xl transform translate-y-full sm:translate-y-10 opacity-0 transition-all duration-500 flex flex-col overflow-hidden border border-white/5">
+            <div class="p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white/50 dark:bg-white/5 backdrop-blur-md z-10">
+                <h2 class="text-2xl font-bold">All Articles</h2>
+                <button id="close-blog-list" class="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="blog-list-grid" class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 content-start custom-scrollbar">
+                <!-- Items populated here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[110] flex flex-col gap-3 pointer-events-none"></div>
 
@@ -534,7 +579,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
     <!-- MAIN SCRIPT -->
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
     <style>
         .toast-enter { transform: translateY(20px); opacity: 0; transition: all 0.3s ease-out; }
         .toast-enter-active { transform: translateY(0); opacity: 1; }

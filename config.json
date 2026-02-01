@@ -156,22 +156,34 @@
         "link_text": "VEZI TOATE ARTICOLELE →",
         "items": [
             {
+                "id": "react-server-components-2026",
                 "category": "Development",
                 "title": "Stăpânirea React Server Components în 2026",
                 "excerpt": "Explorarea noii paradigme de preluare a datelor pe server pentru a îmbunătăți performanța.",
-                "image": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                "image": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                "date": "Oct 12, 2025",
+                "read_time": "8 min read",
+                "content": "<p>React Server Components (RSC) au schimbat fundamental modul în care construim aplicații web. În 2026, acestea nu mai sunt doar o noutate, ci standardul.</p><h3>De ce RSC?</h3><p>RSC permite randarea componentelor exclusiv pe server, reducând bundle-ul de JavaScript trimis clientului. Aceasta înseamnă timpi de încărcare mai rapizi și o experiență mai fluidă.</p><blockquote>Viitorul web-ului este hibrid. Serverul și clientul lucrează împreună mai strâns ca niciodată.</blockquote><h3>Implementare Practică</h3><p>Folosind Next.js 15+, integrarea este seamless. Putem interoga baza de date direct din componentă:</p><pre><code>async function Page() { const data = await db.query(); return <div>{data}</div>; }</code></pre>"
             },
             {
+                "id": "micro-interactions-psychology",
                 "category": "Design",
                 "title": "Psihologia Micro-Interacțiunilor",
                 "excerpt": "Cum animațiile mici și feedback-ul pot crește semnificativ implicarea utilizatorilor.",
-                "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                "image": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                "date": "Sep 28, 2025",
+                "read_time": "5 min read",
+                "content": "<p>Detaliile nu sunt doar detalii. Ele fac designul. Micro-interacțiunile sunt acele momente subtile care ghidează utilizatorul și oferă feedback.</p><h3>Feedback Vizual</h3><p>Când un utilizator apasă pe un buton, se așteaptă la o reacție. O simplă schimbare de culoare sau o animație de apăsare confirmă acțiunea și reduce incertitudinea.</p><h3>Continuitate</h3><p>Tranzițiile fluide între stări mențin contextul spațial. Utilizatorul înțelege de unde vin elementele și unde se duc, creând o hartă mentală a aplicației.</p>"
             },
             {
+                "id": "journey-junior-to-senior",
                 "category": "Carieră",
                 "title": "De la Junior la Senior: O Călătorie de 3 Ani",
                 "excerpt": "Lecții învățate, greșeli făcute și abilități cheie care m-au ajutat să avansez.",
-                "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                "date": "Aug 15, 2025",
+                "read_time": "10 min read",
+                "content": "<p>Drumul în software development nu este liniar. Este plin de bug-uri, sindromul impostorului și momente de evrika.</p><h3>Dincolo de Cod</h3><p>Diferența dintre un junior și un senior nu este doar viteza de scriere a codului, ci capacitatea de a vedea imaginea de ansamblu. Seniorul înțelege impactul deciziilor tehnice asupra business-ului.</p><h3>Comunicarea este Cheia</h3><p>Cele mai grele probleme nu sunt tehnice, ci umane. Să știi să explici concepte complexe unor oameni non-tehnici este o superputere.</p>"
             }
         ]
     },

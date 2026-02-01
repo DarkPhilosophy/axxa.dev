@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         initProjectFilters();
         initModals();
         initAdmin();
+        initModals();
+        initAdmin();
         initContact();
+        initBlog();
         updateTime();
         setInterval(updateTime, 60000);
     } catch (error) {
@@ -190,7 +193,7 @@ function populateLists() {
         const container = document.getElementById('writing-grid');
         if (container) {
             container.innerHTML = siteConfig.writing.items.map(item => `
-                 <a href="#" class="group block bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all reveal-on-scroll">
+                 <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="group block bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all reveal-on-scroll">
                      <div class="h-48 overflow-hidden relative">
                          <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                          <div class="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/10">
@@ -642,7 +645,126 @@ function initContact() {
     }
 }
 
-// --- UTILS ---
+// --- BLOG SYSTEM ---
+function initBlog() {
+    // 1. "View All" Button Logic
+    const viewAllBtn = document.querySelector('[data-i18n="writing.link_text"]');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openBlogList();
+        });
+    }
+
+    // 2. Blog List Modal Logic
+    const blogListModal = document.getElementById('blog-list-modal');
+    if (blogListModal) {
+        const closeBtn = document.getElementById('close-blog-list');
+        const backdrop = document.getElementById('blog-list-backdrop');
+
+        const closeList = () => {
+             document.getElementById('blog-list-content').classList.remove('translate-y-0', 'opacity-100');
+             document.getElementById('blog-list-content').classList.add('translate-y-full', 'sm:translate-y-10', 'opacity-0');
+             backdrop.classList.remove('opacity-100');
+             setTimeout(() => blogListModal.classList.add('hidden'), 300);
+        };
+
+        closeBtn?.addEventListener('click', closeList);
+        backdrop?.addEventListener('click', closeList);
+    }
+
+    // 3. Article Modal Logic
+    const articleModal = document.getElementById('article-modal');
+    if (articleModal) {
+        const closeBtn = document.getElementById('close-article');
+        const backdrop = document.getElementById('article-backdrop');
+
+        const closeArticle = () => {
+            document.getElementById('article-content').classList.remove('scale-100', 'opacity-100');
+            document.getElementById('article-content').classList.add('scale-95', 'opacity-0');
+            backdrop.classList.remove('opacity-100');
+            setTimeout(() => {
+                articleModal.classList.add('hidden');
+                // Remove hash but keep scroll position
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+            }, 300);
+        };
+
+        closeBtn?.addEventListener('click', closeArticle);
+        backdrop?.addEventListener('click', closeArticle);
+        
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !articleModal.classList.contains('hidden')) {
+                closeArticle();
+            }
+        });
+    }
+
+    // 4. Check Hash on Load
+    if (window.location.hash && window.location.hash.startsWith('#article-')) {
+        const articleId = window.location.hash.replace('#article-', '');
+        openArticle(articleId);
+    }
+}
+
+function openBlogList() {
+    const listModal = document.getElementById('blog-list-modal');
+    const container = document.getElementById('blog-list-grid');
+    
+    // Populate List
+    if (container && siteConfig.writing?.items) {
+        container.innerHTML = siteConfig.writing.items.map(item => `
+            <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="flex gap-4 group">
+                <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-primary uppercase">${item.category}</span>
+                    <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">${item.title}</h4>
+                    <span class="text-xs text-slate-500 mt-1 block">${item.date || 'Recent'}</span>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    // Show Modal
+    listModal.classList.remove('hidden');
+    // Force layout reflow
+    void listModal.offsetWidth;
+    
+    document.getElementById('blog-list-backdrop').classList.add('opacity-100');
+    const content = document.getElementById('blog-list-content');
+    content.classList.remove('translate-y-full', 'sm:translate-y-10', 'opacity-0');
+    content.classList.add('translate-y-0', 'opacity-100');
+}
+
+window.openArticle = function(id) {
+    const article = siteConfig.writing?.items.find(i => i.id === id);
+    if (!article) return;
+
+    // Populate Data
+    document.getElementById('article-img').src = article.image;
+    document.getElementById('article-title').innerHTML = article.title;
+    document.getElementById('article-date').textContent = article.date || 'Just now';
+    document.getElementById('article-read').textContent = article.read_time || '5 min read';
+    document.getElementById('article-body').innerHTML = article.content || '<p>Content coming soon...</p>';
+
+    // Show Modal
+    const modal = document.getElementById('article-modal');
+    modal.classList.remove('hidden');
+    void modal.offsetWidth;
+
+    document.getElementById('article-backdrop').classList.add('opacity-100');
+    const content = document.getElementById('article-content');
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+
+    // Update Hash
+    history.pushState(null, null, `#article-${id}`);
+}
+
+
 function updateTime() {
     const now = new Date();
     const timeString = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
