@@ -81,18 +81,7 @@
     z-index: 10;
 }
 
-.glitch-text.main {
-    position: relative;
-    z-index: 20; /* On top */
-}
 
-.glitch-text.layer1,
-.glitch-text.layer2 {
-    position: absolute;
-.glitch-text.main {
-    position: relative;
-    z-index: 10; /* Base Layer */
-}
 
 /* Increase specificity to override #splash-screen h1 (1,0,1) with (1,2,0) */
 #splash-screen .glitch-text.layer1,
@@ -104,7 +93,13 @@
     /* RESTORED: Needed to hide the main text behind the glitch slice to prevent 'triple text' ghosting */
     background: #0a0a0a;
     z-index: 20; /* Sit on top to be visible */
+    z-index: 20; /* Sit on top to be visible */
     pointer-events: none; /* Let clicks pass through */
+}
+
+#splash-screen .glitch-text.layer1::after,
+#splash-screen .glitch-text.layer2::after {
+    content: none;
 }
 
 .glitch-text.layer1 {
