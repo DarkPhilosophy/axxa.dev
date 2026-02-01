@@ -645,7 +645,7 @@ function initContact() {
     }
 }
 
-// --- BLOG SYSTEM --
+// --- BLOG SYSTEM ---
 function initBlog() {
     // 1. "View All" Button Logic
     const viewAllBtn = document.querySelector('[data-i18n="writing.link_text"]');
@@ -668,7 +668,7 @@ function initBlog() {
              backdrop.classList.remove('opacity-100');
              setTimeout(() => {
                  blogListModal.classList.add('hidden');
-                 document.body.style.overflow = ''; // Restore scroll
+                 toggleScrollLock(false);
              }, 300);
         };
 
@@ -688,10 +688,12 @@ function initBlog() {
             backdrop.classList.remove('opacity-100');
             setTimeout(() => {
                 articleModal.classList.add('hidden');
-                // Only restore scroll if blog list is NOT open
+                
+                // Only unlock if blog list is CLOSED
                 if (document.getElementById('blog-list-modal').classList.contains('hidden')) {
-                     document.body.style.overflow = ''; 
+                     toggleScrollLock(false);
                 }
+                
                 // Remove hash but keep scroll position
                 history.pushState("", document.title, window.location.pathname + window.location.search);
             }, 300);
@@ -712,6 +714,16 @@ function initBlog() {
     if (window.location.hash && window.location.hash.startsWith('#article-')) {
         const articleId = window.location.hash.replace('#article-', '');
         openArticle(articleId);
+    }
+}
+
+function toggleScrollLock(active) {
+    if (active) {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
     }
 }
 
@@ -737,7 +749,7 @@ function openBlogList() {
 
     // Show Modal
     listModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // Lock Body Scroll
+    toggleScrollLock(true);
 
     // Force layout reflow
     void listModal.offsetWidth;
@@ -762,10 +774,9 @@ window.openArticle = function(id) {
     // Show Modal
     const modal = document.getElementById('article-modal');
     modal.classList.remove('hidden');
+    // No need for zIndex hack if CSS class is correct
     
-    // Ensure it's on top of everything (z-index hack)
-    modal.style.zIndex = '105'; 
-    document.body.style.overflow = 'hidden'; // Lock Body Scroll
+    toggleScrollLock(true);
 
     void modal.offsetWidth;
 
