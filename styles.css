@@ -296,10 +296,12 @@
 }
 
 /* Brand Styling: Overlapping XX */
+/* PLAY WITH THESE VALUES HERE */
 .brand-overlap-xx {
-    letter-spacing: -0.4em; /* Aggressive overlap */
-    margin-right: 0.15em;   /* Compensate for the lost width */
-    margin-left: 0.05em;
+    font-family: 'Courier New', monospace; /* Force mono */
+    letter-spacing: -0.25em; /* <--- ADJUST THIS: Overlap amount (e.g. -0.2em to -0.5em) */
+    margin-right: 0.35em;    /* <--- ADJUST THIS: Space after XX (e.g. 0.2em to 0.5em) */
+    margin-left: 0.05em;     /* Space before XX */
     display: inline-block;
     position: relative;
     z-index: 1;
