@@ -101,7 +101,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: #0a0a0a; /* Match BG */
+    /* background: #0a0a0a; REMOVED to avoid triple blocky text */
     z-index: 20; /* Sit on top to be visible */
     pointer-events: none; /* Let clicks pass through */
 }
