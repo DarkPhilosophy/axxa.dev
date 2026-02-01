@@ -94,13 +94,13 @@
     z-index: 10; /* Base Layer */
 }
 
-.glitch-text.layer1,
-.glitch-text.layer2 {
+/* Increase specificity to override #splash-screen h1 (1,0,1) with (1,2,0) */
+#splash-screen .glitch-text.layer1,
+#splash-screen .glitch-text.layer2 {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    /* background: #0a0a0a; REMOVED to avoid triple blocky text */
     /* RESTORED: Needed to hide the main text behind the glitch slice to prevent 'triple text' ghosting */
     background: #0a0a0a;
     z-index: 20; /* Sit on top to be visible */
