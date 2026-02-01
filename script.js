@@ -6,27 +6,44 @@
 let siteConfig = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Load Config
-    await loadConfig();
+    try {
+        // 1. Load Config
+        await loadConfig();
 
-    // 2. Initialize UI Logic
-    initSplash();
-    initTheme();
-    initNavigation();
-    initAnimations();
-    initProjectFilters();
-    initModals();
-    initAdmin();
-    updateTime();
-    setInterval(updateTime, 60000);
-
-    // 3. Hide Preloader
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.remove(), 500);
+        // 2. Initialize UI Logic
+        initSplash();
+        initTheme();
+        initNavigation();
+        initAnimations();
+        initProjectFilters();
+        initModals();
+        initAdmin();
+        updateTime();
+        setInterval(updateTime, 60000);
+    } catch (error) {
+        console.error("Initialization error:", error);
+    } finally {
+        // 3. Hide Preloader (Always)
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            // Ensure connection to DOM before trying to remove
+            if(document.body.contains(preloader)) {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    if(document.body.contains(preloader)) preloader.remove();
+                }, 500);
+            }
+        }
     }
 });
+
+// Fallback: Force remove preloader after 5 seconds max
+setTimeout(() => {
+    const preloader = document.getElementById('preloader');
+    if (preloader && document.body.contains(preloader)) {
+        preloader.remove();
+    }
+}, 5000);
 
 // --- CORE: CONFIG LOADER ---
 async function loadConfig() {
