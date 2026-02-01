@@ -89,12 +89,21 @@
 .glitch-text.layer1,
 .glitch-text.layer2 {
     position: absolute;
+.glitch-text.main {
+    position: relative;
+    z-index: 10; /* Base Layer */
+}
+
+.glitch-text.layer1,
+.glitch-text.layer2 {
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: #0a0a0a; /* Match BG to hide main text underneath */
-    z-index: 15;
+    background: #0a0a0a; /* Match BG */
+    z-index: 20; /* Sit on top to be visible */
+    pointer-events: none; /* Let clicks pass through */
 }
 
 .glitch-text.layer1 {
@@ -109,6 +118,36 @@
     text-shadow: -1px 0 #00fff9;
     clip: rect(44px, 450px, 56px, 0);
     animation: glitch-anim2 5s infinite linear alternate-reverse;
+}
+
+/* =========================================
+   NAVBAR & BRANDING
+   ========================================= */
+
+#splash-screen .bg-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+    margin: 0;
+}
+
+/* Brand Styling: Overlapping XX */
+/* UPDATED VALUES based on user feedback */
+.brand-overlap-xx {
+    font-family: 'Courier New', monospace;
+    letter-spacing: -0.15em; /* Less overlap (-0.4 was too much) */
+    margin-right: 0.45em;    /* More space after XX */
+    margin-left: 0.05em;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
 }
 
 @keyframes glitch-anim {
