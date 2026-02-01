@@ -645,7 +645,7 @@ function initContact() {
     }
 }
 
-// --- BLOG SYSTEM ---
+// --- BLOG SYSTEM --
 function initBlog() {
     // 1. "View All" Button Logic
     const viewAllBtn = document.querySelector('[data-i18n="writing.link_text"]');
@@ -666,7 +666,10 @@ function initBlog() {
              document.getElementById('blog-list-content').classList.remove('translate-y-0', 'opacity-100');
              document.getElementById('blog-list-content').classList.add('translate-y-full', 'sm:translate-y-10', 'opacity-0');
              backdrop.classList.remove('opacity-100');
-             setTimeout(() => blogListModal.classList.add('hidden'), 300);
+             setTimeout(() => {
+                 blogListModal.classList.add('hidden');
+                 document.body.style.overflow = ''; // Restore scroll
+             }, 300);
         };
 
         closeBtn?.addEventListener('click', closeList);
@@ -685,6 +688,10 @@ function initBlog() {
             backdrop.classList.remove('opacity-100');
             setTimeout(() => {
                 articleModal.classList.add('hidden');
+                // Only restore scroll if blog list is NOT open
+                if (document.getElementById('blog-list-modal').classList.contains('hidden')) {
+                     document.body.style.overflow = ''; 
+                }
                 // Remove hash but keep scroll position
                 history.pushState("", document.title, window.location.pathname + window.location.search);
             }, 300);
@@ -730,6 +737,8 @@ function openBlogList() {
 
     // Show Modal
     listModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Lock Body Scroll
+
     // Force layout reflow
     void listModal.offsetWidth;
     
@@ -753,6 +762,11 @@ window.openArticle = function(id) {
     // Show Modal
     const modal = document.getElementById('article-modal');
     modal.classList.remove('hidden');
+    
+    // Ensure it's on top of everything (z-index hack)
+    modal.style.zIndex = '105'; 
+    document.body.style.overflow = 'hidden'; // Lock Body Scroll
+
     void modal.offsetWidth;
 
     document.getElementById('article-backdrop').classList.add('opacity-100');
