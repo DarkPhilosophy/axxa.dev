@@ -1,200 +1,600 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AXXA.DEV</title>
-    <style>
-      :root {
-        --bg-color: #0a0a0a;
-        --text-color: #f0f0f0;
-        --accent-color: #00ff88;
-        --secondary-color: #333;
-      }
-
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        font-family: "Courier New", Courier, monospace;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        overflow: hidden;
-        cursor: pointer;
-      }
-
-      .container {
-        text-align: center;
-        z-index: 1;
-      }
-
-      h1 {
-        font-size: 5rem;
-        letter-spacing: 0.5rem;
-        margin: 0;
-        text-transform: uppercase;
-        position: relative;
-      }
-
-      .xx {
-        letter-spacing: -1.5rem;
-        margin-right: 2.2rem;
-      }
-
-      h1::after {
-        content: "";
-        display: block;
-        width: 100px;
-        height: 4px;
-        background: var(--accent-color);
-        margin: 20px auto;
-        box-shadow: 0 0 10px var(--accent-color);
-      }
-
-      p {
-        font-size: 1.2rem;
-        color: #888;
-        margin-top: 20px;
-      }
-
-      .banner-green {
-        margin-top: 40px;
-        padding: 10px 25px;
-        border: 1px solid var(--accent-color);
-        border-radius: 5px;
-        font-size: 0.9rem;
-        color: var(--accent-color);
-        background: rgba(0, 255, 136, 0.1);
-        box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-        text-transform: uppercase;
-        letter-spacing: 0.1rem;
-      }
-
-      /* Glitch effect for the logo */
-      .glitch {
-        position: relative;
-        display: inline-block;
-        color: var(--text-color);
-      }
-
-      .glitch::before,
-      .glitch::after {
-        content: attr(data-text);
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--bg-color); /* Mask background for cleaner clip */
-      }
-
-      .glitch::before {
-        left: 2px;
-        text-shadow: -1px 0 #ff00c1;
-        clip: rect(44px, 450px, 56px, 0);
-        animation: glitch-anim 5s infinite linear alternate-reverse;
-      }
-
-      .glitch::after {
-        left: -2px;
-        text-shadow: -1px 0 #00fff9;
-        clip: rect(44px, 450px, 56px, 0);
-        animation: glitch-anim2 5s infinite linear alternate-reverse;
-      }
-
-      @keyframes glitch-anim {
-        0% {
-          clip: rect(10px, 9999px, 30px, 0);
-        }
-        20% {
-          clip: rect(50px, 9999px, 70px, 0);
-        }
-        40% {
-          clip: rect(20px, 9999px, 90px, 0);
-        }
-        60% {
-          clip: rect(80px, 9999px, 10px, 0);
-        }
-        80% {
-          clip: rect(40px, 9999px, 50px, 0);
-        }
-        100% {
-          clip: rect(60px, 9999px, 30px, 0);
-        }
-      }
-
-      @keyframes glitch-anim2 {
-        0% {
-          clip: rect(60px, 9999px, 10px, 0);
-        }
-        20% {
-          clip: rect(20px, 9999px, 80px, 0);
-        }
-        40% {
-          clip: rect(50px, 9999px, 30px, 0);
-        }
-        60% {
-          clip: rect(10px, 9999px, 50px, 0);
-        }
-        80% {
-          clip: rect(90px, 9999px, 20px, 0);
-        }
-        100% {
-          clip: rect(30px, 9999px, 10px, 0);
-        }
-      }
-
-      /* Subtle background grid */
-      .bg-grid {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      body.fade-out {
-        opacity: 0;
-        transition: opacity 1.5s ease-in-out;
-        pointer-events: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="bg-grid"></div>
-    <div class="container">
-      <h1>
-        <span class="glitch" data-text="A">A</span
-        ><span class="xx glitch" data-text="XX">XX</span
-        ><span class="glitch" data-text="A">A</span>
-      </h1>
-      <p>ADALBERT ALEXANDRU UNGUREANU</p>
-      <div class="banner-green">SYSTEM ONLINE // BUILT BY ME</div>
-    </div>
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00ff88">
+    <title>AXXA.DEV | Adalbert Alexandru Ungureanu</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+New&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind (CDN for simplicity, production would use build step) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      function enterSystem() {
-        document.body.classList.add("fade-out");
-        setTimeout(() => {
-          window.location.href = "./home/index.html";
-        }, 1500);
-      }
-
-      document.body.addEventListener("click", enterSystem);
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") enterSystem();
-      });
-      // Automatic fade out after 3 seconds
-      setTimeout(enterSystem, 3000);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'Inter', 'sans-serif'],
+                        mono: ['Courier New', 'monospace'],
+                    },
+                    colors: {
+                        primary: '#00ff88',
+                        secondary: '#00cc6a',
+                        dark: '#0a0a0a',
+                        surface: '#121212',
+                        'surface-light': '#1e1e1e',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 8s linear infinite',
+                        'glitch': 'glitch 1s linear infinite',
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
     </script>
-  </body>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        /* Essential Splash Styles inline to prevent FOUC */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1.5s ease-in-out, visibility 1.5s;
+        }
+        .fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800 dark:bg-dark dark:text-slate-200 transition-colors duration-300 overflow-x-hidden selection:bg-primary selection:text-black">
+
+    <!-- SPLASH SCREEN OVERLAY -->
+    <div id="splash-screen">
+        <div class="bg-grid"></div>
+        <h1 class="glitch" data-text="AXXA.DEV">
+            A<span class="xx">XX</span>A.DEV
+        </h1>
+        <div class="banner-green">System Ready</div>
+        <p>Click or Press Enter</p>
+    </div>
+
+    <!-- MAIN PORTFOLIO CONTENT -->
+
+    <!-- Custom Cursor -->
+    <!-- (Generated by JS) -->
+
+    <!-- Preloader -->
+    <div id="preloader" class="fixed inset-0 z-[9998] bg-white dark:bg-dark flex items-center justify-center transition-opacity duration-500">
+        <div class="relative w-24 h-24">
+            <div class="absolute inset-0 border-t-4 border-l-4 border-primary rounded-full animate-spin"></div>
+            <div class="absolute inset-2 border-r-4 border-b-4 border-slate-300 dark:border-slate-700 rounded-full animate-spin-slow"></div>
+            <div class="absolute inset-0 flex items-center justify-center font-bold font-mono text-primary animate-pulse">
+                &lt;/&gt;
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] animate-float"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/5 blur-[120px] animate-float" style="animation-delay: -3s;"></div>
+        <div class="absolute top-[20%] right-[30%] w-[20%] h-[20%] rounded-full bg-blue-500/5 blur-[100px] animate-pulse-slow"></div>
+        <div class="bg-grid-pattern absolute inset-0 opacity-[0.4]"></div>
+        <div class="bg-noise absolute inset-0 opacity-[0.03]"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-dark/70 border-b border-slate-200/50 dark:border-white/5 transition-all duration-300">
+        <div class="container mx-auto px-6 h-20 flex justify-between items-center">
+            
+            <!-- Logo -->
+            <a href="#" class="relative group">
+                <span class="font-mono text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
+                    AXXA<span class="text-primary">.DEV</span>
+                </span>
+                <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="nav-link text-sm font-medium hover:text-primary transition-colors">HOME</a>
+                <a href="#about" class="nav-link text-sm font-medium hover:text-primary transition-colors">TENTANG</a>
+                <a href="#services" class="nav-link text-sm font-medium hover:text-primary transition-colors">LAYANAN</a>
+                <a href="#projects" class="nav-link text-sm font-medium hover:text-primary transition-colors">PROYEK</a>
+                <a href="#contact" class="nav-link text-sm font-medium hover:text-primary transition-colors">KONTAK</a>
+                
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="magnetic-btn w-10 h-10 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 hover:border-primary text-slate-600 dark:text-slate-400 hover:text-primary transition-all duration-300">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="md:hidden text-2xl text-slate-800 dark:text-white hover:text-primary transition-colors">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white/95 dark:bg-dark/95 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-center space-y-8">
+        <button id="close-menu" class="absolute top-6 right-6 text-3xl text-slate-800 dark:text-white hover:text-primary">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <a href="#home" class="mobile-link text-3xl font-bold hover:text-primary transition-colors">HOME</a>
+        <a href="#about" class="mobile-link text-3xl font-bold hover:text-primary transition-colors">TENTANG</a>
+        <a href="#services" class="mobile-link text-3xl font-bold hover:text-primary transition-colors">LAYANAN</a>
+        <a href="#projects" class="mobile-link text-3xl font-bold hover:text-primary transition-colors">PROYEK</a>
+        <a href="#contact" class="mobile-link text-3xl font-bold hover:text-primary transition-colors">KONTAK</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="section-spy min-h-screen flex items-center pt-20 relative">
+        <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            
+            <!-- Text Content -->
+            <div class="order-2 md:order-1 space-y-6 reveal-on-scroll">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    Available for Freelance
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-bold leading-tight">
+                    Creative <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">Developer</span>
+                </h1>
+                
+                <p class="text-lg text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed">
+                    Saya Adalbert Alexandru Ungureanu. Mengubah ide kompleks menjadi pengalaman digital yang menakjubkan dengan sentuhan Cyberpunk.
+                </p>
+
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <a href="#projects" class="magnetic-btn px-8 py-3 rounded-full bg-primary text-black font-bold hover:shadow-[0_0_20px_rgba(0,255,136,0.4)] transition-all transform hover:-translate-y-1">
+                        Lihat Portfolio
+                    </a>
+                    <a href="#contact" class="magnetic-btn px-8 py-3 rounded-full border border-slate-300 dark:border-white/20 hover:border-primary hover:text-primary transition-all">
+                        Hubungi Saya
+                    </a>
+                </div>
+
+                <div class="pt-8 flex items-center gap-6 text-slate-400">
+                    <a href="#" class="hover:text-primary transition-colors transform hover:scale-110"><i class="fab fa-github text-2xl"></i></a>
+                    <a href="#" class="hover:text-primary transition-colors transform hover:scale-110"><i class="fab fa-linkedin text-2xl"></i></a>
+                    <a href="#" class="hover:text-primary transition-colors transform hover:scale-110"><i class="fab fa-instagram text-2xl"></i></a>
+                    <a href="#" class="hover:text-primary transition-colors transform hover:scale-110"><i class="fab fa-dribbble text-2xl"></i></a>
+                </div>
+            </div>
+
+            <!-- Hero Image -->
+            <div class="order-1 md:order-2 flex justify-center relative reveal-on-scroll delay-200">
+                <div class="relative w-80 h-80 md:w-[500px] md:h-[500px]">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-primary to-transparent rounded-full opacity-20 blur-[80px] animate-pulse-slow"></div>
+                    <!-- Main Image Container -->
+                    <div class="relative w-full h-full rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl skew-y-3 hover:skew-y-0 transition-transform duration-700 ease-out group">
+                        <div class="absolute inset-0 bg-primary/20 mix-blend-overlay z-10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="images/me.jpg" alt="Profile" class="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    
+                    <!-- Floating Cards -->
+                    <div class="absolute -bottom-10 -left-10 bg-white/10 dark:bg-surface-light/80 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl animate-float">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Experience</div>
+                                <div class="font-bold">5+ Years</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute -top-5 -right-5 bg-white/10 dark:bg-surface-light/80 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl animate-float" style="animation-delay: -2s;">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400">Projects</div>
+                                <div class="font-bold">100+ Done</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack (Marquee) -->
+    <div class="py-10 border-y border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 backdrop-blur-sm overflow-hidden">
+        <div class="flex gap-16 animate-[scroll_20s_linear_infinite] w-max items-center opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+            <!-- Items duplicated for seamless loop -->
+            <i class="fab fa-react text-4xl hover:text-[#61DAFB]"></i>
+            <i class="fab fa-js text-4xl hover:text-[#F7DF1E]"></i>
+            <i class="fab fa-html5 text-4xl hover:text-[#E34F26]"></i>
+            <i class="fab fa-css3-alt text-4xl hover:text-[#1572B6]"></i>
+            <i class="fab fa-node text-4xl hover:text-[#339933]"></i>
+            <i class="fab fa-python text-4xl hover:text-[#3776AB]"></i>
+            <i class="fab fa-git-alt text-4xl hover:text-[#F05032]"></i>
+            <i class="fab fa-docker text-4xl hover:text-[#2496ED]"></i>
+            <!-- Duplicate -->
+            <i class="fab fa-react text-4xl hover:text-[#61DAFB]"></i>
+            <i class="fab fa-js text-4xl hover:text-[#F7DF1E]"></i>
+            <i class="fab fa-html5 text-4xl hover:text-[#E34F26]"></i>
+            <i class="fab fa-css3-alt text-4xl hover:text-[#1572B6]"></i>
+            <i class="fab fa-node text-4xl hover:text-[#339933]"></i>
+            <i class="fab fa-python text-4xl hover:text-[#3776AB]"></i>
+            <i class="fab fa-git-alt text-4xl hover:text-[#F05032]"></i>
+            <i class="fab fa-docker text-4xl hover:text-[#2496ED]"></i>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about" class="section-spy py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center mb-16 reveal-on-scroll">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Tentang <span class="text-primary">Saya</span></h2>
+                <div class="w-16 h-1 bg-primary mx-auto rounded-full mb-6"></div>
+                <p class="text-slate-600 dark:text-slate-400">
+                    Seorang pengembang web yang berdedikasi dengan hasrat untuk menciptakan antarmuka yang intuitif dan dinamis.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="spotlight-card p-8 rounded-2xl bg-white dark:bg-surface border border-slate-200 dark:border-white/5 hover:border-primary/50 transition-colors group reveal-on-scroll">
+                    <div class="spotlight-overlay"></div>
+                    <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Web Development</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        Membangun website responsif dan cepat menggunakan teknologi modern seperti React, Tailwind, dan Next.js.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="spotlight-card p-8 rounded-2xl bg-white dark:bg-surface border border-slate-200 dark:border-white/5 hover:border-primary/50 transition-colors group reveal-on-scroll delay-100">
+                    <div class="spotlight-overlay"></div>
+                    <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Mobile Friendly</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        Memastikan tampilan sempurna di setiap perangkat, dari smartphone hingga desktop layar lebar.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="spotlight-card p-8 rounded-2xl bg-white dark:bg-surface border border-slate-200 dark:border-white/5 hover:border-primary/50 transition-colors group reveal-on-scroll delay-200">
+                    <div class="spotlight-overlay"></div>
+                    <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-search-dollar"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">SEO Optimized</h3>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        Sturktur kode yang ramah mesin pencari untuk meningkatkan visibilitas online Anda.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="section-spy py-24 bg-slate-50 dark:bg-surface-light/30 relative">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 reveal-on-scroll">
+                <div class="max-w-xl">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Proyek <span class="text-primary">Terbaru</span></h2>
+                    <p class="text-slate-600 dark:text-slate-400">
+                        Beberapa hasil karya terbaik yang telah saya kerjakan untuk klien.
+                    </p>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="flex gap-2 mt-6 md:mt-0 overflow-x-auto pb-2 md:pb-0">
+                    <button class="filter-btn active px-4 py-2 rounded-full text-sm font-medium border border-slate-300 dark:border-white/10 hover:border-primary transition-colors" data-filter="all">Semua</button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-slate-300 dark:border-white/10 hover:border-primary transition-colors" data-filter="web">Website</button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium border border-slate-300 dark:border-white/10 hover:border-primary transition-colors" data-filter="design">Design</button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Project 1 -->
+                <div class="project-item group reveal-on-scroll" data-filter-category="web">
+                    <div class="project-card relative h-80 rounded-2xl overflow-hidden cursor-pointer project-trigger shadow-lg hover:shadow-primary/20 transition-all duration-500"
+                         data-title="E-Commerce Starter" 
+                         data-category="Web Development" 
+                         data-image="images/project1.jpg" 
+                         data-desc="Platform e-commerce modern dengan fitur keranjang belanja, pembayaran gateway, dan dashboard admin yang responsif. Dibangun dengan Next.js dan Stripe.">
+                        
+                        <!-- Image Parallax Wrapper -->
+                        <div class="absolute inset-0 w-full h-full overflow-hidden">
+                            <img src="images/project1.jpg" alt="Project 1" class="parallax-img w-full h-full object-cover transition-transform duration-700">
+                        </div>
+                        
+                        <!-- Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                            <span class="text-primary text-xs font-bold tracking-wider uppercase mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Web Development</span>
+                            <h3 class="text-2xl font-bold text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">E-Commerce Starter</h3>
+                            <div class="flex items-center gap-3 mt-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                                <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm hover:bg-primary hover:text-black transition-colors">
+                                    <i class="fas fa-arrow-right text-sm"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-item group reveal-on-scroll delay-100" data-filter-category="design">
+                    <div class="project-card relative h-80 rounded-2xl overflow-hidden cursor-pointer project-trigger shadow-lg hover:shadow-primary/20 transition-all duration-500"
+                         data-title="Neon Branding" 
+                         data-category="UI/UX Design" 
+                         data-image="images/project2.jpg" 
+                         data-desc="Konsep branding futuristik untuk startup teknologi AI, mencakup logo, panduan gaya, dan desain antarmuka aplikasi.">
+                        
+                        <div class="absolute inset-0 w-full h-full overflow-hidden">
+                            <img src="images/project2.jpg" alt="Project 2" class="parallax-img w-full h-full object-cover transition-transform duration-700">
+                        </div>
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                            <span class="text-primary text-xs font-bold tracking-wider uppercase mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">UI/UX Design</span>
+                            <h3 class="text-2xl font-bold text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">Neon Branding</h3>
+                            <div class="flex items-center gap-3 mt-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                                <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm hover:bg-primary hover:text-black transition-colors">
+                                    <i class="fas fa-arrow-right text-sm"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="project-item group reveal-on-scroll delay-200" data-filter-category="web">
+                    <div class="project-card relative h-80 rounded-2xl overflow-hidden cursor-pointer project-trigger shadow-lg hover:shadow-primary/20 transition-all duration-500"
+                         data-title="Portfolio V1" 
+                         data-category="Web Development" 
+                         data-image="images/project3.jpg" 
+                         data-desc="Versi pertama dari website portofolio pribadi, fokus pada minimalisme dan kecepatan loading yang tinggi.">
+                        
+                        <div class="absolute inset-0 w-full h-full overflow-hidden">
+                            <img src="images/project3.jpg" alt="Project 3" class="parallax-img w-full h-full object-cover transition-transform duration-700">
+                        </div>
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                            <span class="text-primary text-xs font-bold tracking-wider uppercase mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Web Development</span>
+                            <h3 class="text-2xl font-bold text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">Portfolio V1</h3>
+                            <div class="flex items-center gap-3 mt-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                                <span class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-sm hover:bg-primary hover:text-black transition-colors">
+                                    <i class="fas fa-arrow-right text-sm"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="section-spy py-24 relative overflow-hidden">
+        <!-- Background Decor -->
+        <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="order-2 md:order-1 reveal-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6">Layanan <span class="text-primary">Unggulan</span></h2>
+                    
+                    <div class="space-y-6">
+                        <div class="group flex gap-4 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="font-bold">01</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Full Stack Development</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Pengembangan aplikasi web end-to-end yang skalabel dan aman.</p>
+                            </div>
+                        </div>
+
+                        <div class="group flex gap-4 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="font-bold">02</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">UI/UX Design</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Perancangan antarmuka yang estetis dan pengalaman pengguna yang mulus.</p>
+                            </div>
+                        </div>
+
+                        <div class="group flex gap-4 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-colors">
+                                <span class="font-bold">03</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2 group-hover:text-primary transition-colors">Technical Consultation</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Konsultasi mendalam untuk solusi teknologi terbaik bagi bisnis Anda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-1 md:order-2 reveal-on-scroll delay-100 relative">
+                     <!-- Code Block decorative -->
+                     <div class="rounded-xl overflow-hidden shadow-2xl bg-[#1e1e1e] border border-white/10 text-xs md:text-sm font-mono leading-relaxed p-6 rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <div class="flex gap-2 mb-4 text-slate-500">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                        </div>
+                        <div class="text-blue-400">const <span class="text-yellow-400">Services</span> = () => {</div>
+                        <div class="pl-4 text-purple-400">return (</div>
+                        <div class="pl-8 text-slate-300">&lt;<span class="text-red-400">PremiumQuality</span></div>
+                        <div class="pl-12 text-blue-300">speed={<span class="text-orange-400">"Lightening"</span>}</div>
+                        <div class="pl-12 text-blue-300">security={<span class="text-orange-400">"Max"</span>}</div>
+                        <div class="pl-12 text-blue-300">design={<span class="text-orange-400">"PixelPerfect"</span>}</div>
+                        <div class="pl-8 text-slate-300">/&gt;</div>
+                        <div class="pl-4 text-purple-400">);</div>
+                        <div class="text-blue-400">}</div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hire Me / CTA Section -->
+    <section id="contact" class="section-spy py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="bg-primary/5 rounded-3xl p-8 md:p-16 border border-primary/20 relative overflow-hidden reveal-on-scroll">
+                <!-- Glow effects -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full pointer-events-none"></div>
+
+                <div class="relative z-10 grid md:grid-cols-2 gap-12">
+                    <div>
+                        <span class="text-primary font-bold tracking-wider uppercase mb-2 block">Dapatkan Penawaran</span>
+                        <h2 class="text-3xl md:text-5xl font-bold mb-6">Siap Memulai Proyek?</h2>
+                        <p class="text-slate-600 dark:text-slate-400 mb-8 max-w-md">
+                            Mari diskusikan ide Anda dan wujudkan menjadi kenyataan digital yang luar biasa.
+                        </p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-white dark:bg-surface flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-envelope text-primary"></i>
+                                </div>
+                                <span class="font-medium">contact@axxa.dev</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-white dark:bg-surface flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-map-marker-alt text-primary"></i>
+                                </div>
+                                <span class="font-medium">Remote / Worldwide</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Form -->
+                    <form id="contact-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" placeholder="Nama" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            <input type="email" placeholder="Email" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                        </div>
+                        <input type="text" placeholder="Subjek" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                        <textarea rows="4" placeholder="Pesan Anda..." class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"></textarea>
+                        
+                        <button type="submit" class="w-full bg-primary text-black font-bold py-4 rounded-xl hover:shadow-[0_0_20px_rgba(0,255,136,0.4)] transition-all flex items-center justify-center gap-2">
+                            <span>Kirim Pesan</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-black py-12 border-t border-slate-200 dark:border-white/10">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <div class="font-mono text-xl font-bold text-slate-800 dark:text-white mb-2">
+                    AXXA<span class="text-primary">.DEV</span>
+                </div>
+                <p class="text-sm text-slate-500">© <span id="year"></span> All rights reserved.</p>
+            </div>
+
+            <div class="flex gap-6">
+                <a href="#" class="text-slate-500 hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="#" class="text-slate-500 hover:text-primary transition-colors">Terms of Service</a>
+            </div>
+
+            <!-- Time Widget -->
+            <div class="font-mono text-sm text-slate-500 bg-slate-100 dark:bg-surface px-4 py-2 rounded-lg border border-slate-200 dark:border-white/5 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span id="local-time">00:00</span> WIB
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll To Top -->
+    <button id="scrollToTopBtn" class="fixed bottom-8 right-8 w-12 h-12 bg-primary text-black rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 opacity-0 translate-y-20 z-40">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Modal Project Detail -->
+    <div id="project-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
+        <div id="modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <div id="modal-content" class="relative bg-white dark:bg-surface w-full max-w-2xl mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
+            <button id="close-modal" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-primary hover:text-black transition-colors z-10">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="h-64 overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent z-[1]"></div>
+                <img id="modal-image" src="" alt="Project Detail" class="w-full h-full object-cover">
+                <div class="absolute bottom-6 left-6 z-[2]">
+                    <span id="modal-category" class="text-primary text-xs font-bold uppercase tracking-wider bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">Web Dev</span>
+                    <h3 id="modal-title" class="text-3xl font-bold text-white mt-2">Project Title</h3>
+                </div>
+            </div>
+            
+            <div class="p-8">
+                <p id="modal-desc" class="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                    Description goes here.
+                </p>
+                <div class="flex gap-4">
+                    <button class="flex-1 bg-primary text-black font-bold py-3 rounded-xl hover:shadow-lg transition-all">Lihat Live Demo</button>
+                    <button class="flex-1 border border-slate-200 dark:border-white/10 font-bold py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all">Source Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[110] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- MAIN SCRIPT -->
+    <script src="script.js"></script>
+    <style>
+        /* Toast Animation */
+        .toast-enter {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+        }
+        .toast-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-exit-active {
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease-in;
+        }
+    </style>
+</body>
 </html>
