@@ -137,11 +137,11 @@
 }
 
 /* Brand Styling: Overlapping XX */
-/* UPDATED VALUES based on user feedback */
+/* UPDATED QUESTIONS based on user feedback */
 .brand-overlap-xx {
     font-family: 'Courier New', monospace !important;
-    letter-spacing: -0.25em !important;
-    margin-right: 0.40em !important;
+    letter-spacing: -0.20em !important; /* Relaxed from -0.25em */
+    margin-right: 0.45em !important;    /* Increased space after XX slightly */
     margin-left: 0.05em !important;
     display: inline-block;
     position: relative;
