@@ -193,6 +193,8 @@
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter") enterSystem();
       });
+      // Automatic fade out after 3 seconds
+      setTimeout(enterSystem, 3000);
     </script>
   </body>
 </html>
