@@ -565,6 +565,7 @@ function setNestedValue(obj, path, value) {
 
 
 
+
 function initContact() {
     const config = siteConfig.contact?.emailjs;
     // Check if config exists and has valid values (not placeholders)
@@ -584,6 +585,25 @@ function initContact() {
     if (form) {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
+
+            // --- RATE LIMITING START ---
+            const lastSent = localStorage.getItem('last_contact_ts');
+            if (lastSent) {
+                const now = Date.now();
+                const diff = now - parseInt(lastSent);
+                const cooldown = 24 * 60 * 60 * 1000; // 24 Hours in ms
+
+                if (diff < cooldown) {
+                    const remaining = cooldown - diff;
+                    const hours = Math.floor(remaining / (1000 * 60 * 60));
+                    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    showToast(`Please wait ${hours}h ${minutes}m before sending another message.`, 'error');
+                    return; // Stop execution
+                }
+            }
+            // --- RATE LIMITING END ---
+
             const btn = form.querySelector('button[type="submit"]');
             const originalText = btn.innerHTML;
             
@@ -595,10 +615,12 @@ function initContact() {
             emailjs.sendForm(config.service_id, config.template_id, this)
                 .then(() => {
                     showToast('Message sent successfully!', 'success');
+                    // Set Timestamp on Success
+                    localStorage.setItem('last_contact_ts', Date.now().toString());
                     form.reset();
                 }, (error) => {
                     console.error('FAILED...', error);
-                    showToast('Failed to send message.', 'error');
+                    showToast('Failed to send message. Please try again.', 'error');
                 })
                 .finally(() => {
                     btn.innerHTML = originalText;

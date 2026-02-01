@@ -205,9 +205,9 @@
         },
         "footer_rights": "Toate drepturile rezervate.",
         "emailjs": {
-            "service_id": "YOUR_SERVICE_ID",
-            "template_id": "YOUR_TEMPLATE_ID",
-            "public_key": "YOUR_PUBLIC_KEY"
+            "service_id": "axxa.dev",
+            "template_id": "axxa.dev",
+            "public_key": "ULPImqYf8JbKYs83i"
         }
     },
     "admin": {
