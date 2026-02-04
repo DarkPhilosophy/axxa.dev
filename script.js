@@ -676,7 +676,11 @@ function initAdmin() {
         setStatus(repoMsg, 'ok');
         showToast(repoMsg, 'success');
 
-        // If repo access is confirmed, no warning is shown.
+        if (result.multiRepo) {
+            const warnMsg = t('admin.github.repo_warning', 'Warning: token appears to access multiple repos.');
+            setStatus(warnMsg, 'warn');
+            showToast(warnMsg, 'error');
+        }
     });
 
     updateBtn?.addEventListener('click', async () => {
@@ -1034,10 +1038,22 @@ async function testGitHubToken(token) {
             }
         });
 
-        return { ok: true, repoOk: repoRes.ok };
+        let multiRepo = false;
+        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (reposRes.ok) {
+            const repos = await reposRes.json();
+            multiRepo = Array.isArray(repos) && repos.length > 1;
+        }
+
+        return { ok: true, repoOk: repoRes.ok, multiRepo };
     } catch (e) {
         console.error('Token test failed', e);
-        return { ok: false, repoOk: false };
+        return { ok: false, repoOk: false, multiRepo: false };
     }
 }
 
