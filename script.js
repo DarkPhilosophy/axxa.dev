@@ -580,9 +580,8 @@ function initAdmin() {
         toggleBtn.className = 'text-xs font-mono font-bold px-3 py-1 rounded border border-white/10 hover:border-primary hover:text-primary transition-all flex items-center gap-2';
         headerControls.appendChild(toggleBtn);
 
-        const updateState = (forceExpand = false) => {
+        const updateState = () => {
             const hasToken = !!localStorage.getItem('axxa_github_token');
-            const isExpanded = !githubBox.classList.contains('hidden');
             
             if (hasToken) {
                 toggleBtn.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> SYNC`;
@@ -638,8 +637,6 @@ function initAdmin() {
 
     // Login Logic
     loginBtn.addEventListener('click', () => {
-        // Simple hardcoded check for demonstration "secret menu"
-        // In a real app, this would be server-side or at least hashed.
         if (passInput.value === 'admin123') { // Secret Password
             loginForm.classList.add('hidden');
             editor.classList.remove('hidden');
@@ -919,7 +916,7 @@ function renderLanguageChips(config, parent, container) {
     });
 }
 
-// Revised Generator: Handles Schema Syncing & Advanced Array Lists
+// Revised Generator: Handles Schema Syncing
 function generateFormFields(schemaData, parent, prefix = '', targetConfig = baseConfig, isTranslation = false) {
     parent.innerHTML = '';
     
@@ -936,6 +933,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 const groupDetails = document.createElement('details');
                 groupDetails.className = 'ml-2 border-l-2 border-white/5 pl-4 mb-2 group/nested';
                 
+                // Nested state persistence logic could be added here if needed, but keeping it simple for now.
                 // Open root sections in default view only
                 if(!isTranslation && !currentPrefix) groupDetails.open = true;
 
@@ -949,101 +947,29 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 build(schemaVal, groupDetails.querySelector('div'), path);
 
             } else if (Array.isArray(schemaVal)) {
-                // ARRAY HANDLING
+                // Array (JSON Editor)
                 const wrapper = document.createElement('div');
-                wrapper.className = 'mb-4';
+                const label = document.createElement('label');
+                label.className = 'block text-xs text-slate-500 mb-1 capitalize flex justify-between';
+                label.innerHTML = `<span>${key}</span> <span class="text-[10px] opacity-50">Array</span>`;
                 
-                // Detect if Array of Objects (Complex List)
-                const isComplex = schemaVal.length > 0 && typeof schemaVal[0] === 'object';
+                const input = document.createElement('textarea');
+                input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white font-mono h-24 focus:border-primary outline-none';
+                const displayVal = actualVal !== undefined ? actualVal : [];
+                input.value = JSON.stringify(displayVal, null, 2);
                 
-                const labelRow = document.createElement('div');
-                labelRow.className = 'flex justify-between items-center mb-2';
-                labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${actualVal ? actualVal.length : 0})</label>`;
-                
-                if (isComplex && !isTranslation) { 
-                    const addBtn = document.createElement('button');
-                    addBtn.className = 'text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20';
-                    addBtn.innerHTML = '+ Add Item';
-                    addBtn.onclick = () => {
-                        const newItem = JSON.parse(JSON.stringify(schemaVal[0] || {}));
-                        Object.keys(newItem).forEach(k => newItem[k] = "");
-                        if ('id' in newItem) newItem.id = crypto.randomUUID().split('-')[0];
-                        
-                        if (!Array.isArray(actualVal)) actualVal = [];
-                        actualVal.push(newItem);
+                input.addEventListener('change', (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.value);
                         ensurePath(targetConfig, path);
-                        setNestedValue(targetConfig, path, actualVal);
-                        
-                        const rootContainer = document.getElementById('json-editor-container');
-                        if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
-                    };
-                    labelRow.appendChild(addBtn);
-                }
-                wrapper.appendChild(labelRow);
+                        setNestedValue(targetConfig, path, parsed);
+                    } catch(err) {
+                        alert('Invalid JSON for array');
+                    }
+                });
 
-                if (isComplex) {
-                    // MENU STYLE LIST
-                    const listContainer = document.createElement('div');
-                    listContainer.className = 'space-y-2';
-                    
-                    const items = Array.isArray(actualVal) ? actualVal : [];
-                    
-                    items.forEach((item, index) => {
-                        const itemDetails = document.createElement('details');
-                        itemDetails.className = 'bg-white/5 rounded-lg overflow-hidden border border-white/5';
-                        
-                        let itemTitle = item.title || item.name || item.role || item.id || `Item ${index + 1}`;
-                        if (itemTitle.length > 30) itemTitle = itemTitle.substring(0, 30) + '...';
-
-                        itemDetails.innerHTML = `
-                            <summary class="px-3 py-2 cursor-pointer text-sm font-medium text-slate-300 hover:bg-white/5 flex justify-between items-center">
-                                <span>${index + 1}. ${itemTitle}</span>
-                                <div class="flex items-center gap-2">
-                                    ${!isTranslation ? `<button class="btn-del-item text-red-500 hover:text-red-400 px-2" data-index="${index}">×</button>` : ''}
-                                    <span class="text-[10px] opacity-50">▼</span>
-                                </div>
-                            </summary>
-                            <div class="p-3 border-t border-white/5 space-y-3" id="item-${path}-${index}"></div>
-                        `;
-                        
-                        listContainer.appendChild(itemDetails);
-                        
-                        if (!isTranslation) {
-                            itemDetails.querySelector('.btn-del-item').addEventListener('click', (e) => {
-                                e.preventDefault();
-                                if(confirm('Delete this item?')) {
-                                    actualVal.splice(index, 1);
-                                    const rootContainer = document.getElementById('json-editor-container');
-                                    if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
-                                }
-                            });
-                        }
-
-                        const itemSchema = schemaVal[0] || item;
-                        generateFormFields(itemSchema, itemDetails.querySelector(`#item-${path}-${index}`), `${path}.${index}`, targetConfig, isTranslation);
-                    });
-                    
-                    wrapper.appendChild(listContainer);
-
-                } else {
-                    // JSON FALLBACK (Primitives)
-                    const input = document.createElement('textarea');
-                    input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white font-mono h-24 focus:border-primary outline-none';
-                    const displayVal = actualVal !== undefined ? actualVal : [];
-                    input.value = JSON.stringify(displayVal, null, 2);
-                    
-                    input.addEventListener('change', (e) => {
-                        try {
-                            const parsed = JSON.parse(e.target.value);
-                            ensurePath(targetConfig, path);
-                            setNestedValue(targetConfig, path, parsed);
-                        } catch(err) {
-                            alert('Invalid JSON for array');
-                        }
-                    });
-                    wrapper.appendChild(input);
-                }
-                
+                wrapper.appendChild(label);
+                wrapper.appendChild(input);
                 p.appendChild(wrapper);
 
             } else {
@@ -1185,4 +1111,503 @@ function setNestedValue(obj, path, value) {
     const last = keys.pop();
     const target = keys.reduce((o, i) => o[i], obj);
     target[last] = value;
+}
+
+
+
+
+function initContact() {
+    const config = siteConfig.contact?.emailjs;
+    // Check if config exists and has valid values (not placeholders)
+    if (!config || !config.public_key || config.public_key.startsWith('YOUR')) {
+        console.warn('EmailJS not fully configured.');
+        return;
+    }
+
+    try {
+        emailjs.init(config.public_key);
+    } catch (e) {
+        console.error('EmailJS init failed', e);
+        return;
+    }
+
+    const form = document.getElementById('contact-form');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // --- RATE LIMITING START ---
+            const lastSent = localStorage.getItem('axxa_msg_ts');
+            if (lastSent) {
+                const now = Date.now();
+                const diff = now - parseInt(lastSent);
+                const cooldown = 24 * 60 * 60 * 1000; // 24 Hours
+
+                console.log(`[RateLimit] Checked: ${lastSent}, Diff: ${diff}, Cooldown: ${cooldown}`);
+
+                if (diff < cooldown) {
+                    const remaining = cooldown - diff;
+                    const hours = Math.floor(remaining / (1000 * 60 * 60));
+                    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    const rateLimitMsg = formatTemplate(
+                        t('contact.form.rate_limit', 'Please wait {hours}h {minutes}m before sending another message.'),
+                        { hours, minutes }
+                    );
+                    showToast(rateLimitMsg, 'error');
+                    return; // Stop execution
+                }
+            }
+            // --- RATE LIMITING END ---
+
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            
+            // Loading State
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('contact.form.sending', 'Sending...')}`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            // Construct secure params + dynamic data
+            const params = {
+                name: form.querySelector('[name="from_name"]').value,
+                email: form.querySelector('[name="from_email"]').value,
+                message: form.querySelector('[name="message"]').value,
+                time: new Date().toLocaleString(getLocaleForLang(currentLang))
+            };
+
+            emailjs.send(config.service_id, config.template_id, params)
+                .then(() => {
+                    showToast(t('contact.form.send_success', 'Message sent successfully!'), 'success');
+                    // Set Timestamp on Success
+                    console.log(`[RateLimit] Setting timestamp: ${Date.now()}`);
+                    localStorage.setItem('axxa_msg_ts', Date.now().toString());
+                    form.reset();
+                }, (error) => {
+                    console.error('FAILED...', error);
+                    showToast(t('contact.form.send_fail', 'Failed to send message. Please try again.'), 'error');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70', 'cursor-not-allowed');
+                });
+        });
+    }
+}
+
+// --- BLOG SYSTEM ---
+function initBlog() {
+    // 1. "View All" Button Logic
+    const viewAllBtn = document.querySelector('[data-i18n="writing.link_text"]');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    // 2. Writing list controls
+    const searchInput = document.getElementById('writing-search');
+    const prevBtn = document.getElementById('writing-prev');
+    const nextBtn = document.getElementById('writing-next');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce((e) => {
+            writingListState.query = e.target.value || '';
+            writingListState.page = 1;
+            renderWritingList();
+        }, 200));
+    }
+
+    prevBtn?.addEventListener('click', () => {
+        if (writingListState.page > 1) {
+            writingListState.page -= 1;
+            renderWritingList();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    nextBtn?.addEventListener('click', () => {
+        const totalPages = getWritingTotalPages();
+        if (writingListState.page < totalPages) {
+            writingListState.page += 1;
+            renderWritingList();
+            document.getElementById('writing-list')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    // 3. Article Modal Logic
+    const articleModal = document.getElementById('article-modal');
+    if (articleModal) {
+        const closeBtn = document.getElementById('close-article');
+        const backdrop = document.getElementById('article-backdrop');
+
+        const closeArticle = () => {
+            document.getElementById('article-content').classList.remove('scale-100', 'opacity-100');
+            document.getElementById('article-content').classList.add('scale-95', 'opacity-0');
+            backdrop.classList.remove('opacity-100');
+            setTimeout(() => {
+                articleModal.classList.add('hidden');
+                
+                toggleScrollLock(false);
+                
+                // Remove hash but keep scroll position
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+            }, 300);
+        };
+
+        closeBtn?.addEventListener('click', closeArticle);
+        backdrop?.addEventListener('click', closeArticle);
+        
+        // Close on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !articleModal.classList.contains('hidden')) {
+                closeArticle();
+            }
+        });
+    }
+
+    // 4. Check Hash on Load
+    if (window.location.hash && window.location.hash.startsWith('#article-')) {
+        const articleId = window.location.hash.replace('#article-', '');
+        openArticle(articleId);
+    }
+}
+
+function toggleScrollLock(active) {
+    if (active) {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+    }
+}
+
+window.openArticle = function(id) {
+    const article = siteConfig.writing?.items.find(i => i.id === id);
+    if (!article) return;
+
+    const justNowLabel = getNestedValue(siteConfig, 'writing.just_now') || 'Just now';
+    const readTimeFallback = getNestedValue(siteConfig, 'writing.read_time_fallback') || '5 min read';
+    const contentFallback = getNestedValue(siteConfig, 'writing.content_coming') || 'Content coming soon...';
+
+    // Populate Data
+    document.getElementById('article-img').src = article.image;
+    document.getElementById('article-title').innerHTML = article.title;
+    document.getElementById('article-date').textContent = article.date || justNowLabel;
+    document.getElementById('article-read').textContent = article.read_time || readTimeFallback;
+    document.getElementById('article-body').innerHTML = article.content || `<p>${contentFallback}</p>`;
+
+    // Show Modal
+    const modal = document.getElementById('article-modal');
+    modal.classList.remove('hidden');
+    // No need for zIndex hack if CSS class is correct
+    
+    toggleScrollLock(true);
+
+    void modal.offsetWidth;
+
+    document.getElementById('article-backdrop').classList.add('opacity-100');
+    const content = document.getElementById('article-content');
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+
+    // Update Hash
+    history.pushState(null, null, `#article-${id}`);
+}
+
+
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString(getLocaleForLang(currentLang), { hour: '2-digit', minute: '2-digit' });
+    document.querySelectorAll('.local-time').forEach(el => el.textContent = timeString);
+    const yearEl = document.getElementById('year');
+    if(yearEl) yearEl.textContent = now.getFullYear();
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `p-4 rounded-xl shadow-xl border backdrop-blur-md flex items-center gap-3 text-sm font-bold min-w-[300px] toast-enter ${type === 'error' ? 'bg-red-500/10 border-red-500 text-red-500' : 'bg-primary/10 border-primary text-primary'}`;
+    toast.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> <span>${msg}</span>`;
+    
+    container.appendChild(toast);
+    
+    // Force reflow
+    void toast.offsetWidth;
+    toast.classList.add('toast-enter-active');
+
+    setTimeout(() => {
+        toast.classList.remove('toast-enter-active');
+        toast.classList.add('toast-exit-active');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+async function testGitHubToken(token) {
+    try {
+        const res = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (!res.ok) return { ok: false, repoOk: false, broadToken: false };
+
+        const repoInfo = getGitHubRepoInfo();
+        if (!repoInfo) return { ok: true, repoOk: false, multiRepo: false };
+
+        const repoRes = await fetch(`https://api.github.com/repos/${repoInfo.repo}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+
+        let multiRepo = false;
+        const reposRes = await fetch('https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (reposRes.ok) {
+            const repos = await reposRes.json();
+            if (Array.isArray(repos)) {
+                // Filter out the current target repo (case-insensitive)
+                const otherRepos = repos.filter(r => r.full_name.toLowerCase() !== repoInfo.repo.toLowerCase());
+                
+                // Check if Classic or Fine-grained
+                const scopes = reposRes.headers.get('x-oauth-scopes');
+                const isClassic = scopes !== null; // Header missing usually means Fine-grained
+
+                let riskyRepos = [];
+
+                if (isClassic) {
+                    // Classic Token: API permissions are generally accurate for the token.
+                    // Risk: Write/Admin on ANY other repo OR access to PRIVATE repos.
+                    riskyRepos = otherRepos.filter(r => {
+                        const isPrivate = r.private;
+                        const hasWrite = r.permissions?.admin || r.permissions?.push || r.permissions?.maintain;
+                        return isPrivate || hasWrite;
+                    });
+                } else {
+                    // Fine-Grained Token: API often reports USER permissions (Admin) for owned Public repos,
+                    // masking the true Token permissions. We cannot trust 'hasWrite' for Public repos here.
+                    // Risk: Access to ANY other PRIVATE repo.
+                    riskyRepos = otherRepos.filter(r => r.private);
+                }
+
+                multiRepo = riskyRepos.length > 0;
+                
+                if (multiRepo) {
+                    console.warn("Token warns: Risky access to:", riskyRepos.map(r => r.full_name));
+                }
+            }
+        }
+
+        return { ok: true, repoOk: repoRes.ok, multiRepo };
+    } catch (e) {
+        console.error('Token test failed', e);
+        return { ok: false, repoOk: false, multiRepo: false };
+    }
+}
+
+async function updateConfigOnGitHub(token) {
+    const repoInfo = getGitHubRepoInfo();
+    if (!repoInfo) return false;
+    const repo = repoInfo.repo;
+    const branch = repoInfo.branch;
+    const path = 'config.json';
+    const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
+
+    try {
+        const getRes = await fetch(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (!getRes.ok) return false;
+        const file = await getRes.json();
+
+        const content = JSON.stringify(baseConfig, null, 4);
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const message = `Update config.json via admin (${new Date().toISOString()})`;
+
+        const putRes = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message,
+                content: encoded,
+                sha: file.sha,
+                branch
+            })
+        });
+
+        return putRes.ok;
+    } catch (e) {
+        console.error('GitHub update failed', e);
+        return false;
+    }
+}
+
+function getGitHubRepoInfo() {
+    const metaRepo = document.querySelector('meta[name="github-repo"]')?.getAttribute('content');
+    const metaBranch = document.querySelector('meta[name="github-branch"]')?.getAttribute('content') || 'master';
+    if (!metaRepo || !metaRepo.includes('/')) return null;
+    return { repo: metaRepo, branch: metaBranch };
+}
+
+function updateGithubSavedState() {
+    const savedEl = document.getElementById('github-saved');
+    if (!savedEl) return;
+    const savedToken = localStorage.getItem('axxa_github_token');
+    const msg = savedToken ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
+    savedEl.textContent = msg;
+}
+
+function initMouseSpotlight() {
+    const spotlight = document.getElementById('mouse-spotlight');
+    if (!spotlight) return;
+
+    let rafId = null;
+    const update = (x, y) => {
+        spotlight.style.setProperty('--spot-x', `${x}px`);
+        spotlight.style.setProperty('--spot-y', `${y}px`);
+    };
+
+    const onMove = (e) => {
+        if (rafId) return;
+        const { clientX, clientY } = e;
+        rafId = requestAnimationFrame(() => {
+            update(clientX, clientY);
+            rafId = null;
+        });
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+}
+
+function formatTemplate(str, vars = {}) {
+    if (!str || typeof str !== 'string') return '';
+    return str.replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
+}
+
+function renderWritingList() {
+    const listContainer = document.getElementById('writing-list-grid');
+    const pageInfo = document.getElementById('writing-page-info');
+    const prevBtn = document.getElementById('writing-prev');
+    const nextBtn = document.getElementById('writing-next');
+    if (!listContainer || !siteConfig.writing?.items) return;
+
+    const recentLabel = getNestedValue(siteConfig, 'writing.recent_label') || 'Recent';
+    const noResultsLabel = getNestedValue(siteConfig, 'writing.no_results') || 'No articles found.';
+    const pageInfoTemplate = getNestedValue(siteConfig, 'writing.page_info') || 'Page {current} of {total}';
+
+    const query = writingListState.query.trim().toLowerCase();
+    const items = siteConfig.writing.items.filter(item => {
+        if (!query) return true;
+        const hay = [
+            item.title,
+            item.excerpt,
+            item.category,
+            item.date,
+            stripHtml(item.content || ''),
+        ].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(query);
+    });
+
+    const totalPages = Math.max(1, Math.ceil(items.length / writingListState.pageSize));
+    if (writingListState.page > totalPages) writingListState.page = totalPages;
+    const start = (writingListState.page - 1) * writingListState.pageSize;
+    const slice = items.slice(start, start + writingListState.pageSize);
+
+    if (slice.length === 0) {
+        listContainer.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">${noResultsLabel}</div>`;
+    } else {
+        listContainer.innerHTML = slice.map(item => `
+            <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="flex gap-4 group bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl p-4 hover:border-primary/50 transition-all reveal-on-scroll">
+                <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
+                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xs font-bold text-primary uppercase">${item.category}</span>
+                    <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">${item.title}</h4>
+                    <span class="text-xs text-slate-500 mt-1 block">${item.date || recentLabel}</span>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    if (pageInfo) {
+        pageInfo.textContent = formatTemplate(pageInfoTemplate, {
+            current: writingListState.page,
+            total: totalPages,
+        });
+    }
+    if (prevBtn) prevBtn.disabled = writingListState.page <= 1;
+    if (nextBtn) nextBtn.disabled = writingListState.page >= totalPages;
+
+    observeRevealElements();
+    revealVisibleNow();
+}
+
+function getWritingTotalPages() {
+    if (!siteConfig.writing?.items) return 1;
+    const query = writingListState.query.trim().toLowerCase();
+    const count = siteConfig.writing.items.filter(item => {
+        if (!query) return true;
+        const hay = [
+            item.title,
+            item.excerpt,
+            item.category,
+            item.date,
+            stripHtml(item.content || ''),
+        ].filter(Boolean).join(' ').toLowerCase();
+        return hay.includes(query);
+    }).length;
+    return Math.max(1, Math.ceil(count / writingListState.pageSize));
+}
+
+function stripHtml(html) {
+    return String(html).replace(/<[^>]*>/g, ' ');
+}
+
+function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+}
+
+function deepMerge(base, override) {
+    if (Array.isArray(override)) return override.slice();
+    if (override && typeof override === 'object') {
+        const result = Array.isArray(base) ? [] : { ...(base || {}) };
+        Object.keys(override).forEach(key => {
+            result[key] = deepMerge(base ? base[key] : undefined, override[key]);
+        });
+        return result;
+    }
+    return override !== undefined ? override : base;
+}
+
+function getLocaleForLang(lang) {
+    const localeMap = baseConfig.i18n?.locales || {};
+    return localeMap[lang] || localeMap[currentLang] || 'ro-RO';
+}
+
+function t(path, fallback = '') {
+    const val = getNestedValue(siteConfig, path);
+    if (val === null || val === undefined) return fallback;
+    return val;
 }
