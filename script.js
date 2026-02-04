@@ -918,6 +918,7 @@ function renderLanguageChips(config, parent, container) {
 
 // Revised Generator: Handles Schema Syncing & Advanced Array Lists
 function generateFormFields(schemaData, parent, prefix = '', targetConfig = baseConfig, isTranslation = false) {
+    if (!parent) return; // Safety check
     parent.innerHTML = '';
     
     const build = (obj, p, currentPrefix) => {
@@ -953,18 +954,18 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
             } else if (Array.isArray(schemaVal)) {
                 // ARRAY HANDLING
                 const wrapper = document.createElement('div');
-                wrapper.className = 'mb-4';
+                wrapper.className = 'mb-4 border border-white/5 rounded-lg p-3 bg-white/5';
                 
                 // Detect if Array of Objects (Complex List)
                 const isComplex = schemaVal.length > 0 && typeof schemaVal[0] === 'object';
                 
                 const labelRow = document.createElement('div');
-                labelRow.className = 'flex justify-between items-center mb-2';
+                labelRow.className = 'flex justify-between items-center mb-3 border-b border-white/5 pb-2';
                 labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${actualVal ? actualVal.length : 0})</label>`;
                 
                 if (isComplex && !isTranslation) { 
                     const addBtn = document.createElement('button');
-                    addBtn.className = 'text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20';
+                    addBtn.className = 'text-xs bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 font-bold transition-colors';
                     addBtn.innerHTML = '+ Add Item';
                     addBtn.onclick = () => {
                         const newItem = JSON.parse(JSON.stringify(schemaVal[0] || {}));
@@ -986,6 +987,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                         ensurePath(targetConfig, path);
                         setNestedValue(targetConfig, path, actualVal);
                         
+                        // Refresh UI
                         const rootContainer = document.getElementById('json-editor-container');
                         if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
                     };
@@ -1000,29 +1002,38 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                     
                     const items = Array.isArray(actualVal) ? actualVal : [];
                     
+                    if (items.length === 0) {
+                        listContainer.innerHTML = `<div class="text-xs text-slate-600 italic p-2">No items yet.</div>`;
+                    }
+
                     items.forEach((item, index) => {
                         const itemDetails = document.createElement('details');
-                        itemDetails.className = 'bg-white/5 rounded-lg overflow-hidden border border-white/5';
+                        itemDetails.className = 'bg-black/20 rounded-lg overflow-hidden border border-white/5 group/item';
                         
                         let itemTitle = item.title || item.name || item.role || item.id || `Item ${index + 1}`;
-                        if (itemTitle.length > 30) itemTitle = itemTitle.substring(0, 30) + '...';
+                        if (itemTitle.length > 40) itemTitle = itemTitle.substring(0, 40) + '...';
 
                         itemDetails.innerHTML = `
-                            <summary class="px-3 py-2 cursor-pointer text-sm font-medium text-slate-300 hover:bg-white/5 flex justify-between items-center">
-                                <span>${index + 1}. ${itemTitle}</span>
+                            <summary class="px-3 py-2 cursor-pointer text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white flex justify-between items-center select-none">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-xs text-slate-500 font-mono">#${index + 1}</span>
+                                    <span>${itemTitle}</span>
+                                </span>
                                 <div class="flex items-center gap-2">
-                                    ${!isTranslation ? `<button class="btn-del-item text-red-500 hover:text-red-400 px-2" data-index="${index}">×</button>` : ''}
-                                    <span class="text-[10px] opacity-50">▼</span>
+                                    ${!isTranslation ? `<button class="btn-del-item text-slate-500 hover:text-red-500 px-2 transition-colors" data-index="${index}"><i class="fas fa-trash"></i></button>` : ''}
+                                    <span class="text-[10px] opacity-50 group-open/item:rotate-180 transition-transform">▼</span>
                                 </div>
                             </summary>
-                            <div class="p-3 border-t border-white/5 space-y-3" id="item-${path}-${index}"></div>
+                            <div class="p-3 border-t border-white/5 space-y-3" id="item-${path.replace(/\./g, '-')}-${index}"></div>
                         `;
                         
                         listContainer.appendChild(itemDetails);
                         
+                        // Bind Delete (Default view only)
                         if (!isTranslation) {
                             itemDetails.querySelector('.btn-del-item').addEventListener('click', (e) => {
                                 e.preventDefault();
+                                e.stopPropagation(); // Prevent toggling details
                                 if(confirm('Delete this item?')) {
                                     actualVal.splice(index, 1);
                                     const rootContainer = document.getElementById('json-editor-container');
@@ -1033,7 +1044,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
 
                         // Recursive Build for Item Fields
                         const itemSchema = schemaVal[0] || item;
-                        generateFormFields(itemSchema, itemDetails.querySelector(`#item-${path}-${index}`), `${path}.${index}`, targetConfig, isTranslation);
+                        generateFormFields(itemSchema, itemDetails.querySelector(`div[id^="item-"]`), `${path}.${index}`, targetConfig, isTranslation);
                     });
                     
                     wrapper.appendChild(listContainer);
