@@ -1096,15 +1096,27 @@ async function testGitHubToken(token) {
             if (Array.isArray(repos)) {
                 // Filter out the current target repo (case-insensitive)
                 const otherRepos = repos.filter(r => r.full_name.toLowerCase() !== repoInfo.repo.toLowerCase());
+                
+                // Check if Classic or Fine-grained
+                const scopes = reposRes.headers.get('x-oauth-scopes');
+                const isClassic = scopes !== null; // Header missing usually means Fine-grained
 
-                // Check for risky access:
-                // 1. Any access to other PRIVATE repos (Data Leak Risk)
-                // 2. Write/Admin access to ANY other repo (Integrity Risk)
-                const riskyRepos = otherRepos.filter(r => {
-                    const isPrivate = r.private;
-                    const hasWrite = r.permissions?.admin || r.permissions?.push || r.permissions?.maintain;
-                    return isPrivate || hasWrite;
-                });
+                let riskyRepos = [];
+
+                if (isClassic) {
+                    // Classic Token: API permissions are generally accurate for the token.
+                    // Risk: Write/Admin on ANY other repo OR access to PRIVATE repos.
+                    riskyRepos = otherRepos.filter(r => {
+                        const isPrivate = r.private;
+                        const hasWrite = r.permissions?.admin || r.permissions?.push || r.permissions?.maintain;
+                        return isPrivate || hasWrite;
+                    });
+                } else {
+                    // Fine-Grained Token: API often reports USER permissions (Admin) for owned Public repos,
+                    // masking the true Token permissions. We cannot trust 'hasWrite' for Public repos here.
+                    // Risk: Access to ANY other PRIVATE repo.
+                    riskyRepos = otherRepos.filter(r => r.private);
+                }
 
                 multiRepo = riskyRepos.length > 0;
                 
