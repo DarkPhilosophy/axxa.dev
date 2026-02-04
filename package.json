@@ -1,0 +1,23 @@
+{
+  "name": "personal-website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarkPhilosophy/axxa.dev.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DarkPhilosophy/axxa.dev/issues"
+  },
+  "homepage": "https://github.com/DarkPhilosophy/axxa.dev#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

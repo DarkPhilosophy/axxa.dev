@@ -1,21 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA favicon">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0a1a14"/>
-      <stop offset="55%" stop-color="#00ff88"/>
-      <stop offset="100%" stop-color="#00c96b"/>
+      <stop offset="0%" stop-color="#00fff0"/>
+      <stop offset="50%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#ff00c8"/>
     </linearGradient>
     <radialGradient id="glow" cx="50%" cy="45%" r="60%">
-      <stop offset="0%" stop-color="#00ff88" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <!-- Semi-transparent colorful background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" opacity="0.85"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)" opacity="0.8"/>
 
   <!-- Glitch color offsets -->
-  <g stroke-width="56" stroke-linecap="butt" stroke-linejoin="miter" fill="none" opacity="0.85">
+  <g stroke-width="56" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85">
     <g stroke="#ff00c1" transform="translate(-6,-4)">
       <line x1="90" y1="120" x2="270" y2="392"/>
       <line x1="270" y1="120" x2="90" y2="392"/>
@@ -31,7 +32,7 @@
   </g>
 
   <!-- Main white XX -->
-  <g stroke="#ffffff" stroke-width="60" stroke-linecap="butt" stroke-linejoin="miter" fill="none">
+  <g stroke="#ffffff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <line x1="90" y1="120" x2="270" y2="392"/>
     <line x1="270" y1="120" x2="90" y2="392"/>
     <line x1="242" y1="120" x2="422" y2="392"/>
