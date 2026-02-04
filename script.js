@@ -755,6 +755,27 @@ function initAdmin() {
 function renderAdminEditor(config, container) {
     container.innerHTML = '';
 
+    // Helper to handle Details State
+    const createDetails = (id, title, className = 'mb-4 bg-white/5 rounded-xl overflow-hidden group') => {
+        const details = document.createElement('details');
+        details.className = className;
+        const isOpen = localStorage.getItem(`admin_details_${id}`) === 'true';
+        if (isOpen) details.open = true;
+
+        details.addEventListener('toggle', () => {
+            localStorage.setItem(`admin_details_${id}`, details.open);
+        });
+
+        details.innerHTML = `
+            <summary class="p-4 cursor-pointer font-bold text-slate-300 hover:text-white flex justify-between items-center select-none">
+                <span>${title}</span>
+                <span class="text-xs text-slate-500 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div class="p-4 border-t border-white/5 space-y-4" id="${id}-content"></div>
+        `;
+        return details;
+    };
+
     // 1. Language Manager Section
     const langSection = document.createElement('div');
     langSection.className = 'mb-8 border-b border-white/10 pb-6';
@@ -762,7 +783,7 @@ function renderAdminEditor(config, container) {
     
     const langList = document.createElement('div');
     langList.className = 'flex flex-wrap gap-2 mb-4';
-    renderLanguageChips(config, langList, container); // Pass container to re-render on change
+    renderLanguageChips(config, langList, container); 
     langSection.appendChild(langList);
 
     const addLangRow = document.createElement('div');
@@ -774,7 +795,6 @@ function renderAdminEditor(config, container) {
     langSection.appendChild(addLangRow);
     container.appendChild(langSection);
 
-    // Bind Add Button
     setTimeout(() => {
         document.getElementById('btn-add-lang')?.addEventListener('click', () => {
             const input = document.getElementById('new-lang-code');
@@ -788,50 +808,34 @@ function renderAdminEditor(config, container) {
         });
     }, 0);
 
-    // 2. Global Settings (i18n options, admin, contact config) - Excluding 'supported'
-    const settingsSection = document.createElement('details');
-    settingsSection.className = 'mb-4 bg-white/5 rounded-xl overflow-hidden group';
-    settingsSection.innerHTML = `
-        <summary class="p-4 cursor-pointer font-bold text-slate-300 hover:text-white flex justify-between items-center select-none">
-            <span>⚙️ Global Settings</span>
-            <span class="text-xs text-slate-500 group-open:rotate-180 transition-transform">▼</span>
-        </summary>
-        <div class="p-4 border-t border-white/5 space-y-4" id="global-settings-form"></div>
-    `;
+    // 2. Global Settings
+    const settingsSection = createDetails('global-settings', '⚙️ Global Settings');
     container.appendChild(settingsSection);
     
-    // Extract Global Settings View
     const globalData = {
-        i18n: { ...config.i18n }, // Copy
+        i18n: { ...config.i18n },
         admin: config.admin,
-        contact_config: config.contact.emailjs // Alias for editing
+        contact_config: config.contact.emailjs
     };
-    delete globalData.i18n.supported; // Managed by chips
-    generateFormFields(globalData, settingsSection.querySelector('#global-settings-form'), '', config);
+    delete globalData.i18n.supported;
+    generateFormFields(globalData, settingsSection.querySelector('#global-settings-content'), '', config);
 
 
-    // 3. Default Language Content (Root keys excluding specials)
+    // 3. Default Language Content
     const defaultLang = config.i18n.default || 'ro';
-    const defaultSection = document.createElement('details');
-    defaultSection.open = true;
-    defaultSection.className = 'mb-4 bg-white/5 rounded-xl overflow-hidden group';
-    defaultSection.innerHTML = `
-        <summary class="p-4 cursor-pointer font-bold text-primary hover:text-white flex justify-between items-center select-none">
-            <span>📝 Default Content (${defaultLang.toUpperCase()})</span>
-            <span class="text-xs text-slate-500 group-open:rotate-180 transition-transform">▼</span>
-        </summary>
-        <div class="p-4 border-t border-white/5 space-y-4" id="default-content-form"></div>
-    `;
+    // ID 'default-content' logic will now handle persistence. Defaults to closed (false) if not in storage.
+    const defaultSection = createDetails('default-content', `📝 Default Content (${defaultLang.toUpperCase()})`);
+    // Override text color style from helper
+    defaultSection.querySelector('summary span').className = 'font-bold text-primary hover:text-white';
     container.appendChild(defaultSection);
 
-    // Filter Content Keys
     const ignoredKeys = ['i18n', 'translations', 'admin'];
     const contentData = {};
     Object.keys(config).forEach(k => {
         if (!ignoredKeys.includes(k)) contentData[k] = config[k];
     });
     
-    generateFormFields(contentData, defaultSection.querySelector('#default-content-form'), '', config);
+    generateFormFields(contentData, defaultSection.querySelector('#default-content-content'), '', config);
 
 
     // 4. Translations
@@ -841,41 +845,33 @@ function renderAdminEditor(config, container) {
     container.appendChild(translationsTitle);
 
     config.i18n.supported.forEach(lang => {
-        if (lang === defaultLang) return; // Skip default
+        if (lang === defaultLang) return;
 
-        const transSection = document.createElement('details');
-        transSection.className = 'mb-4 bg-white/5 rounded-xl overflow-hidden group';
-        transSection.innerHTML = `
-            <summary class="p-4 cursor-pointer font-bold text-slate-300 hover:text-white flex justify-between items-center select-none">
-                <span class="flex items-center gap-2">
-                    <span>🌐 ${lang.toUpperCase()}</span>
-                    <span class="text-xs bg-black/30 px-2 py-0.5 rounded text-slate-500">Translation</span>
-                </span>
-                <span class="text-xs text-slate-500 group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div class="p-4 border-t border-white/5 space-y-4">
-                <div class="flex justify-end mb-4">
-                    <button class="btn-ai-trans text-xs bg-purple-500/20 text-purple-400 hover:bg-purple-500/40 px-3 py-1 rounded border border-purple-500/30 flex items-center gap-2" data-lang="${lang}">
-                        <i class="fas fa-magic"></i> AI Auto-Fill (Simulated)
-                    </button>
-                </div>
-                <div id="trans-form-${lang}"></div>
+        const transSection = createDetails(`trans-${lang}`, `🌐 ${lang.toUpperCase()} Translation`);
+        
+        // Inject button into summary or content. Let's put it inside content for cleaner summary.
+        const contentDiv = transSection.querySelector(`#trans-${lang}-content`);
+        contentDiv.innerHTML = `
+            <div class="flex justify-end mb-4">
+                <button class="btn-ai-trans text-xs bg-purple-500/20 text-purple-400 hover:bg-purple-500/40 px-3 py-1 rounded border border-purple-500/30 flex items-center gap-2" data-lang="${lang}">
+                    <i class="fas fa-magic"></i> Auto-Translate (${defaultLang.toUpperCase()} → ${lang.toUpperCase()})
+                </button>
             </div>
+            <div id="form-fields-${lang}"></div>
         `;
+        
         container.appendChild(transSection);
 
-        // Ensure Translation Object Exists
         if (!config.translations[lang]) config.translations[lang] = {};
 
-        // Generate form using Default Content as Schema (to show missing keys)
-        generateFormFields(contentData, transSection.querySelector(`#trans-form-${lang}`), `translations.${lang}`, config, true);
+        generateFormFields(contentData, contentDiv.querySelector(`#form-fields-${lang}`), `translations.${lang}`, config, true);
     });
 
     // Bind AI Buttons
     container.querySelectorAll('.btn-ai-trans').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const lang = e.currentTarget.dataset.lang;
-            mockAutoTranslate(lang, config, container);
+            realAutoTranslate(lang, defaultLang, config, container);
         });
     });
 }
@@ -913,22 +909,18 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
     const build = (obj, p, currentPrefix) => {
         for (const key in obj) {
             const schemaVal = obj[key];
-            // Determine path in the actual config object
-            // If prefix is empty (Default Content), path is just key.
-            // If prefix is 'translations.en', path is 'translations.en.key'
             const path = currentPrefix ? `${currentPrefix}.${key}` : key;
-            
-            // Get actual value from targetConfig (or null if missing in translation)
             let actualVal = getNestedValue(targetConfig, path);
             
-            // If translation and missing, use empty string
             if (isTranslation && actualVal === undefined) actualVal = '';
 
             if (typeof schemaVal === 'object' && schemaVal !== null && !Array.isArray(schemaVal)) {
                 // Nested Object
                 const groupDetails = document.createElement('details');
                 groupDetails.className = 'ml-2 border-l-2 border-white/5 pl-4 mb-2 group/nested';
-                // Open by default if it's a root section in default view, else closed to save space
+                
+                // Nested state persistence logic could be added here if needed, but keeping it simple for now.
+                // Open root sections in default view only
                 if(!isTranslation && !currentPrefix) groupDetails.open = true;
 
                 groupDetails.innerHTML = `
@@ -949,17 +941,14 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 
                 const input = document.createElement('textarea');
                 input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white font-mono h-24 focus:border-primary outline-none';
-                // If translation has no array, defaulting to empty array JSON []
                 const displayVal = actualVal !== undefined ? actualVal : [];
                 input.value = JSON.stringify(displayVal, null, 2);
                 
                 input.addEventListener('change', (e) => {
                     try {
                         const parsed = JSON.parse(e.target.value);
-                        // Ensure path exists
                         ensurePath(targetConfig, path);
                         setNestedValue(targetConfig, path, parsed);
-                        // applyLanguage(currentLang); // Live preview?
                     } catch(err) {
                         alert('Invalid JSON for array');
                     }
@@ -980,7 +969,6 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 input.type = 'text';
                 input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white focus:border-primary outline-none focus:bg-white/5 transition-colors';
                 
-                // Show placeholder if empty in translation
                 if (isTranslation && !actualVal) {
                     input.placeholder = `(Default: ${schemaVal})`;
                     input.classList.add('placeholder-slate-600');
@@ -991,8 +979,6 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 input.addEventListener('input', (e) => {
                     ensurePath(targetConfig, path);
                     setNestedValue(targetConfig, path, e.target.value);
-                    // If current lang is being edited, refresh
-                    // applyLanguage(currentLang); 
                 });
 
                 wrapper.appendChild(label);
@@ -1015,24 +1001,30 @@ function ensurePath(obj, path) {
     }
 }
 
-// Mock AI Translator
-function mockAutoTranslate(lang, config, container) {
-    if (!confirm(`Auto-translate missing fields for '${lang}'? (Simulation)`)) return;
+// Real AI Translator using Google GTX API
+async function realAutoTranslate(targetLang, sourceLang, config, container) {
+    if (!confirm(`Translate missing fields to '${targetLang.toUpperCase()}' using Google Translate?`)) return;
 
-    const fillGap = (schema, prefix) => {
+    const btn = container.querySelector(`.btn-ai-trans[data-lang="${targetLang}"]`);
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Translating...`;
+    btn.disabled = true;
+
+    // 1. Identify missing fields
+    const missing = [];
+    
+    const findMissing = (schema, prefix) => {
         for (const key in schema) {
             const val = schema[key];
             const path = prefix ? `${prefix}.${key}` : key;
-            const targetPath = `translations.${lang}.${path}`;
+            const targetPath = `translations.${targetLang}.${path}`;
             const currentVal = getNestedValue(config, targetPath);
 
             if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-                fillGap(val, path);
-            } else if (!Array.isArray(val)) {
+                findMissing(val, path);
+            } else if (!Array.isArray(val) && typeof val === 'string') {
                 if (!currentVal) {
-                    // Logic: Append [Lang] to default text
-                    ensurePath(config, targetPath);
-                    setNestedValue(config, targetPath, `[${lang.toUpperCase()}] ${val}`);
+                    missing.push({ path: targetPath, source: val });
                 }
             }
         }
@@ -1045,9 +1037,54 @@ function mockAutoTranslate(lang, config, container) {
         if (!ignoredKeys.includes(k)) contentData[k] = config[k];
     });
 
-    fillGap(contentData, '');
-    renderAdminEditor(config, container); // Refresh UI
-    showToast(`Auto-translated ${lang} (Simulated)`, 'success');
+    findMissing(contentData, '');
+
+    if (missing.length === 0) {
+        showToast('No missing fields to translate.', 'info');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        return;
+    }
+
+    // 2. Translate Batch
+    let successCount = 0;
+    
+    try {
+        for (const item of missing) {
+            // Fetch translation
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(item.source)}`;
+            
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('API Error');
+            
+            const data = await res.json();
+            // Structure is [[["Translated","Source",...]], ...]
+            if (data && data[0] && data[0][0] && data[0][0][0]) {
+                const translatedText = data[0][0][0];
+                ensurePath(config, item.path);
+                setNestedValue(config, item.path, translatedText);
+                successCount++;
+            }
+            
+            // Tiny delay to be polite to the free API
+            await new Promise(r => setTimeout(r, 200));
+        }
+        
+        showToast(`Translated ${successCount} fields successfully!`, 'success');
+        renderAdminEditor(config, container); // Refresh UI to show new values
+        
+    } catch (e) {
+        console.error(e);
+        showToast('Translation failed. API might be rate-limited.', 'error');
+        // Still refresh to show whatever completed
+        renderAdminEditor(config, container);
+    } finally {
+        // Button state is reset by re-render, but if error prevented render:
+        if (container.contains(btn)) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
 }
 
 // Replaces the old generateForm
