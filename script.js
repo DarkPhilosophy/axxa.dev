@@ -1085,7 +1085,7 @@ async function testGitHubToken(token) {
         });
 
         let multiRepo = false;
-        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2&affiliation=owner,collaborator,organization_member', {
+        const reposRes = await fetch('https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator,organization_member', {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github+json'
@@ -1094,8 +1094,19 @@ async function testGitHubToken(token) {
         if (reposRes.ok) {
             const repos = await reposRes.json();
             if (Array.isArray(repos)) {
-                const names = repos.map(r => r.full_name).filter(Boolean);
-                multiRepo = names.length > 1 && names.some(n => n !== repoInfo.repo);
+                const names = repos
+                    .filter(r => r && r.permissions && (r.permissions.push || r.permissions.admin || r.permissions.maintain || r.permissions.triage || r.permissions.pull))
+                    .map(r => r.full_name)
+                    .filter(Boolean);
+
+                // For classic tokens, GitHub returns x-oauth-scopes header.
+                const scopes = reposRes.headers.get('x-oauth-scopes') || '';
+                if (scopes.trim().length > 0) {
+                    multiRepo = names.length > 1 && names.some(n => n !== repoInfo.repo);
+                } else {
+                    // Fine-grained: only warn if other repos with effective permissions appear.
+                    multiRepo = names.some(n => n !== repoInfo.repo);
+                }
             }
         }
 
