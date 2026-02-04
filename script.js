@@ -1094,18 +1094,22 @@ async function testGitHubToken(token) {
         if (reposRes.ok) {
             const repos = await reposRes.json();
             if (Array.isArray(repos)) {
-                const names = repos
-                    .filter(r => r && r.permissions && (r.permissions.push || r.permissions.admin || r.permissions.maintain || r.permissions.triage || r.permissions.pull))
-                    .map(r => r.full_name)
-                    .filter(Boolean);
+                // Filter out the current target repo (case-insensitive)
+                const otherRepos = repos.filter(r => r.full_name.toLowerCase() !== repoInfo.repo.toLowerCase());
 
-                // For classic tokens, GitHub returns x-oauth-scopes header.
-                const scopes = reposRes.headers.get('x-oauth-scopes') || '';
-                if (scopes.trim().length > 0) {
-                    multiRepo = names.length > 1 && names.some(n => n.toLowerCase() !== repoInfo.repo.toLowerCase());
-                } else {
-                    // Fine-grained: only warn if other repos with effective permissions appear.
-                    multiRepo = names.some(n => n.toLowerCase() !== repoInfo.repo.toLowerCase());
+                // Check for risky access:
+                // 1. Any access to other PRIVATE repos (Data Leak Risk)
+                // 2. Write/Admin access to ANY other repo (Integrity Risk)
+                const riskyRepos = otherRepos.filter(r => {
+                    const isPrivate = r.private;
+                    const hasWrite = r.permissions?.admin || r.permissions?.push || r.permissions?.maintain;
+                    return isPrivate || hasWrite;
+                });
+
+                multiRepo = riskyRepos.length > 0;
+                
+                if (multiRepo) {
+                    console.warn("Token warns: Risky access to:", riskyRepos.map(r => r.full_name));
                 }
             }
         }
