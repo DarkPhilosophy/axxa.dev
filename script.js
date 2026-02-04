@@ -630,14 +630,27 @@ function initAdmin() {
         savedEl.textContent = msg;
     }
 
+    const updateToggleLabel = () => {
+        if (!toggleBtn || !githubBox) return;
+        const collapsed = githubBox.classList.contains('github-collapsed');
+        toggleBtn.textContent = collapsed ? t('admin.github.toggle_show', 'Expand') : t('admin.github.toggle', 'Collapse');
+    };
+
+    updateToggleLabel();
+
     toggleBtn?.addEventListener('click', () => {
         githubBox?.classList.toggle('github-collapsed');
+        updateToggleLabel();
     });
 
     const collapseLater = () => {
         if (!githubBox) return;
         githubBox.classList.remove('github-collapsed');
-        setTimeout(() => githubBox.classList.add('github-collapsed'), 2000);
+        updateToggleLabel();
+        setTimeout(() => {
+            githubBox.classList.add('github-collapsed');
+            updateToggleLabel();
+        }, 2000);
     };
 
     const setStatus = (msg, state = 'ok') => {
@@ -709,7 +722,10 @@ function initAdmin() {
         setStatus(repoMsg, 'ok');
         showToast(repoMsg, 'success');
         sessionGithubToken = token;
-        if (savedEl) savedEl.textContent = t('admin.github.saved_state', 'Token not saved.');
+        if (savedEl) {
+            const msg = localStorage.getItem('axxa_github_token') ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
+            savedEl.textContent = msg;
+        }
         collapseLater();
 
         if (result.multiRepo) {
@@ -1074,7 +1090,7 @@ async function testGitHubToken(token) {
         });
 
         let multiRepo = false;
-        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2', {
+        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2&affiliation=owner,collaborator,organization_member', {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github+json'
@@ -1082,7 +1098,10 @@ async function testGitHubToken(token) {
         });
         if (reposRes.ok) {
             const repos = await reposRes.json();
-            multiRepo = Array.isArray(repos) && repos.length > 1;
+            if (Array.isArray(repos)) {
+                const names = repos.map(r => r.full_name).filter(Boolean);
+                multiRepo = names.length > 1 && names.some(n => n !== repoInfo.repo);
+            }
         }
 
         return { ok: true, repoOk: repoRes.ok, multiRepo };
