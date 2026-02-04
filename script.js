@@ -676,7 +676,7 @@ function initAdmin() {
         setStatus(repoMsg, 'ok');
         showToast(repoMsg, 'success');
 
-        if (result.multiRepo) {
+        if (result.broadToken) {
             const warnMsg = t('admin.github.repo_warning', 'Warning: token appears to access multiple repos.');
             setStatus(warnMsg, 'warn');
             showToast(warnMsg, 'error');
@@ -1026,10 +1026,13 @@ async function testGitHubToken(token) {
                 'Accept': 'application/vnd.github+json'
             }
         });
-        if (!res.ok) return { ok: false, repoOk: false, multiRepo: false };
+        if (!res.ok) return { ok: false, repoOk: false, broadToken: false };
+
+        const scopes = res.headers.get('x-oauth-scopes') || '';
+        const broadToken = scopes.trim().length > 0;
 
         const repoInfo = getGitHubRepoInfo();
-        if (!repoInfo) return { ok: true, repoOk: false, multiRepo: false };
+        if (!repoInfo) return { ok: true, repoOk: false, broadToken };
 
         const repoRes = await fetch(`https://api.github.com/repos/${repoInfo.repo}`, {
             headers: {
@@ -1038,22 +1041,10 @@ async function testGitHubToken(token) {
             }
         });
 
-        let multiRepo = false;
-        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github+json'
-            }
-        });
-        if (reposRes.ok) {
-            const repos = await reposRes.json();
-            multiRepo = Array.isArray(repos) && repos.length > 1;
-        }
-
-        return { ok: true, repoOk: repoRes.ok, multiRepo };
+        return { ok: true, repoOk: repoRes.ok, broadToken };
     } catch (e) {
         console.error('Token test failed', e);
-        return { ok: false, repoOk: false, multiRepo: false };
+        return { ok: false, repoOk: false, broadToken: false };
     }
 }
 
