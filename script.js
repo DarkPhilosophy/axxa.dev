@@ -635,7 +635,9 @@ function initAdmin() {
     });
 
     const collapseLater = () => {
-        setTimeout(() => githubBox?.classList.add('github-collapsed'), 2000);
+        if (!githubBox) return;
+        githubBox.classList.remove('github-collapsed');
+        setTimeout(() => githubBox.classList.add('github-collapsed'), 2000);
     };
 
     const setStatus = (msg, state = 'ok') => {
