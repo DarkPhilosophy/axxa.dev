@@ -149,6 +149,7 @@ function applyLanguage(lang) {
     populateText();
     populateLists();
     renderWritingList();
+    updateGithubSavedState();
     observeRevealElements();
     revealVisibleNow();
     updateTime();
@@ -625,10 +626,7 @@ function initAdmin() {
     // GitHub token handling
     const savedToken = localStorage.getItem('axxa_github_token');
     if (tokenInput && savedToken) tokenInput.value = savedToken;
-    if (savedEl) {
-        const msg = savedToken ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
-        savedEl.textContent = msg;
-    }
+    updateGithubSavedState();
 
     const updateToggleLabel = () => {
         if (!toggleBtn || !githubBox) return;
@@ -684,7 +682,7 @@ function initAdmin() {
             return;
         }
         localStorage.setItem('axxa_github_token', token);
-        if (savedEl) savedEl.textContent = t('admin.github.saved_state_ok', 'Token saved locally.');
+        updateGithubSavedState();
         const msg = t('admin.github.save_ok', 'Token saved.');
         setStatus(msg, 'ok');
         showToast(msg, 'success');
@@ -722,10 +720,7 @@ function initAdmin() {
         setStatus(repoMsg, 'ok');
         showToast(repoMsg, 'success');
         sessionGithubToken = token;
-        if (savedEl) {
-            const msg = localStorage.getItem('axxa_github_token') ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
-            savedEl.textContent = msg;
-        }
+        updateGithubSavedState();
         collapseLater();
 
         if (result.multiRepo) {
@@ -1160,6 +1155,14 @@ function getGitHubRepoInfo() {
     const metaBranch = document.querySelector('meta[name="github-branch"]')?.getAttribute('content') || 'master';
     if (!metaRepo || !metaRepo.includes('/')) return null;
     return { repo: metaRepo, branch: metaBranch };
+}
+
+function updateGithubSavedState() {
+    const savedEl = document.getElementById('github-saved');
+    if (!savedEl) return;
+    const savedToken = localStorage.getItem('axxa_github_token');
+    const msg = savedToken ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
+    savedEl.textContent = msg;
 }
 
 function initMouseSpotlight() {
