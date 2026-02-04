@@ -616,46 +616,86 @@ function initAdmin() {
     const savedToken = localStorage.getItem('axxa_github_token');
     if (tokenInput && savedToken) tokenInput.value = savedToken;
 
-    const setStatus = (msg, ok = true) => {
+    const setStatus = (msg, state = 'ok') => {
         if (!statusEl) return;
         statusEl.textContent = msg;
-        statusEl.classList.toggle('text-green-400', ok);
-        statusEl.classList.toggle('text-red-400', !ok);
+        statusEl.classList.remove('text-slate-400');
+        statusEl.classList.toggle('text-green-400', state === 'ok');
+        statusEl.classList.toggle('text-red-400', state === 'error');
+        statusEl.classList.toggle('text-yellow-400', state === 'warn');
     };
 
     saveTokenBtn?.addEventListener('click', () => {
         const token = tokenInput?.value?.trim();
         if (!token) {
-            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
+            const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
             return;
         }
         localStorage.setItem('axxa_github_token', token);
-        setStatus(t('admin.github.save_ok', 'Token saved.'), true);
+        const msg = t('admin.github.save_ok', 'Token saved.');
+        setStatus(msg, 'ok');
+        showToast(msg, 'success');
     });
 
     testTokenBtn?.addEventListener('click', async () => {
         const token = tokenInput?.value?.trim();
         if (!token) {
-            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
+            const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
             return;
         }
-        const ok = await testGitHubToken(token);
-        setStatus(ok ? t('admin.github.test_ok', 'Token is valid.') : t('admin.github.test_fail', 'Invalid token or missing permissions.'), ok);
+        const result = await testGitHubToken(token);
+        if (!result.ok) {
+            const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
+            return;
+        }
+
+        const baseMsg = t('admin.github.test_ok', 'Token is valid.');
+        setStatus(baseMsg, 'ok');
+        showToast(baseMsg, 'success');
+
+        if (!result.repoOk) {
+            const msg = t('admin.github.repo_missing', 'Token does NOT have access to this repo.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
+            return;
+        }
+
+        const repoMsg = t('admin.github.repo_ok', 'Token has access to this repo.');
+        setStatus(repoMsg, 'ok');
+        showToast(repoMsg, 'success');
+
+        if (result.multiRepo) {
+            const warnMsg = t('admin.github.repo_warning', 'Warning: token appears to access multiple repos.');
+            setStatus(warnMsg, 'warn');
+            showToast(warnMsg, 'error');
+        }
     });
 
     updateBtn?.addEventListener('click', async () => {
         if (!adminUnlocked) {
-            setStatus(t('admin.github.unlock_required', 'Unlock admin first.'), false);
+            const msg = t('admin.github.unlock_required', 'Unlock admin first.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
             return;
         }
         const token = tokenInput?.value?.trim();
         if (!token) {
-            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
+            const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
             return;
         }
         localStorage.setItem('axxa_github_token', token);
         const ok = await updateConfigOnGitHub(token);
-        setStatus(ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.'), ok);
+        const msg = ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.');
+        setStatus(msg, ok ? 'ok' : 'error');
+        showToast(msg, ok ? 'success' : 'error');
     });
 }
 
@@ -980,10 +1020,31 @@ async function testGitHubToken(token) {
                 'Accept': 'application/vnd.github+json'
             }
         });
-        return res.ok;
+        if (!res.ok) return { ok: false, repoOk: false, multiRepo: false };
+
+        const repoRes = await fetch('https://api.github.com/repos/DarkPhilosophy/axxa.dev', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+
+        let multiRepo = false;
+        const reposRes = await fetch('https://api.github.com/user/repos?per_page=2', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (reposRes.ok) {
+            const repos = await reposRes.json();
+            multiRepo = Array.isArray(repos) && repos.length > 1;
+        }
+
+        return { ok: true, repoOk: repoRes.ok, multiRepo };
     } catch (e) {
         console.error('Token test failed', e);
-        return false;
+        return { ok: false, repoOk: false, multiRepo: false };
     }
 }
 

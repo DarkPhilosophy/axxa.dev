@@ -26,5 +26,5 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  safelist: ['text-green-400', 'text-red-400'],
+  safelist: ['text-green-400', 'text-red-400', 'text-yellow-400'],
 };
