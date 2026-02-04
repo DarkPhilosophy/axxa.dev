@@ -563,6 +563,12 @@ function initAdmin() {
     const testTokenBtn = document.getElementById('btn-test-token');
     const updateBtn = document.getElementById('btn-github-update');
     const statusEl = document.getElementById('github-status');
+    const repoInfo = getGitHubRepoInfo();
+    if (statusEl && repoInfo) {
+        const msg = formatTemplate(t('admin.github.repo_note', 'Repo: {repo} (branch: {branch})'), repoInfo);
+        statusEl.textContent = msg;
+        statusEl.classList.remove('text-slate-400');
+    }
 
     // Key Combo: Ctrl + Shift + L
     document.addEventListener('keydown', (e) => {
@@ -1022,7 +1028,10 @@ async function testGitHubToken(token) {
         });
         if (!res.ok) return { ok: false, repoOk: false, multiRepo: false };
 
-        const repoRes = await fetch('https://api.github.com/repos/DarkPhilosophy/axxa.dev', {
+        const repoInfo = getGitHubRepoInfo();
+        if (!repoInfo) return { ok: true, repoOk: false, multiRepo: false };
+
+        const repoRes = await fetch(`https://api.github.com/repos/${repoInfo.repo}`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github+json'
@@ -1049,11 +1058,12 @@ async function testGitHubToken(token) {
 }
 
 async function updateConfigOnGitHub(token) {
-    const owner = 'DarkPhilosophy';
-    const repo = 'axxa.dev';
-    const branch = 'master';
+    const repoInfo = getGitHubRepoInfo();
+    if (!repoInfo) return false;
+    const repo = repoInfo.repo;
+    const branch = repoInfo.branch;
     const path = 'config.json';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+    const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`;
 
     try {
         const getRes = await fetch(apiUrl, {
@@ -1089,6 +1099,13 @@ async function updateConfigOnGitHub(token) {
         console.error('GitHub update failed', e);
         return false;
     }
+}
+
+function getGitHubRepoInfo() {
+    const metaRepo = document.querySelector('meta[name="github-repo"]')?.getAttribute('content');
+    const metaBranch = document.querySelector('meta[name="github-branch"]')?.getAttribute('content') || 'master';
+    if (!metaRepo || !metaRepo.includes('/')) return null;
+    return { repo: metaRepo, branch: metaBranch };
 }
 
 function initMouseSpotlight() {
