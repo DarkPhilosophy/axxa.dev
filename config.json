@@ -253,7 +253,21 @@
         "pass_placeholder": "Introdu parola",
         "btn_login": "Deblochează",
         "btn_save": "Descarcă Config",
-        "btn_close": "Închide"
+        "btn_close": "Închide",
+        "github": {
+            "title": "GitHub Sync",
+            "token_placeholder": "GitHub Token",
+            "btn_save_token": "Salvează Token",
+            "btn_test_token": "Testează Token",
+            "btn_update": "Actualizează Config pe GitHub",
+            "note": "Token-ul este stocat local în browser.",
+            "save_ok": "Token salvat.",
+            "test_ok": "Token valid.",
+            "test_fail": "Token invalid sau fără permisiuni.",
+            "unlock_required": "Deblochează admin întâi.",
+            "update_ok": "Config.json a fost actualizat pe GitHub.",
+            "update_fail": "Nu am putut actualiza config.json."
+        }
     },
     "translations": {
         "en": {
@@ -497,7 +511,21 @@
                 "pass_placeholder": "Enter Password",
                 "btn_login": "Unlock",
                 "btn_save": "Download Config",
-                "btn_close": "Close"
+                "btn_close": "Close",
+                "github": {
+                    "title": "GitHub Sync",
+                    "token_placeholder": "GitHub Token",
+                    "btn_save_token": "Save Token",
+                    "btn_test_token": "Test Token",
+                    "btn_update": "Update Config on GitHub",
+                    "note": "Token is stored locally in your browser.",
+                    "save_ok": "Token saved.",
+                    "test_ok": "Token is valid.",
+                    "test_fail": "Invalid token or missing permissions.",
+                    "unlock_required": "Unlock admin first.",
+                    "update_ok": "config.json updated on GitHub.",
+                    "update_fail": "Failed to update config.json."
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ const writingListState = {
     pageSize: 12,
 };
 let revealObserver = null;
+let adminUnlocked = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -557,6 +558,10 @@ function initAdmin() {
     const errorMsg = document.getElementById('login-error');
     const saveBtn = document.getElementById('btn-save-config');
     const container = document.getElementById('json-editor-container');
+    const tokenInput = document.getElementById('github-token');
+    const saveTokenBtn = document.getElementById('btn-save-token');
+    const testTokenBtn = document.getElementById('btn-test-token');
+    const updateBtn = document.getElementById('btn-github-update');
 
     // Key Combo: Ctrl + Shift + L
     document.addEventListener('keydown', (e) => {
@@ -572,6 +577,7 @@ function initAdmin() {
         editor.classList.add('hidden');
         passInput.value = '';
         errorMsg.classList.add('hidden');
+        adminUnlocked = false;
     });
 
     // Login Logic
@@ -581,6 +587,7 @@ function initAdmin() {
         if (passInput.value === 'admin123') { // Secret Password
             loginForm.classList.add('hidden');
             editor.classList.remove('hidden');
+            adminUnlocked = true;
             generateForm(baseConfig, container);
         } else {
             errorMsg.classList.remove('hidden');
@@ -602,6 +609,45 @@ function initAdmin() {
         URL.revokeObjectURL(url);
         
         showToast('Configuration downloaded! Replace the file in your project.', 'success');
+    });
+
+    // GitHub token handling
+    const savedToken = localStorage.getItem('axxa_github_token');
+    if (tokenInput && savedToken) tokenInput.value = savedToken;
+
+    saveTokenBtn?.addEventListener('click', () => {
+        const token = tokenInput?.value?.trim();
+        if (!token) {
+            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            return;
+        }
+        localStorage.setItem('axxa_github_token', token);
+        showToast(t('admin.github.save_ok', 'Token saved.'), 'success');
+    });
+
+    testTokenBtn?.addEventListener('click', async () => {
+        const token = tokenInput?.value?.trim();
+        if (!token) {
+            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            return;
+        }
+        const ok = await testGitHubToken(token);
+        showToast(ok ? t('admin.github.test_ok', 'Token is valid.') : t('admin.github.test_fail', 'Invalid token or missing permissions.'), ok ? 'success' : 'error');
+    });
+
+    updateBtn?.addEventListener('click', async () => {
+        if (!adminUnlocked) {
+            showToast(t('admin.github.unlock_required', 'Unlock admin first.'), 'error');
+            return;
+        }
+        const token = tokenInput?.value?.trim();
+        if (!token) {
+            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            return;
+        }
+        localStorage.setItem('axxa_github_token', token);
+        const ok = await updateConfigOnGitHub(token);
+        showToast(ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.'), ok ? 'success' : 'error');
     });
 }
 
@@ -916,6 +962,64 @@ function showToast(msg, type = 'info') {
         toast.classList.add('toast-exit-active');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+async function testGitHubToken(token) {
+    try {
+        const res = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        return res.ok;
+    } catch (e) {
+        console.error('Token test failed', e);
+        return false;
+    }
+}
+
+async function updateConfigOnGitHub(token) {
+    const owner = 'DarkPhilosophy';
+    const repo = 'axxa.dev';
+    const branch = 'master';
+    const path = 'config.json';
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+
+    try {
+        const getRes = await fetch(apiUrl, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json'
+            }
+        });
+        if (!getRes.ok) return false;
+        const file = await getRes.json();
+
+        const content = JSON.stringify(baseConfig, null, 4);
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const message = `Update config.json via admin (${new Date().toISOString()})`;
+
+        const putRes = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message,
+                content: encoded,
+                sha: file.sha,
+                branch
+            })
+        });
+
+        return putRes.ok;
+    } catch (e) {
+        console.error('GitHub update failed', e);
+        return false;
+    }
 }
 
 function initMouseSpotlight() {
