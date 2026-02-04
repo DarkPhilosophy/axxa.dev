@@ -916,7 +916,7 @@ function renderLanguageChips(config, parent, container) {
     });
 }
 
-// Revised Generator: Handles Schema Syncing
+// Revised Generator: Handles Schema Syncing & Advanced Array Lists
 function generateFormFields(schemaData, parent, prefix = '', targetConfig = baseConfig, isTranslation = false) {
     parent.innerHTML = '';
     
@@ -926,14 +926,18 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
             const path = currentPrefix ? `${currentPrefix}.${key}` : key;
             let actualVal = getNestedValue(targetConfig, path);
             
-            if (isTranslation && actualVal === undefined) actualVal = '';
+            // Fix "null" bug: Default to empty string for text, empty array for arrays
+            if (actualVal === undefined || actualVal === null) {
+                if (Array.isArray(schemaVal)) actualVal = [];
+                else if (typeof schemaVal === 'object') actualVal = {};
+                else actualVal = '';
+            }
 
             if (typeof schemaVal === 'object' && schemaVal !== null && !Array.isArray(schemaVal)) {
                 // Nested Object
                 const groupDetails = document.createElement('details');
                 groupDetails.className = 'ml-2 border-l-2 border-white/5 pl-4 mb-2 group/nested';
                 
-                // Nested state persistence logic could be added here if needed, but keeping it simple for now.
                 // Open root sections in default view only
                 if(!isTranslation && !currentPrefix) groupDetails.open = true;
 
@@ -947,29 +951,112 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 build(schemaVal, groupDetails.querySelector('div'), path);
 
             } else if (Array.isArray(schemaVal)) {
-                // Array (JSON Editor)
+                // ARRAY HANDLING
                 const wrapper = document.createElement('div');
-                const label = document.createElement('label');
-                label.className = 'block text-xs text-slate-500 mb-1 capitalize flex justify-between';
-                label.innerHTML = `<span>${key}</span> <span class="text-[10px] opacity-50">Array</span>`;
+                wrapper.className = 'mb-4';
                 
-                const input = document.createElement('textarea');
-                input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white font-mono h-24 focus:border-primary outline-none';
-                const displayVal = actualVal !== undefined ? actualVal : [];
-                input.value = JSON.stringify(displayVal, null, 2);
+                // Detect if Array of Objects (Complex List)
+                const isComplex = schemaVal.length > 0 && typeof schemaVal[0] === 'object';
                 
-                input.addEventListener('change', (e) => {
-                    try {
-                        const parsed = JSON.parse(e.target.value);
+                const labelRow = document.createElement('div');
+                labelRow.className = 'flex justify-between items-center mb-2';
+                labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${actualVal ? actualVal.length : 0})</label>`;
+                
+                if (isComplex && !isTranslation) { 
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20';
+                    addBtn.innerHTML = '+ Add Item';
+                    addBtn.onclick = () => {
+                        const newItem = JSON.parse(JSON.stringify(schemaVal[0] || {}));
+                        // Clear values but keep structure
+                        const clearObj = (o) => {
+                            Object.keys(o).forEach(k => {
+                                if (Array.isArray(o[k])) o[k] = [];
+                                else if (typeof o[k] === 'object' && o[k] !== null) clearObj(o[k]);
+                                else o[k] = "";
+                            });
+                        };
+                        clearObj(newItem);
+                        
+                        // Generate ID if needed
+                        if ('id' in newItem || !newItem.id) newItem.id = crypto.randomUUID().split('-')[0];
+                        
+                        if (!Array.isArray(actualVal)) actualVal = [];
+                        actualVal.push(newItem);
                         ensurePath(targetConfig, path);
-                        setNestedValue(targetConfig, path, parsed);
-                    } catch(err) {
-                        alert('Invalid JSON for array');
-                    }
-                });
+                        setNestedValue(targetConfig, path, actualVal);
+                        
+                        const rootContainer = document.getElementById('json-editor-container');
+                        if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
+                    };
+                    labelRow.appendChild(addBtn);
+                }
+                wrapper.appendChild(labelRow);
 
-                wrapper.appendChild(label);
-                wrapper.appendChild(input);
+                if (isComplex) {
+                    // MENU STYLE LIST
+                    const listContainer = document.createElement('div');
+                    listContainer.className = 'space-y-2';
+                    
+                    const items = Array.isArray(actualVal) ? actualVal : [];
+                    
+                    items.forEach((item, index) => {
+                        const itemDetails = document.createElement('details');
+                        itemDetails.className = 'bg-white/5 rounded-lg overflow-hidden border border-white/5';
+                        
+                        let itemTitle = item.title || item.name || item.role || item.id || `Item ${index + 1}`;
+                        if (itemTitle.length > 30) itemTitle = itemTitle.substring(0, 30) + '...';
+
+                        itemDetails.innerHTML = `
+                            <summary class="px-3 py-2 cursor-pointer text-sm font-medium text-slate-300 hover:bg-white/5 flex justify-between items-center">
+                                <span>${index + 1}. ${itemTitle}</span>
+                                <div class="flex items-center gap-2">
+                                    ${!isTranslation ? `<button class="btn-del-item text-red-500 hover:text-red-400 px-2" data-index="${index}">×</button>` : ''}
+                                    <span class="text-[10px] opacity-50">▼</span>
+                                </div>
+                            </summary>
+                            <div class="p-3 border-t border-white/5 space-y-3" id="item-${path}-${index}"></div>
+                        `;
+                        
+                        listContainer.appendChild(itemDetails);
+                        
+                        if (!isTranslation) {
+                            itemDetails.querySelector('.btn-del-item').addEventListener('click', (e) => {
+                                e.preventDefault();
+                                if(confirm('Delete this item?')) {
+                                    actualVal.splice(index, 1);
+                                    const rootContainer = document.getElementById('json-editor-container');
+                                    if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
+                                }
+                            });
+                        }
+
+                        // Recursive Build for Item Fields
+                        const itemSchema = schemaVal[0] || item;
+                        generateFormFields(itemSchema, itemDetails.querySelector(`#item-${path}-${index}`), `${path}.${index}`, targetConfig, isTranslation);
+                    });
+                    
+                    wrapper.appendChild(listContainer);
+
+                } else {
+                    // JSON FALLBACK (Primitives)
+                    const input = document.createElement('textarea');
+                    input.className = 'w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-sm text-white font-mono h-24 focus:border-primary outline-none';
+                    const displayVal = actualVal !== undefined ? actualVal : [];
+                    input.value = JSON.stringify(displayVal, null, 2);
+                    
+                    input.addEventListener('change', (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.value);
+                            ensurePath(targetConfig, path);
+                            setNestedValue(targetConfig, path, parsed);
+                        } catch(err) {
+                            alert('Invalid JSON for array');
+                        }
+                    });
+                    wrapper.appendChild(input);
+                }
+                
                 p.appendChild(wrapper);
 
             } else {
