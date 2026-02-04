@@ -1102,10 +1102,10 @@ async function testGitHubToken(token) {
                 // For classic tokens, GitHub returns x-oauth-scopes header.
                 const scopes = reposRes.headers.get('x-oauth-scopes') || '';
                 if (scopes.trim().length > 0) {
-                    multiRepo = names.length > 1 && names.some(n => n !== repoInfo.repo);
+                    multiRepo = names.length > 1 && names.some(n => n.toLowerCase() !== repoInfo.repo.toLowerCase());
                 } else {
                     // Fine-grained: only warn if other repos with effective permissions appear.
-                    multiRepo = names.some(n => n !== repoInfo.repo);
+                    multiRepo = names.some(n => n.toLowerCase() !== repoInfo.repo.toLowerCase());
                 }
             }
         }
