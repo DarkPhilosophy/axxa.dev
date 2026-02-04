@@ -13,6 +13,7 @@ const writingListState = {
 };
 let revealObserver = null;
 let adminUnlocked = false;
+let sessionGithubToken = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -563,6 +564,9 @@ function initAdmin() {
     const testTokenBtn = document.getElementById('btn-test-token');
     const updateBtn = document.getElementById('btn-github-update');
     const statusEl = document.getElementById('github-status');
+    const savedEl = document.getElementById('github-saved');
+    const toggleBtn = document.getElementById('btn-toggle-github');
+    const githubBox = document.getElementById('github-sync');
     const repoInfo = getGitHubRepoInfo();
     if (statusEl && repoInfo) {
         const msg = formatTemplate(t('admin.github.repo_note', 'Repo: {repo} (branch: {branch})'), repoInfo);
@@ -621,6 +625,18 @@ function initAdmin() {
     // GitHub token handling
     const savedToken = localStorage.getItem('axxa_github_token');
     if (tokenInput && savedToken) tokenInput.value = savedToken;
+    if (savedEl) {
+        const msg = savedToken ? t('admin.github.saved_state_ok', 'Token saved locally.') : t('admin.github.saved_state', 'Token not saved.');
+        savedEl.textContent = msg;
+    }
+
+    toggleBtn?.addEventListener('click', () => {
+        githubBox?.classList.toggle('github-collapsed');
+    });
+
+    const collapseLater = () => {
+        setTimeout(() => githubBox?.classList.add('github-collapsed'), 2000);
+    };
 
     const setStatus = (msg, state = 'ok') => {
         if (!statusEl) return;
@@ -631,7 +647,7 @@ function initAdmin() {
         statusEl.classList.toggle('text-yellow-400', state === 'warn');
     };
 
-    saveTokenBtn?.addEventListener('click', () => {
+    saveTokenBtn?.addEventListener('click', async () => {
         const token = tokenInput?.value?.trim();
         if (!token) {
             const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
@@ -639,10 +655,25 @@ function initAdmin() {
             showToast(msg, 'error');
             return;
         }
+        const result = await testGitHubToken(token);
+        if (!result.ok) {
+            const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
+            return;
+        }
+        if (!result.repoOk) {
+            const msg = t('admin.github.repo_missing', 'Token does NOT have access to this repo.');
+            setStatus(msg, 'error');
+            showToast(msg, 'error');
+            return;
+        }
         localStorage.setItem('axxa_github_token', token);
+        if (savedEl) savedEl.textContent = t('admin.github.saved_state_ok', 'Token saved locally.');
         const msg = t('admin.github.save_ok', 'Token saved.');
         setStatus(msg, 'ok');
         showToast(msg, 'success');
+        collapseLater();
     });
 
     testTokenBtn?.addEventListener('click', async () => {
@@ -675,6 +706,9 @@ function initAdmin() {
         const repoMsg = t('admin.github.repo_ok', 'Token has access to this repo.');
         setStatus(repoMsg, 'ok');
         showToast(repoMsg, 'success');
+        sessionGithubToken = token;
+        if (savedEl) savedEl.textContent = t('admin.github.saved_state', 'Token not saved.');
+        collapseLater();
 
         if (result.multiRepo) {
             const warnMsg = t('admin.github.repo_warning', 'Warning: token appears to access multiple repos.');
@@ -690,14 +724,13 @@ function initAdmin() {
             showToast(msg, 'error');
             return;
         }
-        const token = tokenInput?.value?.trim();
+        const token = tokenInput?.value?.trim() || sessionGithubToken || savedToken;
         if (!token) {
             const msg = t('admin.github.test_fail', 'Invalid token or missing permissions.');
             setStatus(msg, 'error');
             showToast(msg, 'error');
             return;
         }
-        localStorage.setItem('axxa_github_token', token);
         const ok = await updateConfigOnGitHub(token);
         const msg = ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.');
         setStatus(msg, ok ? 'ok' : 'error');

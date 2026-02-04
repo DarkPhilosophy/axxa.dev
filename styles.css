@@ -116,6 +116,19 @@
     }
 }
 
+/* Admin GitHub sync collapse */
+#github-sync {
+    transition: transform 0.3s ease, opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+}
+#github-sync.github-collapsed {
+    transform: translateX(40px);
+    opacity: 0.3;
+    max-height: 24px;
+    overflow: hidden;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
 
 /* Always-on subtle glitch for brand text (layer slices, low blur) */
 .brand-glitch {
