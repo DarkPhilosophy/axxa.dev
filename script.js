@@ -562,6 +562,7 @@ function initAdmin() {
     const saveTokenBtn = document.getElementById('btn-save-token');
     const testTokenBtn = document.getElementById('btn-test-token');
     const updateBtn = document.getElementById('btn-github-update');
+    const statusEl = document.getElementById('github-status');
 
     // Key Combo: Ctrl + Shift + L
     document.addEventListener('keydown', (e) => {
@@ -615,39 +616,46 @@ function initAdmin() {
     const savedToken = localStorage.getItem('axxa_github_token');
     if (tokenInput && savedToken) tokenInput.value = savedToken;
 
+    const setStatus = (msg, ok = true) => {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.classList.toggle('text-green-400', ok);
+        statusEl.classList.toggle('text-red-400', !ok);
+    };
+
     saveTokenBtn?.addEventListener('click', () => {
         const token = tokenInput?.value?.trim();
         if (!token) {
-            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
             return;
         }
         localStorage.setItem('axxa_github_token', token);
-        showToast(t('admin.github.save_ok', 'Token saved.'), 'success');
+        setStatus(t('admin.github.save_ok', 'Token saved.'), true);
     });
 
     testTokenBtn?.addEventListener('click', async () => {
         const token = tokenInput?.value?.trim();
         if (!token) {
-            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
             return;
         }
         const ok = await testGitHubToken(token);
-        showToast(ok ? t('admin.github.test_ok', 'Token is valid.') : t('admin.github.test_fail', 'Invalid token or missing permissions.'), ok ? 'success' : 'error');
+        setStatus(ok ? t('admin.github.test_ok', 'Token is valid.') : t('admin.github.test_fail', 'Invalid token or missing permissions.'), ok);
     });
 
     updateBtn?.addEventListener('click', async () => {
         if (!adminUnlocked) {
-            showToast(t('admin.github.unlock_required', 'Unlock admin first.'), 'error');
+            setStatus(t('admin.github.unlock_required', 'Unlock admin first.'), false);
             return;
         }
         const token = tokenInput?.value?.trim();
         if (!token) {
-            showToast(t('admin.github.test_fail', 'Invalid token or missing permissions.'), 'error');
+            setStatus(t('admin.github.test_fail', 'Invalid token or missing permissions.'), false);
             return;
         }
         localStorage.setItem('axxa_github_token', token);
         const ok = await updateConfigOnGitHub(token);
-        showToast(ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.'), ok ? 'success' : 'error');
+        setStatus(ok ? t('admin.github.update_ok', 'config.json updated on GitHub.') : t('admin.github.update_fail', 'Failed to update config.json.'), ok);
     });
 }
 
