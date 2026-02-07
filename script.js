@@ -1215,12 +1215,13 @@ function setNestedValue(obj, path, value) {
 
 
 function initContact() {
-    const contactEndpoint = 'https://contact.axxa.dev/';
+    const contactEndpoint = '/api/contact';
 
     const form = document.getElementById('contact-form');
     if (form) {
         form.addEventListener('submit', function(event) {
             event.preventDefault();
+            event.stopPropagation();
 
             // --- RATE LIMITING START ---
             const lastSent = localStorage.getItem('axxa_msg_ts');
