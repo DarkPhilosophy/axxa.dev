@@ -816,6 +816,15 @@ function renderAdminEditor(config, container) {
             if (code && !config.i18n.supported.includes(code)) {
                 config.i18n.supported.push(code);
                 if (!config.translations[code]) config.translations[code] = {};
+                if (!config.i18n.locales) config.i18n.locales = {};
+                if (!config.i18n.locales[code]) {
+                    const parts = code.split('-');
+                    if (parts.length === 2) {
+                        config.i18n.locales[code] = `${parts[0].toLowerCase()}-${parts[1].toUpperCase()}`;
+                    } else {
+                        config.i18n.locales[code] = `${code}-${code.toUpperCase()}`;
+                    }
+                }
                 renderAdminEditor(config, container);
                 showToast(`Language '${code}' added.`, 'success');
             }
@@ -907,6 +916,7 @@ function renderLanguageChips(config, parent, container) {
                 if (confirm(`Remove language '${lang}' and all its translations?`)) {
                     config.i18n.supported = config.i18n.supported.filter(l => l !== lang);
                     delete config.translations[lang];
+                    if (config.i18n.locales) delete config.i18n.locales[lang];
                     renderAdminEditor(config, container);
                 }
             };
