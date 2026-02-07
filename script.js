@@ -1327,6 +1327,7 @@ function initContact() {
                 .then(async (res) => {
                     if (!res.ok) {
                         const errText = await res.text().catch(() => '');
+                        console.error('Server Error:', errText);
                         throw new Error(errText || `HTTP ${res.status}`);
                     }
                 })
