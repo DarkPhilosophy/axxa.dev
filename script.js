@@ -1215,19 +1215,7 @@ function setNestedValue(obj, path, value) {
 
 
 function initContact() {
-    const config = siteConfig.contact?.emailjs;
-    // Check if config exists and has valid values (not placeholders)
-    if (!config || !config.public_key || config.public_key.startsWith('YOUR')) {
-        console.warn('EmailJS not fully configured.');
-        return;
-    }
-
-    try {
-        emailjs.init(config.public_key);
-    } catch (e) {
-        console.error('EmailJS init failed', e);
-        return;
-    }
+    const contactEndpoint = 'https://contact.axxa.dev/';
 
     const form = document.getElementById('contact-form');
     if (form) {
@@ -1266,22 +1254,71 @@ function initContact() {
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
 
-            // Construct secure params + dynamic data
-            const params = {
-                name: form.querySelector('[name="from_name"]').value,
-                email: form.querySelector('[name="from_email"]').value,
-                message: form.querySelector('[name="message"]').value,
-                time: new Date().toLocaleString(getLocaleForLang(currentLang))
+            const name = form.querySelector('[name="from_name"]').value.trim();
+            const email = form.querySelector('[name="from_email"]').value.trim();
+            const message = form.querySelector('[name="message"]').value.trim();
+            const honeypot = form.querySelector('[name="website"]')?.value?.trim();
+
+            const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            if (!name || name.length < 2 || name.length > 80) {
+                showToast(t('contact.form.validation_name', 'Please enter your name.'), 'error');
+                return;
+            }
+            if (!email || email.length > 120 || !emailOk) {
+                showToast(t('contact.form.validation_email', 'Please enter a valid email.'), 'error');
+                return;
+            }
+            if (!message || message.length < 10 || message.length > 2000) {
+                showToast(t('contact.form.validation_message', 'Please enter a longer message.'), 'error');
+                return;
+            }
+            if (honeypot) {
+                showToast(t('contact.form.validation_spam', 'Spam detected.'), 'error');
+                return;
+            }
+
+            const turnstileInput = form.querySelector('input[name="cf-turnstile-response"]');
+            const turnstileToken = (turnstileInput && turnstileInput.value) || (window.turnstile && window.turnstile.getResponse && window.turnstile.getResponse()) || '';
+            if (!turnstileToken) {
+                showToast(t('contact.form.validation_captcha', 'Please complete the verification.'), 'error');
+                return;
+            }
+
+            const payload = {
+                name,
+                email,
+                message,
+                honeypot,
+                time: new Date().toLocaleString(getLocaleForLang(currentLang)),
+                lang: currentLang,
+                user_agent: navigator.userAgent,
+                turnstile_token: turnstileToken
             };
 
-            emailjs.send(config.service_id, config.template_id, params)
+            fetch(contactEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(async (res) => {
+                    if (!res.ok) {
+                        const errText = await res.text().catch(() => '');
+                        throw new Error(errText || `HTTP ${res.status}`);
+                    }
+                })
                 .then(() => {
                     showToast(t('contact.form.send_success', 'Message sent successfully!'), 'success');
                     // Set Timestamp on Success
                     console.log(`[RateLimit] Setting timestamp: ${Date.now()}`);
                     localStorage.setItem('axxa_msg_ts', Date.now().toString());
                     form.reset();
-                }, (error) => {
+                    if (window.turnstile && window.turnstile.reset) {
+                        window.turnstile.reset();
+                    }
+                })
+                .catch((error) => {
                     console.error('FAILED...', error);
                     showToast(t('contact.form.send_fail', 'Failed to send message. Please try again.'), 'error');
                 })
