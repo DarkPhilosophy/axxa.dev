@@ -917,6 +917,66 @@ function renderLanguageChips(config, parent, container) {
 }
 
 // Revised Generator: Handles Schema Syncing & Advanced Array Lists
+function cloneSchemaWithEmptyValues(schema) {
+    if (Array.isArray(schema)) return [];
+    if (schema && typeof schema === 'object') {
+        const out = {};
+        Object.keys(schema).forEach(k => {
+            out[k] = cloneSchemaWithEmptyValues(schema[k]);
+        });
+        return out;
+    }
+    return '';
+}
+
+function cloneDeep(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function syncTranslationsArrayAdd(config, path, newItem) {
+    const defaultLang = config.i18n?.default;
+    (config.i18n?.supported || []).forEach(lang => {
+        if (lang === defaultLang) return;
+        const transPath = `translations.${lang}.${path}`;
+        let arr = getNestedValue(config, transPath);
+        if (!Array.isArray(arr)) arr = [];
+        arr.push(cloneDeep(newItem));
+        ensurePath(config, transPath);
+        setNestedValue(config, transPath, arr);
+    });
+}
+
+function syncTranslationsArrayRemove(config, path, index) {
+    const defaultLang = config.i18n?.default;
+    (config.i18n?.supported || []).forEach(lang => {
+        if (lang === defaultLang) return;
+        const transPath = `translations.${lang}.${path}`;
+        let arr = getNestedValue(config, transPath);
+        if (!Array.isArray(arr)) return;
+        if (index >= 0 && index < arr.length) {
+            arr.splice(index, 1);
+            ensurePath(config, transPath);
+            setNestedValue(config, transPath, arr);
+        }
+    });
+}
+
+function ensureTranslationArrayLength(targetConfig, path, schemaArray) {
+    const desired = Array.isArray(schemaArray) ? schemaArray.length : 0;
+    let arr = getNestedValue(targetConfig, path);
+    if (!Array.isArray(arr)) arr = [];
+    if (arr.length === desired) return arr;
+
+    const next = [];
+    for (let i = 0; i < desired; i++) {
+        if (arr[i] !== undefined) next[i] = arr[i];
+        else next[i] = cloneDeep(schemaArray[i] !== undefined ? schemaArray[i] : (schemaArray[0] || ''));
+    }
+    ensurePath(targetConfig, path);
+    setNestedValue(targetConfig, path, next);
+    return next;
+}
+
 function generateFormFields(schemaData, parent, prefix = '', targetConfig = baseConfig, isTranslation = false) {
     if (!parent) return; // Safety check
     parent.innerHTML = '';
@@ -961,23 +1021,15 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 
                 const labelRow = document.createElement('div');
                 labelRow.className = 'flex justify-between items-center mb-3 border-b border-white/5 pb-2';
-                labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${actualVal ? actualVal.length : 0})</label>`;
+                const countVal = isTranslation ? schemaVal.length : (actualVal ? actualVal.length : 0);
+                labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${countVal})</label>`;
                 
                 if (isComplex && !isTranslation) { 
                     const addBtn = document.createElement('button');
                     addBtn.className = 'text-xs bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 font-bold transition-colors';
                     addBtn.innerHTML = '+ Add Item';
                     addBtn.onclick = () => {
-                        const newItem = JSON.parse(JSON.stringify(schemaVal[0] || {}));
-                        // Clear values but keep structure
-                        const clearObj = (o) => {
-                            Object.keys(o).forEach(k => {
-                                if (Array.isArray(o[k])) o[k] = [];
-                                else if (typeof o[k] === 'object' && o[k] !== null) clearObj(o[k]);
-                                else o[k] = "";
-                            });
-                        };
-                        clearObj(newItem);
+                        const newItem = cloneSchemaWithEmptyValues(schemaVal[0] || {});
                         
                         // Generate ID if needed
                         if ('id' in newItem || !newItem.id) newItem.id = crypto.randomUUID().split('-')[0];
@@ -986,6 +1038,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                         actualVal.push(newItem);
                         ensurePath(targetConfig, path);
                         setNestedValue(targetConfig, path, actualVal);
+                        syncTranslationsArrayAdd(targetConfig, path, newItem);
                         
                         // Refresh UI
                         const rootContainer = document.getElementById('json-editor-container');
@@ -1000,7 +1053,10 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                     const listContainer = document.createElement('div');
                     listContainer.className = 'space-y-2';
                     
-                    const items = Array.isArray(actualVal) ? actualVal : [];
+                    let items = Array.isArray(actualVal) ? actualVal : [];
+                    if (isTranslation) {
+                        items = ensureTranslationArrayLength(targetConfig, path, schemaVal);
+                    }
                     
                     if (items.length === 0) {
                         listContainer.innerHTML = `<div class="text-xs text-slate-600 italic p-2">No items yet.</div>`;
@@ -1034,8 +1090,11 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                             itemDetails.querySelector('.btn-del-item').addEventListener('click', (e) => {
                                 e.preventDefault();
                                 e.stopPropagation(); // Prevent toggling details
-                                if(confirm('Delete this item?')) {
+                                if(confirm('Delete this item across all languages?')) {
                                     actualVal.splice(index, 1);
+                                    ensurePath(targetConfig, path);
+                                    setNestedValue(targetConfig, path, actualVal);
+                                    syncTranslationsArrayRemove(targetConfig, path, index);
                                     const rootContainer = document.getElementById('json-editor-container');
                                     if(rootContainer) renderAdminEditor(baseConfig, rootContainer);
                                 }
@@ -1059,8 +1118,17 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                     input.addEventListener('change', (e) => {
                         try {
                             const parsed = JSON.parse(e.target.value);
+                            let nextVal = parsed;
+                            if (isTranslation) {
+                                const desired = Array.isArray(schemaVal) ? schemaVal.length : 0;
+                                const arr = Array.isArray(parsed) ? parsed : [];
+                                nextVal = [];
+                                for (let i = 0; i < desired; i++) {
+                                    nextVal[i] = arr[i] !== undefined ? arr[i] : (schemaVal[i] !== undefined ? schemaVal[i] : '');
+                                }
+                            }
                             ensurePath(targetConfig, path);
-                            setNestedValue(targetConfig, path, parsed);
+                            setNestedValue(targetConfig, path, nextVal);
                         } catch(err) {
                             alert('Invalid JSON for array');
                         }

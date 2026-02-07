@@ -37,26 +37,18 @@ export default {
         const honeypot = (payload.honeypot || '').trim();
         const turnstileToken = (payload.turnstile_token || '').trim();
         
-        // Metadata from Cloudflare
         const userIp = request.headers.get('CF-Connecting-IP') || 'Unknown';
         const userCountry = request.headers.get('CF-IPCountry') || 'Unknown';
 
-        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!name || name.length < 2 || name.length > 80) return new Response('Invalid name', { status: 400, headers: corsHeaders });
+        if (!email || email.length > 120) return new Response('Invalid email', { status: 400, headers: corsHeaders });
+        if (!message || message.length < 10 || message.length > 5000) return new Response('Invalid message', { status: 400, headers: corsHeaders });
+        if (honeypot) return new Response('Spam detected', { status: 400, headers: corsHeaders });
+        if (!turnstileToken) return new Response('Missing Turnstile token', { status: 400, headers: corsHeaders });
 
-        if (!name || name.length < 2 || name.length > 80) {
-            return new Response('Invalid name', { status: 400, headers: corsHeaders });
-        }
-        if (!email || email.length > 120 || !emailOk) {
-            return new Response('Invalid email', { status: 400, headers: corsHeaders });
-        }
-        if (!message || message.length < 10 || message.length > 5000) {
-            return new Response('Invalid message', { status: 400, headers: corsHeaders });
-        }
-        if (honeypot) {
-            return new Response('Spam detected', { status: 400, headers: corsHeaders });
-        }
-        if (!turnstileToken) {
-            return new Response('Missing Turnstile token', { status: 400, headers: corsHeaders });
+        // DEBUG: Check secret existence
+        if (!env.TURNSTILE_SECRET) {
+            return new Response('Worker Config Error: Missing Secret', { status: 500, headers: corsHeaders });
         }
 
         // 1. Verify Turnstile
@@ -71,20 +63,19 @@ export default {
             body: verifyBody
         });
 
-        const verifyJson = await verifyResp.json().catch(() => null);
-        if (!verifyJson || verifyJson.success !== true) {
-            return new Response('Turnstile verification failed', { status: 403, headers: corsHeaders });
+        const verifyJson = await verifyResp.json().catch(() => ({ success: false, error: 'Parse Error' }));
+        if (!verifyJson.success) {
+            return new Response(`Turnstile Failed: ${JSON.stringify(verifyJson['error-codes'] || verifyJson)}`, { status: 403, headers: corsHeaders });
         }
 
         // 2. Send via Resend
         const subject = `[AXXA.DEV] New message from ${name}`;
-        
         const bodyHtml = `
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0a0a; color: #f0f0f0; margin: 0; padding: 20px; }
+        body { font-family: sans-serif; background-color: #0a0a0a; color: #f0f0f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; border: 1px solid #333; border-radius: 12px; overflow: hidden; background: #111; }
         .header { background: #00ff88; color: #000; padding: 20px; text-align: center; }
         .header h2 { margin: 0; font-size: 24px; letter-spacing: 1px; }
@@ -98,14 +89,9 @@ export default {
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h2>NEW TRANSMISSION</h2>
-        </div>
+        <div class="header"><h2>NEW TRANSMISSION</h2></div>
         <div class="content">
-            <div class="message-box">
-                <p style="white-space: pre-wrap; margin: 0;">${message}</p>
-            </div>
-            
+            <div class="message-box"><p style="white-space: pre-wrap; margin: 0;">${message}</p></div>
             <table class="meta-table">
                 <tr><td>Sender</td><td>${name} (${email})</td></tr>
                 <tr><td>IP Address</td><td>${userIp}</td></tr>
@@ -118,13 +104,10 @@ export default {
                 <tr><td>Language</td><td>${payload.lang || 'Unknown'}</td></tr>
             </table>
         </div>
-        <div class="footer">
-            &copy; 2026 AXXA.DEV | SECURE TERMINAL INBOUND
-        </div>
+        <div class="footer">&copy; 2026 AXXA.DEV | SECURE TERMINAL INBOUND</div>
     </div>
 </body>
-</html>
-        `;
+</html>`;
 
         const resendResp = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -141,16 +124,11 @@ export default {
             })
         });
 
-        if (!resendResp.ok) {
-            return new Response('Failed to send email', { status: 500, headers: corsHeaders });
-        }
+        if (!resendResp.ok) return new Response('Failed to send email', { status: 500, headers: corsHeaders });
 
         return new Response(JSON.stringify({ ok: true }), {
             status: 200,
-            headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json'
-            }
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
 };
