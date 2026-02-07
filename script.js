@@ -1261,7 +1261,7 @@ function initContact() {
                 showToast(t('contact.form.validation_email', 'Please enter a valid email.'), 'error');
                 return;
             }
-            if (!message || message.length < 10 || message.length > 2000) {
+            if (!message || message.length < 10 || message.length > 5000) {
                 showToast(t('contact.form.validation_message', 'Please enter a longer message.'), 'error');
                 return;
             }

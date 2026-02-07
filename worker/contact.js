@@ -1,11 +1,9 @@
-import { EmailMessage } from 'cloudflare:email';
-
 export default {
     async fetch(request, env) {
         const allowedOrigins = new Set([
             'https://axxa.dev',
             'https://www.axxa.dev',
-            'https://contact.axxa.dev'
+            'https://darkphilosophy.github.io'
         ]);
 
         const origin = request.headers.get('Origin') || '';
@@ -48,7 +46,7 @@ export default {
         if (!email || email.length > 120 || !emailOk) {
             return new Response('Invalid email', { status: 400, headers: corsHeaders });
         }
-        if (!message || message.length < 10 || message.length > 2000) {
+        if (!message || message.length < 10 || message.length > 5000) {
             return new Response('Invalid message', { status: 400, headers: corsHeaders });
         }
         if (honeypot) {
@@ -58,6 +56,7 @@ export default {
             return new Response('Missing Turnstile token', { status: 400, headers: corsHeaders });
         }
 
+        // 1. Verify Turnstile
         const verifyBody = new URLSearchParams({
             secret: env.TURNSTILE_SECRET,
             response: turnstileToken,
@@ -75,31 +74,38 @@ export default {
             return new Response('Turnstile verification failed', { status: 403, headers: corsHeaders });
         }
 
+        // 2. Send via Resend
         const subject = `New contact form message from ${name}`;
-        const lines = [
-            `Name: ${name}`,
-            `Email: ${email}`,
-            `Time: ${payload.time || ''}`,
-            `Lang: ${payload.lang || ''}`,
-            `User-Agent: ${payload.user_agent || ''}`,
-            '',
-            message
-        ];
-        const bodyText = lines.join('\n');
+        const bodyHtml = `
+            <h3>New Contact Form Submission</h3>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Time:</strong> ${payload.time || ''}</p>
+            <p><strong>Lang:</strong> ${payload.lang || ''}</p>
+            <hr>
+            <p style="white-space: pre-wrap;">${message}</p>
+        `;
 
-        const from = env.EMAIL_FROM || 'alexa@axxa.dev';
-        const to = env.EMAIL_TO || 'alexa@axxa.dev';
-        const raw = [
-            `From: ${from}`,
-            `To: ${to}`,
-            `Reply-To: ${email}`,
-            `Subject: ${subject}`,
-            'Content-Type: text/plain; charset="UTF-8"',
-            '',
-            bodyText
-        ].join('\n');
+        const resendResp = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: 'axxa.dev <contact@axxa.dev>',
+                to: [env.EMAIL_TO || 'nell9@kakao.com'],
+                reply_to: email,
+                subject: subject,
+                html: bodyHtml
+            })
+        });
 
-        await env.SEND_EMAIL.send(new EmailMessage(from, to, raw));
+        if (!resendResp.ok) {
+            const error = await resendResp.text();
+            console.error('Resend error:', error);
+            return new Response('Failed to send email via provider', { status: 500, headers: corsHeaders });
+        }
 
         return new Response(JSON.stringify({ ok: true }), {
             status: 200,
