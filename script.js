@@ -1223,6 +1223,9 @@ function initContact() {
             event.preventDefault();
             event.stopPropagation();
 
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+
             // --- RATE LIMITING START ---
             const lastSent = localStorage.getItem('axxa_msg_ts');
             if (lastSent) {
