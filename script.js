@@ -1247,14 +1247,6 @@ function initContact() {
             }
             // --- RATE LIMITING END ---
 
-            const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
-            
-            // Loading State
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('contact.form.sending', 'Sending...')}`;
-            btn.disabled = true;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-
             const name = form.querySelector('[name="from_name"]').value.trim();
             const email = form.querySelector('[name="from_email"]').value.trim();
             const message = form.querySelector('[name="message"]').value.trim();
@@ -1284,6 +1276,11 @@ function initContact() {
                 showToast(t('contact.form.validation_captcha', 'Please complete the verification.'), 'error');
                 return;
             }
+
+            // Loading State (Moved after validation)
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t('contact.form.sending', 'Sending...')}`;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
 
             const payload = {
                 name,
