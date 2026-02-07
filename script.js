@@ -1244,27 +1244,52 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
 
     // 2. Translate Batch
     let successCount = 0;
+    const translateEndpoint = 'https://contact.axxa.dev/translate';
     
     try {
-        for (const item of missing) {
-            // Fetch translation
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(item.source)}`;
-            
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('API Error');
-            
+        const texts = missing.map(m => m.source);
+        let translations = [];
+
+        try {
+            const res = await fetch(translateEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sourceLang,
+                    targetLang,
+                    texts
+                })
+            });
+            if (!res.ok) throw new Error(`Translate API ${res.status}`);
             const data = await res.json();
-            // Structure is [[["Translated","Source",...]], ...]
-            if (data && data[0] && data[0][0] && data[0][0][0]) {
-                const translatedText = data[0][0][0];
-                ensurePath(config, item.path);
-                setNestedValue(config, item.path, translatedText);
-                successCount++;
-            }
-            
-            // Tiny delay to be polite to the free API
-            await new Promise(r => setTimeout(r, 200));
+            translations = Array.isArray(data.translations) ? data.translations : [];
+        } catch (e) {
+            console.warn('Translate endpoint failed, falling back to direct calls.', e);
         }
+
+        if (translations.length !== texts.length) {
+            translations = [];
+            for (const item of missing) {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(item.source)}`;
+                const res = await fetch(url);
+                if (!res.ok) {
+                    translations.push('');
+                    continue;
+                }
+                const data = await res.json();
+                const translatedText = data && data[0] && data[0][0] && data[0][0][0] ? data[0][0][0] : '';
+                translations.push(translatedText);
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        translations.forEach((translatedText, idx) => {
+            if (!translatedText) return;
+            const item = missing[idx];
+            ensurePath(config, item.path);
+            setNestedValue(config, item.path, translatedText);
+            successCount++;
+        });
         
         showToast(`Translated ${successCount} fields successfully!`, 'success');
         renderAdminEditor(config, container); // Refresh UI to show new values

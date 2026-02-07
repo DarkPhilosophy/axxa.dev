@@ -3,9 +3,11 @@ export default {
         const allowedOrigins = new Set([
             'https://axxa.dev',
             'https://www.axxa.dev',
-            'https://darkphilosophy.github.io'
+            'https://darkphilosophy.github.io',
+            'https://contact.axxa.dev'
         ]);
 
+        const url = new URL(request.url);
         const origin = request.headers.get('Origin') || '';
         const allowOrigin = allowedOrigins.has(origin) ? origin : 'https://axxa.dev';
 
@@ -22,6 +24,10 @@ export default {
 
         if (request.method !== 'POST') {
             return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
+        }
+
+        if (url.pathname === '/translate') {
+            return handleTranslate(request, corsHeaders);
         }
 
         let payload;
@@ -132,3 +138,51 @@ export default {
         });
     }
 };
+
+async function handleTranslate(request, corsHeaders) {
+    let payload;
+    try {
+        payload = await request.json();
+    } catch {
+        return new Response('Invalid JSON', { status: 400, headers: corsHeaders });
+    }
+
+    const sourceLang = (payload.sourceLang || '').trim();
+    const targetLang = (payload.targetLang || '').trim();
+    const texts = Array.isArray(payload.texts) ? payload.texts : [];
+
+    if (!sourceLang || !targetLang || texts.length === 0) {
+        return new Response('Invalid translation payload', { status: 400, headers: corsHeaders });
+    }
+
+    if (texts.length > 50) {
+        return new Response('Too many items', { status: 400, headers: corsHeaders });
+    }
+
+    const translations = [];
+    for (const text of texts) {
+        const input = String(text || '').trim();
+        if (!input) {
+            translations.push('');
+            continue;
+        }
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sourceLang)}&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(input)}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+            translations.push('');
+            continue;
+        }
+        const data = await res.json().catch(() => null);
+        const translated = data && data[0] && data[0][0] && data[0][0][0] ? data[0][0][0] : '';
+        translations.push(translated);
+        await new Promise(r => setTimeout(r, 200));
+    }
+
+    return new Response(JSON.stringify({ translations }), {
+        status: 200,
+        headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+        }
+    });
+}
