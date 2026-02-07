@@ -933,6 +933,13 @@ function cloneDeep(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
+function getBasePathFromTranslation(path) {
+    if (!path.startsWith('translations.')) return path;
+    const parts = path.split('.');
+    if (parts.length < 3) return path;
+    return parts.slice(2).join('.');
+}
+
 function syncTranslationsArrayAdd(config, path, newItem) {
     const defaultLang = config.i18n?.default;
     (config.i18n?.supported || []).forEach(lang => {
@@ -1016,12 +1023,21 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                 const wrapper = document.createElement('div');
                 wrapper.className = 'mb-4 border border-white/5 rounded-lg p-3 bg-white/5';
                 
+                let schemaArray = schemaVal;
+                if (isTranslation && schemaArray.length === 0) {
+                    const basePath = getBasePathFromTranslation(path);
+                    const baseArray = getNestedValue(baseConfig, basePath);
+                    if (Array.isArray(baseArray) && baseArray.length > 0) {
+                        schemaArray = baseArray;
+                    }
+                }
+
                 // Detect if Array of Objects (Complex List)
-                const isComplex = schemaVal.length > 0 && typeof schemaVal[0] === 'object';
+                const isComplex = schemaArray.length > 0 && typeof schemaArray[0] === 'object';
                 
                 const labelRow = document.createElement('div');
                 labelRow.className = 'flex justify-between items-center mb-3 border-b border-white/5 pb-2';
-                const countVal = isTranslation ? schemaVal.length : (actualVal ? actualVal.length : 0);
+                const countVal = isTranslation ? schemaArray.length : (actualVal ? actualVal.length : 0);
                 labelRow.innerHTML = `<label class="text-xs font-bold text-slate-400 uppercase">${key} (${countVal})</label>`;
                 
                 if (isComplex && !isTranslation) { 
@@ -1029,7 +1045,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                     addBtn.className = 'text-xs bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 font-bold transition-colors';
                     addBtn.innerHTML = '+ Add Item';
                     addBtn.onclick = () => {
-                        const newItem = cloneSchemaWithEmptyValues(schemaVal[0] || {});
+                        const newItem = cloneSchemaWithEmptyValues(schemaArray[0] || {});
                         
                         // Generate ID if needed
                         if ('id' in newItem || !newItem.id) newItem.id = crypto.randomUUID().split('-')[0];
@@ -1055,7 +1071,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                     
                     let items = Array.isArray(actualVal) ? actualVal : [];
                     if (isTranslation) {
-                        items = ensureTranslationArrayLength(targetConfig, path, schemaVal);
+                        items = ensureTranslationArrayLength(targetConfig, path, schemaArray);
                     }
                     
                     if (items.length === 0) {
@@ -1102,7 +1118,7 @@ function generateFormFields(schemaData, parent, prefix = '', targetConfig = base
                         }
 
                         // Recursive Build for Item Fields
-                        const itemSchema = schemaVal[0] || item;
+                        const itemSchema = schemaArray[0] || item;
                         generateFormFields(itemSchema, itemDetails.querySelector(`div[id^="item-"]`), `${path}.${index}`, targetConfig, isTranslation);
                     });
                     
