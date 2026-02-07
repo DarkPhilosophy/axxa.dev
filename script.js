@@ -1220,17 +1220,27 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
     const missing = [];
     
     const findMissing = (schema, prefix) => {
-        for (const key in schema) {
-            const val = schema[key];
-            const path = prefix ? `${prefix}.${key}` : key;
-            const targetPath = `translations.${targetLang}.${path}`;
-            const currentVal = getNestedValue(config, targetPath);
+        if (Array.isArray(schema)) {
+            schema.forEach((item, idx) => {
+                const itemPath = prefix ? `${prefix}.${idx}` : String(idx);
+                findMissing(item, itemPath);
+            });
+            return;
+        }
 
-            if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-                findMissing(val, path);
-            } else if (!Array.isArray(val) && typeof val === 'string') {
-                if (!currentVal) {
-                    missing.push({ path: targetPath, source: val });
+        if (schema && typeof schema === 'object') {
+            for (const key in schema) {
+                const val = schema[key];
+                const path = prefix ? `${prefix}.${key}` : key;
+                const targetPath = `translations.${targetLang}.${path}`;
+                const currentVal = getNestedValue(config, targetPath);
+
+                if (typeof val === 'object' && val !== null) {
+                    findMissing(val, path);
+                } else if (typeof val === 'string') {
+                    if (!currentVal) {
+                        missing.push({ path: targetPath, source: val });
+                    }
                 }
             }
         }
