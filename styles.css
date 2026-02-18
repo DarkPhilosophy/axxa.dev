@@ -29,55 +29,25 @@
     src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-700.woff2) format("woff2");
 }
 
-body {
-    font-family: "Quicksand", sans-serif;
+:root {
+    --font: "Quicksand";
+    --code-font: "Consolas";
 }
 
-/* Force Quicksand across the main site UI text */
-html,
-body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-span,
-div,
-a,
-button,
-input,
-textarea,
-select,
-label,
-li,
-small,
-strong {
-    font-family: "Quicksand", sans-serif;
+body {
+    font-family: var(--font), sans-serif;
 }
 
 /* Tailwind utility can still force mono in markup; keep UI text Quicksand */
 .font-mono:not(code):not(pre):not(kbd):not(samp) {
-    font-family: "Quicksand", sans-serif !important;
+    font-family: var(--font), sans-serif !important;
 }
 
 code,
 pre,
 kbd,
 samp {
-    font-family: Consolas, "Courier New", monospace;
-}
-
-/* Keep icon font isolated to Font Awesome glyph elements */
-i.fa,
-i.fas,
-i.far,
-i.fab,
-i.fa-solid,
-i.fa-regular,
-i.fa-brands {
-    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+    font-family: var(--code-font), "Courier New", monospace;
 }
 
 /* =========================================
