@@ -1,16 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA favicon round">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA blue round favicon">
   <defs>
-    <radialGradient id="g" cx="30%" cy="25%" r="85%">
-      <stop offset="0%" stop-color="#56f0ff"/>
-      <stop offset="45%" stop-color="#2ec5ff"/>
-      <stop offset="100%" stop-color="#2563eb"/>
-    </radialGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="55%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
   </defs>
-
-  <circle cx="256" cy="256" r="240" fill="url(#g)"/>
-  <circle cx="256" cy="256" r="238" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="6"/>
-
-  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="44">
+  <circle cx="256" cy="256" r="256" fill="url(#b)"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="46">
     <line x1="132" y1="148" x2="246" y2="364"/>
     <line x1="246" y1="148" x2="132" y2="364"/>
     <line x1="266" y1="148" x2="380" y2="364"/>
