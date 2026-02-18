@@ -236,22 +236,16 @@
         "title": "Ce Spun<span class=\"text-primary\"> Clienții.</span>",
         "items": [
             {
+                "text": "\"Strategia fără execuție e doar o schiță. Aici am văzut disciplină, viteză și rezultate măsurabile.\"",
+                "author": "Napoleon Bonaparte",
+                "role": "Strateg Militar (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
+            },
+            {
                 "text": "\"Leadership-ul bun înseamnă stabilitate pe termen lung, nu doar câștig rapid.\"",
                 "author": "George Washington",
                 "role": "Primul Președinte al SUA (Satiric)",
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg/330px-Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
-            },
-            {
-                "text": "\"Optimizarea continuă economisește timp, bani și nervi. Exact ce vrei într-un produs bun.\"",
-                "author": "Benjamin Franklin",
-                "role": "Inventator & Diplomat (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
-            },
-            {
-                "text": "\"Execuția curajoasă contează: ideea bună fără acțiune rămâne doar zgomot.\"",
-                "author": "Theodore Roosevelt",
-                "role": "Președinte al SUA (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
             },
             {
                 "text": "\"Infrastructura bună ține piept nopților grele. Când apare haosul, sistemul tot trebuie să rămână în picioare.\"",
@@ -260,22 +254,10 @@
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
             },
             {
-                "text": "\"Sistemele solide se văd în momente dificile: rezistă, se adaptează și merg mai departe.\"",
-                "author": "Abraham Lincoln",
-                "role": "Președinte al SUA (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
-            },
-            {
-                "text": "\"Strategia fără execuție e doar o schiță. Aici am văzut disciplină, viteză și rezultate măsurabile.\"",
-                "author": "Napoleon Bonaparte",
-                "role": "Strateg Militar (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
-            },
-            {
-                "author": "Nikola Tesla",
-                "role": "Inventator (Satiric)",
-                "text": "\"Inovația reală apare când îndrăznești să construiești ce nu există încă.\"",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
+                "author": "Albert Einstein",
+                "role": "Fizician (Satiric)",
+                "text": "\"Simplificarea inteligentă este semnul unui sistem bine gândit.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg"
             },
             {
                 "text": "\"Modernizarea reală începe când procesele sunt clare, iar oamenii pot opera sistemul fără fricțiune.\"",
@@ -284,22 +266,16 @@
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg/330px-Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg"
             },
             {
-                "text": "\"Mesaj clar, direcție clară, impact real. Comunicarea bună face diferența.\"",
-                "author": "Martin Luther King Jr.",
-                "role": "Lider civic (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
+                "text": "\"Optimizarea continuă economisește timp, bani și nervi. Exact ce vrei într-un produs bun.\"",
+                "author": "Benjamin Franklin",
+                "role": "Inventator & Diplomat (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
             },
             {
-                "author": "Albert Einstein",
-                "role": "Fizician (Satiric)",
-                "text": "\"Simplificarea inteligentă este semnul unui sistem bine gândit.\"",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg"
-            },
-            {
-                "text": "\"Consecvența bate entuziasmul de moment. Execuția curată, repetată, aduce victoria pe termen lung.\"",
-                "author": "Ștefan cel Mare",
-                "role": "Voievod al Moldovei (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+                "author": "Ioana d'Arc",
+                "role": "Eroină franceză (Satiric)",
+                "text": "\"Curajul strategic schimbă cursul jocului, chiar și când resursele sunt limitate.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Joan_of_arc_miniature_graded.jpg/330px-Joan_of_arc_miniature_graded.jpg"
             },
             {
                 "text": "\"Unirea componentelor diferite într-un singur flux stabil este adevărata performanță tehnică.\"",
@@ -308,10 +284,34 @@
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
             },
             {
-                "author": "Ioana d'Arc",
-                "role": "Eroină franceză (Satiric)",
-                "text": "\"Curajul strategic schimbă cursul jocului, chiar și când resursele sunt limitate.\"",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Joan_of_arc_miniature_graded.jpg/330px-Joan_of_arc_miniature_graded.jpg"
+                "text": "\"Sistemele solide se văd în momente dificile: rezistă, se adaptează și merg mai departe.\"",
+                "author": "Abraham Lincoln",
+                "role": "Președinte al SUA (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
+            },
+            {
+                "text": "\"Consecvența bate entuziasmul de moment. Execuția curată, repetată, aduce victoria pe termen lung.\"",
+                "author": "Ștefan cel Mare",
+                "role": "Voievod al Moldovei (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+            },
+            {
+                "text": "\"Execuția curajoasă contează: ideea bună fără acțiune rămâne doar zgomot.\"",
+                "author": "Theodore Roosevelt",
+                "role": "Președinte al SUA (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
+            },
+            {
+                "author": "Nikola Tesla",
+                "role": "Inventator (Satiric)",
+                "text": "\"Inovația reală apare când îndrăznești să construiești ce nu există încă.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
+            },
+            {
+                "text": "\"Mesaj clar, direcție clară, impact real. Comunicarea bună face diferența.\"",
+                "author": "Martin Luther King Jr.",
+                "role": "Lider civic (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
             }
         ]
     },
@@ -594,16 +594,10 @@
                 "title": "What<span class=\"text-primary\"> Clients Say.</span>",
                 "items": [
                     {
-                        "text": "\"The real performance is integrating different components into one stable flow.\"",
-                        "author": "Michael the Brave",
-                        "role": "Ruler (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
-                    },
-                    {
-                        "text": "\"Consistency beats momentary enthusiasm. Clean repeated execution wins in the long run.\"",
-                        "author": "Stephen the Great",
-                        "role": "Voivode of Moldavia (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+                        "text": "\"Strategy without execution is just a sketch. Here I saw discipline, speed, and measurable outcomes.\"",
+                        "author": "Napoleon Bonaparte",
+                        "role": "Military Strategist (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
                     },
                     {
                         "text": "\"Strong leadership means long-term stability, not just quick wins.\"",
@@ -612,46 +606,10 @@
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg/330px-Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
                     },
                     {
-                        "text": "\"Continuous optimization saves time, money, and headaches. Exactly what a good product needs.\"",
-                        "author": "Benjamin Franklin",
-                        "role": "Inventor & Diplomat (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
-                    },
-                    {
-                        "text": "\"Bold execution matters: a great idea without action is only noise.\"",
-                        "author": "Theodore Roosevelt",
-                        "role": "U.S. President (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
-                    },
-                    {
-                        "text": "\"Solid systems prove themselves in hard times: they endure, adapt, and keep moving.\"",
-                        "author": "Abraham Lincoln",
-                        "role": "U.S. President (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
-                    },
-                    {
-                        "text": "\"Strategy without execution is just a sketch. Here I saw discipline, speed, and measurable outcomes.\"",
-                        "author": "Napoleon Bonaparte",
-                        "role": "Military Strategist (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
-                    },
-                    {
-                        "author": "Nikola Tesla",
-                        "role": "Inventor (Satirical)",
-                        "text": "\"Real innovation happens when you dare to build what does not exist yet.\"",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
-                    },
-                    {
-                        "text": "\"True modernization starts when processes are clear and teams can operate with minimal friction.\"",
-                        "author": "Alexandru Ioan Cuza",
-                        "role": "Ruler of the United Principalities (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg/330px-Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg"
-                    },
-                    {
-                        "text": "\"Clear message, clear direction, real impact. Great communication makes the difference.\"",
-                        "author": "Martin Luther King Jr.",
-                        "role": "Civil Rights Leader (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
+                        "text": "\"Solid infrastructure must endure hard nights. When chaos appears, the system still has to stand.\"",
+                        "author": "Vlad the Impaler",
+                        "role": "Ruler of Wallachia (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
                     },
                     {
                         "author": "Albert Einstein",
@@ -660,16 +618,58 @@
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg"
                     },
                     {
-                        "text": "\"Solid infrastructure must endure hard nights. When chaos appears, the system still has to stand.\"",
-                        "author": "Vlad the Impaler",
-                        "role": "Ruler of Wallachia (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
+                        "text": "\"True modernization starts when processes are clear and teams can operate with minimal friction.\"",
+                        "author": "Alexandru Ioan Cuza",
+                        "role": "Ruler of the United Principalities (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg/330px-Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg"
+                    },
+                    {
+                        "text": "\"Continuous optimization saves time, money, and headaches. Exactly what a good product needs.\"",
+                        "author": "Benjamin Franklin",
+                        "role": "Inventor & Diplomat (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
                     },
                     {
                         "author": "Joan of Arc",
                         "role": "French heroine (Satirical)",
                         "text": "\"Strategic courage can change the game, even when resources are limited.\"",
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Joan_of_arc_miniature_graded.jpg/330px-Joan_of_arc_miniature_graded.jpg"
+                    },
+                    {
+                        "text": "\"The real performance is integrating different components into one stable flow.\"",
+                        "author": "Michael the Brave",
+                        "role": "Ruler (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
+                    },
+                    {
+                        "text": "\"Solid systems prove themselves in hard times: they endure, adapt, and keep moving.\"",
+                        "author": "Abraham Lincoln",
+                        "role": "U.S. President (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
+                    },
+                    {
+                        "text": "\"Consistency beats momentary enthusiasm. Clean repeated execution wins in the long run.\"",
+                        "author": "Stephen the Great",
+                        "role": "Voivode of Moldavia (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+                    },
+                    {
+                        "text": "\"Bold execution matters: a great idea without action is only noise.\"",
+                        "author": "Theodore Roosevelt",
+                        "role": "U.S. President (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
+                    },
+                    {
+                        "author": "Nikola Tesla",
+                        "role": "Inventor (Satirical)",
+                        "text": "\"Real innovation happens when you dare to build what does not exist yet.\"",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
+                    },
+                    {
+                        "text": "\"Clear message, clear direction, real impact. Great communication makes the difference.\"",
+                        "author": "Martin Luther King Jr.",
+                        "role": "Civil Rights Leader (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
                     }
                 ]
             },
