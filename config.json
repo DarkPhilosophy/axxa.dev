@@ -1,7 +1,10 @@
 {
     "i18n": {
         "default": "ro",
-        "supported": ["ro", "en"],
+        "supported": [
+            "ro",
+            "en"
+        ],
         "fallback": "ro",
         "locales": {
             "ro": "ro-RO",
@@ -134,7 +137,11 @@
                 "image": "images/Cleveroad.jpg",
                 "desc": "O platformă premium de e-commerce pentru modă. Arhitectură CMS headless cu frontend Next.js.",
                 "filter_cat": "web design",
-                "tech": ["Next.js", "Stripe", "Tailwind"]
+                "tech": [
+                    "Next.js",
+                    "Stripe",
+                    "Tailwind"
+                ]
             },
             {
                 "id": "p2",
@@ -143,7 +150,11 @@
                 "image": "images/Game Dashboard Design.jpg",
                 "desc": "Un dashboard financiar în timp real. Vizualizări de date interactive construite cu D3.js.",
                 "filter_cat": "web",
-                "tech": ["React", "D3.js", "Firebase"]
+                "tech": [
+                    "React",
+                    "D3.js",
+                    "Firebase"
+                ]
             },
             {
                 "id": "p3",
@@ -152,7 +163,11 @@
                 "image": "images/Portofoliu.png",
                 "desc": "Un rebranding complet pentru o firmă de arhitectură. Layout minimalist și animații subtile.",
                 "filter_cat": "design",
-                "tech": ["HTML/CSS", "GSAP", "Design"]
+                "tech": [
+                    "HTML/CSS",
+                    "GSAP",
+                    "Design"
+                ]
             },
             {
                 "id": "p4",
@@ -161,7 +176,11 @@
                 "image": "images/Task manager app.jpg",
                 "desc": "Aplicație de fitness cu gamification și urmărire GPS. Dezvoltată cu Flutter.",
                 "filter_cat": "mobile design",
-                "tech": ["Flutter", "Dart", "Firebase"]
+                "tech": [
+                    "Flutter",
+                    "Dart",
+                    "Firebase"
+                ]
             }
         ]
     },
@@ -227,6 +246,36 @@
                 "author": "Sarah Jenkins",
                 "role": "Artistry",
                 "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+            },
+            {
+                "text": "\"Strategia fără execuție e doar o schiță. Aici am văzut disciplină, viteză și rezultate măsurabile.\"",
+                "author": "Napoleon Bonaparte",
+                "role": "Strateg Militar (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
+            },
+            {
+                "text": "\"Infrastructura bună ține piept nopților grele. Când apare haosul, sistemul tot trebuie să rămână în picioare.\"",
+                "author": "Vlad Țepeș",
+                "role": "Domn al Țării Românești (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
+            },
+            {
+                "text": "\"Consecvența bate entuziasmul de moment. Execuția curată, repetată, aduce victoria pe termen lung.\"",
+                "author": "Ștefan cel Mare",
+                "role": "Voievod al Moldovei (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+            },
+            {
+                "text": "\"Unirea componentelor diferite într-un singur flux stabil este adevărata performanță tehnică.\"",
+                "author": "Mihai Viteazul",
+                "role": "Domnitor (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
+            },
+            {
+                "text": "\"Modernizarea reală începe când procesele sunt clare, iar oamenii pot opera sistemul fără fricțiune.\"",
+                "author": "Alexandru Ioan Cuza",
+                "role": "Domnitor al Principatelor Unite (Satiric)",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg/330px-Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg"
             }
         ]
     },
@@ -410,7 +459,11 @@
                         "image": "images/Cleveroad.jpg",
                         "desc": "A premium fashion e-commerce platform. Headless CMS architecture with a Next.js frontend.",
                         "filter_cat": "web design",
-                        "tech": ["Next.js", "Stripe", "Tailwind"]
+                        "tech": [
+                            "Next.js",
+                            "Stripe",
+                            "Tailwind"
+                        ]
                     },
                     {
                         "id": "p2",
@@ -419,7 +472,11 @@
                         "image": "images/Game Dashboard Design.jpg",
                         "desc": "A real-time financial dashboard. Interactive data visualizations built with D3.js.",
                         "filter_cat": "web",
-                        "tech": ["React", "D3.js", "Firebase"]
+                        "tech": [
+                            "React",
+                            "D3.js",
+                            "Firebase"
+                        ]
                     },
                     {
                         "id": "p3",
@@ -428,7 +485,11 @@
                         "image": "images/Portofoliu.png",
                         "desc": "A full rebrand for an architecture firm. Minimal layout and subtle animations.",
                         "filter_cat": "design",
-                        "tech": ["HTML/CSS", "GSAP", "Design"]
+                        "tech": [
+                            "HTML/CSS",
+                            "GSAP",
+                            "Design"
+                        ]
                     },
                     {
                         "id": "p4",
@@ -437,7 +498,11 @@
                         "image": "images/Task manager app.jpg",
                         "desc": "Fitness app with gamification and GPS tracking. Built with Flutter.",
                         "filter_cat": "mobile design",
-                        "tech": ["Flutter", "Dart", "Firebase"]
+                        "tech": [
+                            "Flutter",
+                            "Dart",
+                            "Firebase"
+                        ]
                     }
                 ]
             },
@@ -503,6 +568,36 @@
                         "author": "Sarah Jenkins",
                         "role": "Artistry",
                         "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                    },
+                    {
+                        "text": "\"Strategy without execution is just a sketch. Here I saw discipline, speed, and measurable outcomes.\"",
+                        "author": "Napoleon Bonaparte",
+                        "role": "Military Strategist (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
+                    },
+                    {
+                        "text": "\"Solid infrastructure must endure hard nights. When chaos appears, the system still has to stand.\"",
+                        "author": "Vlad the Impaler",
+                        "role": "Ruler of Wallachia (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
+                    },
+                    {
+                        "text": "\"Consistency beats momentary enthusiasm. Clean repeated execution wins in the long run.\"",
+                        "author": "Stephen the Great",
+                        "role": "Voivode of Moldavia (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg/330px-%C5%9Etefan_cel_Mare_%28Stephen_the_Great%29_1488%2C_Vorone%C5%A3_Monastery.jpg"
+                    },
+                    {
+                        "text": "\"The real performance is integrating different components into one stable flow.\"",
+                        "author": "Michael the Brave",
+                        "role": "Ruler (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
+                    },
+                    {
+                        "text": "\"True modernization starts when processes are clear and teams can operate with minimal friction.\"",
+                        "author": "Alexandru Ioan Cuza",
+                        "role": "Ruler of the United Principalities (Satirical)",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg/330px-Alexandru_Ioan_Cuza_-_Photo_by_Carol_Popp_de_Szathm%C3%A1ry.jpg"
                     }
                 ]
             },
