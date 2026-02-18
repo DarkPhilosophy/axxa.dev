@@ -306,6 +306,12 @@
                 "author": "Mihai Viteazul",
                 "role": "Domnitor (Satiric)",
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MihaiViteazul.jpg/330px-MihaiViteazul.jpg"
+            },
+            {
+                "author": "Ioana d'Arc",
+                "role": "Eroină franceză (Satiric)",
+                "text": "\"Curajul strategic schimbă cursul jocului, chiar și când resursele sunt limitate.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Joan_of_arc_miniature_graded.jpg/330px-Joan_of_arc_miniature_graded.jpg"
             }
         ]
     },
@@ -658,6 +664,12 @@
                         "author": "Vlad the Impaler",
                         "role": "Ruler of Wallachia (Satirical)",
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg/330px-Vlad_%C5%A2epe%C5%9F%2C_the_Impaler%2C_Prince_of_Wallachia_%281456-1462%29_%28died_1477%29.jpg"
+                    },
+                    {
+                        "author": "Joan of Arc",
+                        "role": "French heroine (Satirical)",
+                        "text": "\"Strategic courage can change the game, even when resources are limited.\"",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Joan_of_arc_miniature_graded.jpg/330px-Joan_of_arc_miniature_graded.jpg"
                     }
                 ]
             },
