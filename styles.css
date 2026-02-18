@@ -274,6 +274,62 @@ body.nav-hidden #nav-reveal-hint {
     background: rgb(148 163 184 / 0.25);
 }
 
+.nav-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.nav-cluster-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.nav-cluster-links {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-top: 8px;
+    border-top: 1px solid rgb(148 163 184 / 0.35);
+}
+
+.nav-cluster-links::before,
+.nav-cluster-links::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    width: 1px;
+    height: 10px;
+    background: rgb(148 163 184 / 0.35);
+}
+
+.nav-cluster-links::before {
+    left: 0;
+}
+
+.nav-cluster-links::after {
+    right: 0;
+}
+
+.dark .nav-cluster-label {
+    color: rgb(148 163 184);
+}
+
+.dark .nav-cluster-links {
+    border-top-color: rgb(148 163 184 / 0.25);
+}
+
+.dark .nav-cluster-links::before,
+.dark .nav-cluster-links::after {
+    background: rgb(148 163 184 / 0.25);
+}
+
 body:hover .mouse-spotlight {
     opacity: 1;
 }
