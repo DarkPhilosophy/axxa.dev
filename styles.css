@@ -271,6 +271,25 @@ body.overlay-open #nav-reveal-hint {
     opacity: 0 !important;
 }
 
+/* Global overlay stacking (reliable, independent of Tailwind build output) */
+#contact-modal {
+    z-index: 12000 !important;
+}
+
+#sql-modal {
+    z-index: 12010 !important;
+}
+
+#contact-modal-backdrop,
+#sql-modal-backdrop {
+    z-index: 1;
+}
+
+#contact-modal-content,
+#sql-modal-content {
+    z-index: 2;
+}
+
 .nav-divider {
     width: 1px;
     height: 18px;
