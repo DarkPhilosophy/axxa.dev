@@ -244,6 +244,41 @@ samp {
         rgba(0, 255, 136, 0.0) 60%);
 }
 
+/* Nav UX */
+#main-nav {
+    transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+#nav-reveal-hint {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 45;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+body.nav-hidden #nav-reveal-hint {
+    opacity: 1;
+}
+
+.nav-group-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(100 116 139);
+    border: 1px solid rgb(203 213 225 / 0.6);
+    border-radius: 9999px;
+    padding: 0.18rem 0.45rem;
+}
+
+.dark .nav-group-tag {
+    color: rgb(148 163 184);
+    border-color: rgb(148 163 184 / 0.35);
+}
+
 body:hover .mouse-spotlight {
     opacity: 1;
 }

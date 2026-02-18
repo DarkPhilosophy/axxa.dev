@@ -448,12 +448,14 @@ function initNavigation() {
         const showNav = () => {
             if (!hidden) return;
             nav.style.transform = 'translateY(0)';
+            document.body.classList.remove('nav-hidden');
             hidden = false;
         };
 
         const hideNav = () => {
             if (hidden) return;
             nav.style.transform = 'translateY(-100%)';
+            document.body.classList.add('nav-hidden');
             hidden = true;
         };
 

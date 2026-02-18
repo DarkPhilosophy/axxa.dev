@@ -9,6 +9,14 @@
     <title data-i18n="meta.title">AXXA.DEV</title>
     <meta name="description" content="" data-i18n-attr="content:meta.description">
     <meta name="keywords" content="" data-i18n-attr="content:meta.keywords">
+    <script>
+        (function () {
+            var p = window.location.pathname;
+            var isHome = p === '/' || p === '/index.html';
+            var seen = sessionStorage.getItem('axxa_splash_seen') === '1';
+            if (!isHome || seen) document.documentElement.setAttribute('data-splash', 'off');
+        })();
+    </script>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,6 +53,9 @@
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
+        }
+        html[data-splash="off"] #splash-screen {
+            display: none !important;
         }
         /* Custom Scrollbar for Admin Panel */
         .custom-scrollbar::-webkit-scrollbar {
@@ -111,11 +122,14 @@
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center space-x-8">
+                <span class="nav-group-tag">MAIN</span>
                 <a href="#home" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.home">HOME</a>
                 <a href="#about" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.about">ABOUT</a>
                 <a href="#services" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="services.title">SERVICES</a> <!-- Fallback or separate key if overly specific -->
+                <span class="nav-group-tag">CONTENT</span>
                 <a href="/projects/" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
                 <a href="/writing/" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
+                <span class="nav-group-tag">ACTION</span>
                 <a href="#" data-open-contact class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.contact">CONTACT</a>
                 <a href="#" data-open-sql class="nav-link text-sm font-medium hover:text-primary transition-colors">SQL STATUS</a>
                 
@@ -142,6 +156,9 @@
             </button>
         </div>
     </nav>
+    <div id="nav-reveal-hint" class="px-3 py-1 rounded-b-lg text-[11px] font-semibold tracking-wide bg-slate-900/85 text-white border border-white/20">
+        Move mouse to top to show menu
+    </div>
 
     <!-- Mobile Menu Overlay -->
     <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white/95 dark:bg-dark/95 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-center space-y-8">
