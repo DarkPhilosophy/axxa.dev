@@ -20,7 +20,7 @@
 <body>
   <main class="wrap">
     <h1>AXXA SQL Cluster Status</h1>
-    <p class="sub">Live source: <code>https://sql.axxa.dev/status.json</code></p>
+    <p class="sub">Live source: <code><a id="sourceLink" href="https://sql.axxa.dev/status.json" target="_blank" rel="noopener noreferrer">https://sql.axxa.dev/status.json</a></code></p>
     <section class="grid">
       <article class="card">
         <h2>Overall</h2>
@@ -62,6 +62,17 @@
         document.getElementById('c_uptime').textContent='Uptime: '+fmt(c.sqld_uptime_sec);
       }catch(e){const b=document.getElementById('overall');b.textContent='UNAVAILABLE';b.className='badge danger';}
     }
+
+    const sourceLink = document.getElementById('sourceLink');
+    if (sourceLink) {
+      sourceLink.addEventListener('click', function (e) {
+        const selected = window.getSelection ? window.getSelection().toString() : '';
+        if (selected && selected.length > 0) {
+          e.preventDefault();
+        }
+      });
+    }
+
     load();setInterval(load,10000);
   </script>
 </body>
