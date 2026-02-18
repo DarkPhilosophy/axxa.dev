@@ -239,19 +239,19 @@
                 "text": "\"Leadership-ul bun înseamnă stabilitate pe termen lung, nu doar câștig rapid.\"",
                 "author": "George Washington",
                 "role": "Primul Președinte al SUA (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/George_Washington.jpg/330px-George_Washington.jpg"
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg/330px-Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
             },
             {
                 "text": "\"Optimizarea continuă economisește timp, bani și nervi. Exact ce vrei într-un produs bun.\"",
                 "author": "Benjamin Franklin",
                 "role": "Inventator & Diplomat (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg/330px-Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg"
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
             },
             {
                 "text": "\"Execuția curajoasă contează: ideea bună fără acțiune rămâne doar zgomot.\"",
                 "author": "Theodore Roosevelt",
                 "role": "Președinte al SUA (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/President_Roosevelt_-_Pach_Bros.jpg/330px-President_Roosevelt_-_Pach_Bros.jpg"
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
             },
             {
                 "text": "\"Infrastructura bună ține piept nopților grele. Când apare haosul, sistemul tot trebuie să rămână în picioare.\"",
@@ -263,7 +263,7 @@
                 "text": "\"Sistemele solide se văd în momente dificile: rezistă, se adaptează și merg mai departe.\"",
                 "author": "Abraham Lincoln",
                 "role": "Președinte al SUA (Satiric)",
-                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Abraham_Lincoln_O-77_matte_collodion_print.jpg/330px-Abraham_Lincoln_O-77_matte_collodion_print.jpg"
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
             },
             {
                 "text": "\"Strategia fără execuție e doar o schiță. Aici am văzut disciplină, viteză și rezultate măsurabile.\"",
@@ -272,10 +272,10 @@
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
             },
             {
-                "text": "“Alex este un developer extrem de atent la detalii. Nu scrie doar cod—se gândește și la partea de business și UX. Rezultatul final a depășit așteptările noastre.”",
-                "author": "James Wilson",
-                "role": "CEO, Tech.",
-                "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                "author": "Nikola Tesla",
+                "role": "Inventator (Satiric)",
+                "text": "\"Inovația reală apare când îndrăznești să construiești ce nu există încă.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
             },
             {
                 "text": "\"Modernizarea reală începe când procesele sunt clare, iar oamenii pot opera sistemul fără fricțiune.\"",
@@ -290,10 +290,10 @@
                 "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
             },
             {
-                "text": "“A fost o plăcere să lucrez cu Alex. Abilitățile sale de design sunt de top și înțelege nevoile utilizatorilor. Implicarea utilizatorilor a crescut semnificativ după redesign.”",
-                "author": "Sarah Jenkins",
-                "role": "Artistry",
-                "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                "author": "Albert Einstein",
+                "role": "Fizician (Satiric)",
+                "text": "\"Simplificarea inteligentă este semnul unui sistem bine gândit.\"",
+                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg"
             },
             {
                 "text": "\"Consecvența bate entuziasmul de moment. Execuția curată, repetată, aduce victoria pe termen lung.\"",
@@ -603,25 +603,25 @@
                         "text": "\"Strong leadership means long-term stability, not just quick wins.\"",
                         "author": "George Washington",
                         "role": "1st U.S. President (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/George_Washington.jpg/330px-George_Washington.jpg"
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg/330px-Gilbert_Stuart_Williamstown_Portrait_of_George_Washington.jpg"
                     },
                     {
                         "text": "\"Continuous optimization saves time, money, and headaches. Exactly what a good product needs.\"",
                         "author": "Benjamin Franklin",
                         "role": "Inventor & Diplomat (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg/330px-Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg"
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg/330px-Joseph_Siffrein_Duplessis_-_Benjamin_Franklin_-_Google_Art_Project.jpg"
                     },
                     {
                         "text": "\"Bold execution matters: a great idea without action is only noise.\"",
                         "author": "Theodore Roosevelt",
                         "role": "U.S. President (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/President_Roosevelt_-_Pach_Bros.jpg/330px-President_Roosevelt_-_Pach_Bros.jpg"
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Theodore_Roosevelt_by_the_Pach_Bros.jpg/330px-Theodore_Roosevelt_by_the_Pach_Bros.jpg"
                     },
                     {
                         "text": "\"Solid systems prove themselves in hard times: they endure, adapt, and keep moving.\"",
                         "author": "Abraham Lincoln",
                         "role": "U.S. President (Satirical)",
-                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Abraham_Lincoln_O-77_matte_collodion_print.jpg/330px-Abraham_Lincoln_O-77_matte_collodion_print.jpg"
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg/330px-Abraham_Lincoln_1863_Portrait_%283x4_cropped%29.jpg"
                     },
                     {
                         "text": "\"Strategy without execution is just a sketch. Here I saw discipline, speed, and measurable outcomes.\"",
@@ -630,10 +630,10 @@
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/330px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg"
                     },
                     {
-                        "text": "“Alex is an extremely detail-oriented developer. He doesn’t just write code—he thinks about business and UX too. The final result exceeded our expectations.”",
-                        "author": "James Wilson",
-                        "role": "CEO, Tech.",
-                        "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                        "author": "Nikola Tesla",
+                        "role": "Inventor (Satirical)",
+                        "text": "\"Real innovation happens when you dare to build what does not exist yet.\"",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg"
                     },
                     {
                         "text": "\"True modernization starts when processes are clear and teams can operate with minimal friction.\"",
@@ -648,10 +648,10 @@
                         "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Martin_Luther_King%2C_Jr..jpg/330px-Martin_Luther_King%2C_Jr..jpg"
                     },
                     {
-                        "text": "“It was a pleasure working with Alex. His design skills are top-notch and he understands user needs. Engagement increased significantly after the redesign.”",
-                        "author": "Sarah Jenkins",
-                        "role": "Artistry",
-                        "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                        "author": "Albert Einstein",
+                        "role": "Physicist (Satirical)",
+                        "text": "\"Intelligent simplification is the mark of a well-designed system.\"",
+                        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg"
                     },
                     {
                         "text": "\"Solid infrastructure must endure hard nights. When chaos appears, the system still has to stand.\"",
