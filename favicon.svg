@@ -1,35 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA favicon XX mark">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#00fff0"/>
       <stop offset="50%" stop-color="#00ff88"/>
       <stop offset="100%" stop-color="#ff00c8"/>
     </linearGradient>
-    <clipPath id="circleClip">
-      <circle cx="256" cy="256" r="256"/>
-    </clipPath>
   </defs>
 
-  <g clip-path="url(#circleClip)">
-    <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="none"/>
+  <circle cx="256" cy="256" r="256" fill="url(#orb)"/>
 
-    <!-- Left X -->
-    <g fill="#ffffff">
-      <polygon points="90,98 148,98 270,286 212,286"/>
-      <polygon points="270,98 212,98 90,286 148,286"/>
-      <polygon points="90,414 148,414 270,226 212,226"/>
-      <polygon points="270,414 212,414 90,226 148,226"/>
-    </g>
+  <!-- Left X -->
+  <g fill="#f2f4f5">
+    <rect x="150" y="70" width="62" height="372" transform="rotate(31 181 256)"/>
+    <rect x="150" y="70" width="62" height="372" transform="rotate(-31 181 256)"/>
+  </g>
 
-    <!-- Right X -->
-    <g fill="#ffffff">
-      <polygon points="242,98 300,98 422,286 364,286"/>
-      <polygon points="422,98 364,98 242,286 300,286"/>
-      <polygon points="242,414 300,414 422,226 364,226"/>
-      <polygon points="422,414 364,414 242,226 300,226"/>
-    </g>
-
-    <!-- Center cut creates cleaner diamond crossing -->
-    <polygon points="256,200 296,256 256,312 216,256" fill="url(#bg)"/>
+  <!-- Right X -->
+  <g fill="#f2f4f5">
+    <rect x="300" y="70" width="62" height="372" transform="rotate(31 331 256)"/>
+    <rect x="300" y="70" width="62" height="372" transform="rotate(-31 331 256)"/>
   </g>
 </svg>
