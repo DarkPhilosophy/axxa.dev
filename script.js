@@ -347,6 +347,14 @@ function populateLists() {
 function initSplash() {
     const splash = document.getElementById('splash-screen');
     if (!splash) return;
+    const isHomePath = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    const seenSplash = sessionStorage.getItem('axxa_splash_seen') === '1';
+
+    if (!isHomePath || seenSplash) {
+        splash.remove();
+        return;
+    }
+    sessionStorage.setItem('axxa_splash_seen', '1');
 
     // Auto-remove after delay
     setTimeout(() => {
@@ -435,16 +443,17 @@ function initNavigation() {
     if (nav) {
         let lastY = window.scrollY || 0;
         let hidden = false;
+        nav.style.willChange = 'transform';
 
         const showNav = () => {
             if (!hidden) return;
-            nav.classList.remove('-translate-y-full');
+            nav.style.transform = 'translateY(0)';
             hidden = false;
         };
 
         const hideNav = () => {
             if (hidden) return;
-            nav.classList.add('-translate-y-full');
+            nav.style.transform = 'translateY(-100%)';
             hidden = true;
         };
 
@@ -492,6 +501,36 @@ function initNavigation() {
         contactClosers.forEach(btnEl => btnEl.addEventListener('click', closeContact));
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !contactModal.classList.contains('hidden')) closeContact();
+        });
+    }
+
+    // SQL modal open/close hooks.
+    const sqlModal = document.getElementById('sql-modal');
+    const sqlBackdrop = document.getElementById('sql-modal-backdrop');
+    const sqlContent = document.getElementById('sql-modal-content');
+    const sqlOpeners = document.querySelectorAll('[data-open-sql]');
+    const sqlClosers = document.querySelectorAll('[data-close-sql]');
+
+    if (sqlModal && sqlBackdrop && sqlContent) {
+        const openSql = () => {
+            sqlModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                sqlBackdrop.classList.remove('opacity-0');
+                sqlContent.classList.remove('opacity-0', 'scale-95');
+            });
+        };
+        const closeSql = () => {
+            sqlBackdrop.classList.add('opacity-0');
+            sqlContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => sqlModal.classList.add('hidden'), 250);
+        };
+        sqlOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            openSql();
+        }));
+        sqlClosers.forEach(btnEl => btnEl.addEventListener('click', closeSql));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !sqlModal.classList.contains('hidden')) closeSql();
         });
     }
 }
