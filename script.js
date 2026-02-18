@@ -15,8 +15,16 @@ let revealObserver = null;
 let adminUnlocked = false;
 let sessionGithubToken = null;
 let activeOverlay = null;
+let timeTicker = null;
+let softNavBound = false;
+let softNavLoading = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await bootApp();
+    initSoftNavigation();
+});
+
+async function bootApp() {
     try {
         // 1. Load Config
         await loadConfig();
@@ -32,7 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         initContact();
         initBlog();
         updateTime();
-        setInterval(updateTime, 60000);
+        if (timeTicker) clearInterval(timeTicker);
+        timeTicker = setInterval(updateTime, 60000);
     } catch (error) {
         console.error("Initialization error:", error);
     } finally {
@@ -48,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
-});
+}
 
 // Fallback: Force remove preloader after 5 seconds max
 setTimeout(() => {
@@ -594,6 +603,70 @@ function initNavigation() {
             if (e.key === 'Escape' && !sqlModal.classList.contains('hidden')) closeSql();
         });
     }
+}
+
+function initSoftNavigation() {
+    if (softNavBound) return;
+    softNavBound = true;
+
+    const isSoftPath = (url) => {
+        try {
+            const u = new URL(url, window.location.origin);
+            const p = u.pathname.endsWith('/') ? u.pathname : `${u.pathname}/`;
+            return u.origin === window.location.origin && ['/', '/projects/', '/writing/'].includes(p);
+        } catch {
+            return false;
+        }
+    };
+
+    const swapPageContent = async (url, push = true) => {
+        if (softNavLoading || activeOverlay) return;
+        if (!isSoftPath(url)) {
+            window.location.href = url;
+            return;
+        }
+        softNavLoading = true;
+        try {
+            const res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextMain = doc.querySelector('#page-content');
+            const currMain = document.querySelector('#page-content');
+            if (!nextMain || !currMain) {
+                window.location.href = url;
+                return;
+            }
+            currMain.replaceWith(nextMain);
+            document.title = doc.title || document.title;
+            const nextDesc = doc.querySelector('meta[name="description"]');
+            const currDesc = document.querySelector('meta[name="description"]');
+            if (nextDesc && currDesc) currDesc.setAttribute('content', nextDesc.getAttribute('content') || '');
+            if (push) history.pushState({}, '', url);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            applyLanguage(currentLang);
+            initAnimations();
+        } catch (e) {
+            console.error('Soft nav failed:', e);
+            window.location.href = url;
+        } finally {
+            softNavLoading = false;
+        }
+    };
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a[data-soft-nav]');
+        if (!link) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const href = link.getAttribute('href');
+        if (!href) return;
+        e.preventDefault();
+        swapPageContent(href, true);
+    });
+
+    window.addEventListener('popstate', () => {
+        swapPageContent(window.location.href, false);
+    });
 }
 
 

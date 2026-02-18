@@ -125,7 +125,7 @@
         <div class="container mx-auto px-6 h-20 flex justify-between items-center">
             
             <!-- Logo -->
-            <a href="#" class="relative group brand-neo">
+            <a href="/" data-soft-nav class="relative group brand-neo">
                 <span class="brand-neo-text text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
                     A<span class="brand-overlap-xx text-slate-800 dark:text-white group-hover:text-primary transition-colors">XX</span>A<span class="text-primary">.DEV</span>
                 </span>
@@ -145,8 +145,8 @@
                 <div class="nav-cluster">
                     <div class="nav-cluster-label" data-i18n="nav.groups.content">CONTENT</div>
                     <div class="nav-cluster-links">
-                        <a href="/projects/" class="nav-link text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
-                        <a href="/writing/" class="nav-link text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
+                        <a href="/projects/" data-soft-nav class="nav-link text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
+                        <a href="/writing/" data-soft-nav class="nav-link text-sm font-medium text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
                     </div>
                 </div>
                 <div class="nav-cluster">
@@ -193,8 +193,8 @@
         <a href="#home" class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.home">HOME</a>
         <a href="#about" class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.about">ABOUT</a>
         <a href="#services" class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="services.title">SERVICES</a>
-        <a href="/projects/" class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
-        <a href="/writing/" class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
+        <a href="/projects/" data-soft-nav class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
+        <a href="/writing/" data-soft-nav class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
         <a href="#" data-open-contact class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors" data-i18n="nav.contact">CONTACT</a>
         <a href="#" data-open-sql class="mobile-link text-3xl font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors">SQL STATUS</a>
         <div class="flex items-center gap-3 pt-6">
@@ -203,6 +203,7 @@
         </div>
     </div>
 
+    <main id="page-content" data-page="home">
     <!-- Hero Section -->
     <section id="home" data-section="hero" data-testid="section-hero" class="section-spy min-h-screen flex items-center pt-20 relative">
         <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
@@ -402,6 +403,7 @@
     </section>
 
     <!-- Projects Section -->
+    </main>
     <!-- Testimonials Section -->
     <section id="testimonials" data-section="testimonials" data-testid="section-testimonials" class="section-spy py-24 relative overflow-hidden">
         <span id="customer" class="absolute -top-20"></span>
@@ -592,7 +594,7 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <!-- MAIN SCRIPT -->
-    <script src="/script.js?v=19"></script>
+    <script src="/script.js?v=20"></script>
     <style>
         .toast-enter { transform: translateY(20px); opacity: 0; transition: all 0.3s ease-out; }
         .toast-enter-active { transform: translateY(0); opacity: 1; }
