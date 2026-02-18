@@ -258,6 +258,9 @@ samp {
     opacity: 0;
     pointer-events: none;
     transition: opacity 180ms ease;
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
 }
 
 body.nav-hidden #nav-reveal-hint {
@@ -285,9 +288,13 @@ body.nav-hidden #nav-reveal-hint {
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgb(100 116 139);
+    color: rgb(226 232 240);
     font-weight: 700;
     line-height: 1;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    border-radius: 9999px;
+    padding: 0.24rem 0.52rem;
+    background: rgba(0, 0, 0, 0.55);
 }
 
 .nav-cluster-links {
@@ -296,7 +303,7 @@ body.nav-hidden #nav-reveal-hint {
     align-items: center;
     gap: 1.5rem;
     padding-top: 8px;
-    border-top: 1px solid rgb(148 163 184 / 0.35);
+    border-top: 1px solid rgba(0, 255, 136, 0.75);
 }
 
 .nav-cluster-links::before,
@@ -306,7 +313,7 @@ body.nav-hidden #nav-reveal-hint {
     top: -1px;
     width: 1px;
     height: 10px;
-    background: rgb(148 163 184 / 0.35);
+    background: rgba(0, 255, 136, 0.75);
 }
 
 .nav-cluster-links::before {
@@ -318,16 +325,34 @@ body.nav-hidden #nav-reveal-hint {
 }
 
 .dark .nav-cluster-label {
-    color: rgb(148 163 184);
+    color: rgb(226 232 240);
+    border-color: rgba(0, 255, 136, 0.45);
+    background: rgba(0, 0, 0, 0.9);
 }
 
 .dark .nav-cluster-links {
-    border-top-color: rgb(148 163 184 / 0.25);
+    border-top-color: rgba(0, 255, 136, 0.85);
 }
 
 .dark .nav-cluster-links::before,
 .dark .nav-cluster-links::after {
-    background: rgb(148 163 184 / 0.25);
+    background: rgba(0, 255, 136, 0.85);
+}
+
+/* OLED true black mode */
+html.dark body {
+    background: #000 !important;
+}
+
+html.dark #main-nav {
+    background: rgba(0, 0, 0, 0.97) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark #preloader,
+html.dark #mobile-menu,
+html.dark #splash-screen {
+    background: #000 !important;
 }
 
 body:hover .mouse-spotlight {

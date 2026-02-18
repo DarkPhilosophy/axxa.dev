@@ -178,6 +178,8 @@ function populateText() {
                 // Actually meta tags use content attribute usually.
                 // Re-reading HTML: <title data-i18n="meta.title">...
                 el.textContent = value;
+            } else if (el.classList.contains('nav-link') || el.classList.contains('mobile-link')) {
+                el.textContent = String(value).replace(/<[^>]*>/g, '');
             } else {
                 el.innerHTML = value; // Use innerHTML to allow simple span tags like <br>
             }
