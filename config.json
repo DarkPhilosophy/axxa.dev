@@ -44,7 +44,12 @@
         "work": "Proiecte",
         "writing": "Articole",
         "contact": "Contact",
-        "hire": "Angajează-mă"
+        "hire": "Angajează-mă",
+        "groups": {
+            "main": "Principal",
+            "content": "Conținut",
+            "action": "Acțiuni"
+        }
     },
     "about": {
         "title": "Arsenalul <span class=\"text-primary\">Meu.</span>",
@@ -315,7 +320,12 @@
                 "work": "Projects",
                 "writing": "Writing",
                 "contact": "Contact",
-                "hire": "Hire Me"
+                "hire": "Hire Me",
+                "groups": {
+                    "main": "Main",
+                    "content": "Content",
+                    "action": "Action"
+                }
             },
             "about": {
                 "title": "My <span class=\"text-primary\">Arsenal.</span>",

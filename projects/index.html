@@ -73,7 +73,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800 dark:bg-dark dark:text-slate-200 transition-colors duration-300 overflow-x-hidden selection:bg-primary selection:text-black">
+<body class="bg-gray-50 text-slate-800 dark:bg-black dark:text-slate-200 transition-colors duration-300 overflow-x-hidden selection:bg-primary selection:text-black">
 
     <!-- SPLASH SCREEN OVERLAY -->
     <div id="splash-screen">
@@ -88,7 +88,7 @@
     </div>
 
     <!-- PRELOADER -->
-    <div id="preloader" class="fixed inset-0 z-[9998] bg-white dark:bg-dark flex items-center justify-center transition-opacity duration-500">
+    <div id="preloader" class="fixed inset-0 z-[9998] bg-white dark:bg-black flex items-center justify-center transition-opacity duration-500">
         <div class="relative w-24 h-24">
             <div class="absolute inset-0 border-t-4 border-l-4 border-primary rounded-full animate-spin"></div>
             <div class="absolute inset-2 border-r-4 border-b-4 border-slate-300 dark:border-slate-700 rounded-full animate-spin-slow"></div>
@@ -109,7 +109,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav id="main-nav" class="fixed w-full top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-dark/70 border-b border-slate-200/50 dark:border-white/5 transition-all duration-300">
+    <nav id="main-nav" class="fixed w-full top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-black/95 border-b border-slate-200/50 dark:border-white/5 transition-all duration-300">
         <div class="container mx-auto px-6 h-20 flex justify-between items-center">
             
             <!-- Logo -->
@@ -123,7 +123,7 @@
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-end gap-8">
                 <div class="nav-cluster">
-                    <div class="nav-cluster-label">MAIN</div>
+                    <div class="nav-cluster-label" data-i18n="nav.groups.main">MAIN</div>
                     <div class="nav-cluster-links">
                         <a href="/#home" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.home">HOME</a>
                         <a href="/#about" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.about">ABOUT</a>
@@ -131,14 +131,14 @@
                     </div>
                 </div>
                 <div class="nav-cluster">
-                    <div class="nav-cluster-label">CONTENT</div>
+                    <div class="nav-cluster-label" data-i18n="nav.groups.content">CONTENT</div>
                     <div class="nav-cluster-links">
                         <a href="/projects/" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.work">PROJECTS</a>
                         <a href="/writing/" class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.writing">WRITING</a>
                     </div>
                 </div>
                 <div class="nav-cluster">
-                    <div class="nav-cluster-label">ACTION</div>
+                    <div class="nav-cluster-label" data-i18n="nav.groups.action">ACTION</div>
                     <div class="nav-cluster-links">
                         <a href="#" data-open-contact class="nav-link text-sm font-medium hover:text-primary transition-colors" data-i18n="nav.contact">CONTACT</a>
                         <a href="#" data-open-sql class="nav-link text-sm font-medium hover:text-primary transition-colors">SQL STATUS</a>
@@ -150,7 +150,7 @@
                         <button id="lang-menu-btn" class="magnetic-btn px-3 py-2 rounded-full border border-slate-200 dark:border-white/10 hover:border-primary text-slate-600 dark:text-slate-400 hover:text-primary transition-all duration-300 text-xs font-bold tracking-wider">
                             RO
                         </button>
-                        <div id="lang-menu" class="hidden absolute right-0 mt-2 min-w-[120px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-surface shadow-xl overflow-hidden">
+                        <div id="lang-menu" class="hidden absolute right-0 mt-2 min-w-[120px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-black shadow-xl overflow-hidden">
                             <button class="lang-option w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-white/5" data-lang="ro">RO</button>
                             <button class="lang-option w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-white/5" data-lang="en">EN</button>
                         </div>
@@ -173,7 +173,7 @@
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white/95 dark:bg-dark/95 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-center space-y-8">
+    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white/95 dark:bg-black/95 backdrop-blur-xl opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-center space-y-8">
         <button id="close-menu" class="absolute top-6 right-6 text-3xl text-slate-800 dark:text-white hover:text-primary">
             <i class="fas fa-times"></i>
         </button>
@@ -192,7 +192,7 @@
     </div>
 
     <!-- Projects Section -->
-    <section id="projects" data-section="projects" data-testid="section-projects" class="section-spy py-24 bg-slate-50 dark:bg-surface-light/30 relative">
+    <section id="projects" data-section="projects" data-testid="section-projects" class="section-spy py-24 bg-slate-50 dark:bg-black relative">
         <div class="container mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-end mb-12 reveal-on-scroll">
                 <div class="max-w-xl">
@@ -217,16 +217,16 @@
     <!-- Contact Modal -->
     <div id="contact-modal" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4">
         <div id="contact-modal-backdrop" data-close-contact class="absolute inset-0 bg-black/75 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div id="contact-modal-content" class="relative w-full max-w-3xl bg-white dark:bg-surface rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-10 opacity-0 scale-95 transition-all duration-300">
+        <div id="contact-modal-content" class="relative w-full max-w-3xl bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-10 opacity-0 scale-95 transition-all duration-300">
             <button type="button" data-close-contact class="absolute top-4 right-4 w-10 h-10 rounded-full border border-slate-200 dark:border-white/20 hover:border-primary hover:text-primary transition-colors"><i class="fas fa-times"></i></button>
             <h2 class="text-3xl md:text-4xl font-bold mb-3" data-i18n="contact.title">Let's build something...</h2>
             <p class="text-slate-600 dark:text-slate-400 mb-6" data-i18n="contact.description">Loading...</p>
             <form id="contact-form" data-testid="contact-form" class="space-y-4" novalidate>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" name="from_name" required minlength="2" maxlength="80" data-i18n-attr="placeholder:contact.form.name_placeholder" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
-                    <input type="email" name="from_email" required maxlength="120" data-i18n-attr="placeholder:contact.form.email_placeholder" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                    <input type="text" name="from_name" required minlength="2" maxlength="80" data-i18n-attr="placeholder:contact.form.name_placeholder" class="w-full bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                    <input type="email" name="from_email" required maxlength="120" data-i18n-attr="placeholder:contact.form.email_placeholder" class="w-full bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
                 </div>
-                <textarea name="message" rows="5" required minlength="10" maxlength="2000" data-i18n-attr="placeholder:contact.form.message_placeholder" class="w-full bg-white dark:bg-surface border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"></textarea>
+                <textarea name="message" rows="5" required minlength="10" maxlength="2000" data-i18n-attr="placeholder:contact.form.message_placeholder" class="w-full bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"></textarea>
                 <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none">
                 <div class="flex justify-center"><div class="cf-turnstile" data-sitekey="0x4AAAAAACYntikDpRc3Xy5L"></div></div>
                 <button type="submit" class="w-full bg-primary text-black font-bold py-4 rounded-xl hover:shadow-[0_0_20px_rgba(0,255,136,0.4)] transition-all flex items-center justify-center gap-2"><span data-i18n="contact.form.btn_send">Send Message</span><i class="fas fa-paper-plane"></i></button>
@@ -237,7 +237,7 @@
     <!-- SQL Status Modal -->
     <div id="sql-modal" class="fixed inset-0 z-[125] hidden flex items-center justify-center p-4">
         <div id="sql-modal-backdrop" data-close-sql class="absolute inset-0 bg-black/75 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div id="sql-modal-content" class="relative w-full max-w-2xl bg-white dark:bg-surface rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 opacity-0 scale-95 transition-all duration-300">
+        <div id="sql-modal-content" class="relative w-full max-w-2xl bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 p-6 md:p-8 opacity-0 scale-95 transition-all duration-300">
             <button type="button" data-close-sql class="absolute top-4 right-4 w-10 h-10 rounded-full border border-slate-200 dark:border-white/20 hover:border-primary hover:text-primary transition-colors"><i class="fas fa-times"></i></button>
             <h2 class="text-3xl font-bold mb-3">SQL Cluster Status</h2>
             <p class="text-slate-600 dark:text-slate-400 mb-6">Monitorizare rapidă pentru clusterul SQL.</p>
@@ -266,7 +266,7 @@
             </div>
 
             <!-- Time Widget -->
-            <div class="font-mono text-sm text-slate-500 bg-slate-100 dark:bg-surface px-4 py-2 rounded-lg border border-slate-200 dark:border-white/5 flex items-center gap-2">
+            <div class="font-mono text-sm text-slate-500 bg-slate-100 dark:bg-black px-4 py-2 rounded-lg border border-slate-200 dark:border-white/5 flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="local-time">00:00</span>
             </div>
@@ -281,7 +281,7 @@
     <!-- Modal Project Detail -->
     <div id="project-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center">
         <div id="modal-backdrop" class="absolute inset-0 bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-        <div id="modal-content" class="relative bg-white dark:bg-surface w-full max-w-2xl mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
+        <div id="modal-content" class="relative bg-white dark:bg-black w-full max-w-2xl mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300">
             <button id="close-modal" class="absolute top-4 right-4 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-primary hover:text-black transition-colors z-10">
                 <i class="fas fa-times"></i>
             </button>
@@ -304,7 +304,7 @@
     <!-- Article Modal (Full Screen Read) -->
     <div id="article-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center">
         <div id="article-backdrop" class="absolute inset-0 bg-black/90 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
-        <div id="article-content" class="relative bg-white dark:bg-surface w-full max-w-3xl h-[90vh] mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 flex flex-col">
+        <div id="article-content" class="relative bg-white dark:bg-black w-full max-w-3xl h-[90vh] mx-4 rounded-3xl overflow-hidden shadow-2xl transform scale-95 opacity-0 transition-all duration-300 flex flex-col">
             <!-- Header -->
             <div class="relative h-64 shrink-0">
                 <img id="article-img" src="" class="w-full h-full object-cover">

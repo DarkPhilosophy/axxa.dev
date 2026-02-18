@@ -339,21 +339,6 @@ body.nav-hidden #nav-reveal-hint {
     background: rgba(0, 255, 136, 0.85);
 }
 
-/* OLED true black mode */
-html.dark body {
-    background: #000 !important;
-}
-
-html.dark #main-nav {
-    background: rgba(0, 0, 0, 0.97) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-html.dark #preloader,
-html.dark #mobile-menu,
-html.dark #splash-screen {
-    background: #000 !important;
-}
 
 body:hover .mouse-spotlight {
     opacity: 1;
