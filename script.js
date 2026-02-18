@@ -60,7 +60,7 @@ setTimeout(() => {
 // --- CORE: CONFIG LOADER ---
 async function loadConfig() {
     try {
-        const response = await fetch('config.json');
+        const response = await fetch('/config.json');
         baseConfig = await response.json();
 
         initI18n();
