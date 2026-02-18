@@ -465,6 +465,7 @@ function initNavigation() {
         };
 
         window.addEventListener('scroll', () => {
+            if (activeOverlay) return;
             const y = window.scrollY || 0;
             if (y < 80) {
                 showNav();
@@ -477,15 +478,18 @@ function initNavigation() {
         }, { passive: true });
 
         nav.addEventListener('mouseenter', () => {
+            if (activeOverlay) return;
             navHovered = true;
             showNav();
         });
         nav.addEventListener('mouseleave', () => {
+            if (activeOverlay) return;
             navHovered = false;
             if (window.scrollY > 120 && !hoverReveal) hideNav();
         });
 
         document.addEventListener('mousemove', (e) => {
+            if (activeOverlay) return;
             if (e.clientY <= 20) {
                 hoverReveal = true;
                 showNav();
@@ -499,6 +503,7 @@ function initNavigation() {
     const setOverlayLock = (locked) => {
         const nav = document.getElementById('main-nav') || document.querySelector('nav');
         if (locked) {
+            document.body.classList.add('overlay-open');
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
             if (nav) {
@@ -506,6 +511,7 @@ function initNavigation() {
                 nav.style.pointerEvents = 'none';
             }
         } else {
+            document.body.classList.remove('overlay-open');
             document.body.style.overflow = '';
             document.documentElement.style.overflow = '';
             if (nav) {
@@ -795,6 +801,7 @@ function initAdmin() {
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
             if (activeOverlay && activeOverlay !== 'admin') return;
             activeOverlay = 'admin';
+            document.body.classList.add('overlay-open');
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
             const nav = document.getElementById('main-nav') || document.querySelector('nav');
@@ -809,6 +816,7 @@ function initAdmin() {
     closeBtn.addEventListener('click', () => {
         overlay.classList.add('hidden');
         if (activeOverlay === 'admin') activeOverlay = null;
+        document.body.classList.remove('overlay-open');
         document.body.style.overflow = '';
         document.documentElement.style.overflow = '';
         const nav = document.getElementById('main-nav') || document.querySelector('nav');

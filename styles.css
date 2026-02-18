@@ -267,6 +267,10 @@ body.nav-hidden #nav-reveal-hint {
     opacity: 1;
 }
 
+body.overlay-open #nav-reveal-hint {
+    opacity: 0 !important;
+}
+
 .nav-divider {
     width: 1px;
     height: 18px;
@@ -313,10 +317,10 @@ body.nav-hidden #nav-reveal-hint {
 .nav-cluster-links > .nav-link::before {
     content: '';
     position: absolute;
-    top: -9px;
+    top: -11px;
     left: 50%;
-    width: 1px;
-    height: 10px;
+    width: 2px;
+    height: 12px;
     transform: translateX(-50%);
     background: rgba(0, 255, 136, 0.85);
 }
