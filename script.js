@@ -375,6 +375,8 @@ function initTheme() {
         html.classList.remove('dark');
     }
 
+    if (!toggleBtn) return;
+
     toggleBtn.addEventListener('click', () => {
         html.classList.toggle('dark');
         if (html.classList.contains('dark')) {
@@ -406,22 +408,92 @@ function initNavigation() {
         }
     };
 
-    btn.addEventListener('click', () => toggleMenu(true));
-    close.addEventListener('click', () => toggleMenu(false));
-    links.forEach(l => l.addEventListener('click', () => toggleMenu(false)));
+    if (btn && menu && close) {
+        btn.addEventListener('click', () => toggleMenu(true));
+        close.addEventListener('click', () => toggleMenu(false));
+        links.forEach(l => l.addEventListener('click', () => toggleMenu(false)));
+    }
 
     // Scroll to Top
     const toTopBtn = document.getElementById('scrollToTopBtn');
     window.addEventListener('scroll', () => {
+        if (!toTopBtn) return;
         if (window.scrollY > 500) {
             toTopBtn.classList.remove('opacity-0', 'translate-y-20');
         } else {
             toTopBtn.classList.add('opacity-0', 'translate-y-20');
         }
     });
-    toTopBtn.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    if (toTopBtn) {
+        toTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // Auto-hide topbar on scroll down, reveal on scroll up or top-edge hover.
+    const nav = document.getElementById('main-nav') || document.querySelector('nav');
+    if (nav) {
+        let lastY = window.scrollY || 0;
+        let hidden = false;
+
+        const showNav = () => {
+            if (!hidden) return;
+            nav.classList.remove('-translate-y-full');
+            hidden = false;
+        };
+
+        const hideNav = () => {
+            if (hidden) return;
+            nav.classList.add('-translate-y-full');
+            hidden = true;
+        };
+
+        window.addEventListener('scroll', () => {
+            const y = window.scrollY || 0;
+            if (y < 80) {
+                showNav();
+                lastY = y;
+                return;
+            }
+            if (y > lastY + 6) hideNav();
+            if (y < lastY - 6) showNav();
+            lastY = y;
+        }, { passive: true });
+
+        document.addEventListener('mousemove', (e) => {
+            if (e.clientY <= 20) showNav();
+        });
+    }
+
+    // Contact modal open/close hooks.
+    const contactModal = document.getElementById('contact-modal');
+    const contactBackdrop = document.getElementById('contact-modal-backdrop');
+    const contactContent = document.getElementById('contact-modal-content');
+    const contactOpeners = document.querySelectorAll('[data-open-contact]');
+    const contactClosers = document.querySelectorAll('[data-close-contact]');
+
+    if (contactModal && contactBackdrop && contactContent) {
+        const openContact = () => {
+            contactModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                contactBackdrop.classList.remove('opacity-0');
+                contactContent.classList.remove('opacity-0', 'scale-95');
+            });
+        };
+        const closeContact = () => {
+            contactBackdrop.classList.add('opacity-0');
+            contactContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => contactModal.classList.add('hidden'), 250);
+        };
+        contactOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            openContact();
+        }));
+        contactClosers.forEach(btnEl => btnEl.addEventListener('click', closeContact));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !contactModal.classList.contains('hidden')) closeContact();
+        });
+    }
 }
 
 
@@ -536,6 +608,8 @@ function initModals() {
     const closeBtn = document.getElementById('close-modal');
     const content = document.getElementById('modal-content');
 
+    if (!modal || !backdrop || !closeBtn || !content) return;
+
     const closeModal = () => {
         backdrop.classList.add('opacity-0');
         content.classList.add('opacity-0', 'scale-95');
@@ -568,6 +642,10 @@ function initAdmin() {
     const savedEl = document.getElementById('github-saved');
     const githubBox = document.getElementById('github-sync');
     const headerControls = document.getElementById('github-header-controls');
+
+    if (!overlay || !closeBtn || !loginForm || !editor || !passInput || !loginBtn || !errorMsg || !saveBtn || !container) {
+        return;
+    }
 
     // 1. GitHub Sync Logic (Header Integration)
     const savedToken = localStorage.getItem('axxa_github_token');
