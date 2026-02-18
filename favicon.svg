@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA blue round favicon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AXXA favicon">
   <defs>
-    <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#60a5fa"/>
-      <stop offset="55%" stop-color="#3b82f6"/>
-      <stop offset="100%" stop-color="#1d4ed8"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00fff0"/>
+      <stop offset="50%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#ff00c8"/>
     </linearGradient>
   </defs>
-  <circle cx="256" cy="256" r="256" fill="url(#b)"/>
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
   <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="46">
     <line x1="132" y1="148" x2="246" y2="364"/>
     <line x1="246" y1="148" x2="132" y2="364"/>
