@@ -1,3 +1,45 @@
+@font-face {
+    font-family: "Quicksand";
+    font-style: normal;
+    font-weight: 300;
+    src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-300.woff2) format("woff2");
+}
+@font-face {
+    font-family: "Quicksand";
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-400.woff2) format("woff2");
+}
+@font-face {
+    font-family: "Quicksand";
+    font-style: normal;
+    font-weight: 500;
+    src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-500.woff2) format("woff2");
+}
+@font-face {
+    font-family: "Quicksand";
+    font-style: normal;
+    font-weight: 600;
+    src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-600.woff2) format("woff2");
+}
+@font-face {
+    font-family: "Quicksand";
+    font-style: normal;
+    font-weight: 700;
+    src: url(https://crearts-community.github.io/Assets/fonts/quicksand/quicksand-700.woff2) format("woff2");
+}
+
+body {
+    font-family: "Quicksand", sans-serif;
+}
+
+code,
+pre,
+kbd,
+samp {
+    font-family: Consolas, "Courier New", monospace;
+}
+
 /* =========================================
    SPLASH SCREEN STYLES (From Original)
    ========================================= */
@@ -7,7 +49,7 @@
     z-index: 9999;
     background-color: #0a0a0a;
     color: #f0f0f0;
-    font-family: "Courier New", Courier, monospace;
+    font-family: "Quicksand", sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -253,7 +295,7 @@ body:hover .mouse-spotlight {
 /* Brand Styling: Overlapping XX */
 /* UPDATED QUESTIONS based on user feedback */
 .brand-overlap-xx {
-    font-family: 'Courier New', monospace !important;
+    font-family: "Quicksand", sans-serif !important;
     letter-spacing: -0.30em !important; /* Relaxed from -0.25em */
     margin-right: 0.45em !important;    /* Increased space after XX slightly */
     margin-left: 0.15em !important;
