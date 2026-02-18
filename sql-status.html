@@ -184,7 +184,7 @@
         div.className='event';
         const sev=(ev.severity_last||'degraded').toUpperCase();
         const sm=(ev.samples||[]).slice(-3).map(s=>`<li>${dt(s.ts)} - ${s.reason}</li>`).join('');
-        div.innerHTML=`<h3>${sev} outage</h3><p><strong>Start:</strong> ${ev.start_utc||dt(ev.start_ts)}</p><p><strong>End:</strong> ${ev.end_utc||'OPEN'}</p><p><strong>Duration:</strong> ${fmt(ev.duration_sec||0)}</p><p><strong>Last reason:</strong> ${ev.reason_last||'n/a'}</p>${sm?`<ul class="samples">${sm}</ul>`:''}`;
+        div.innerHTML=`<h3>${sev} outage</h3><p><strong>Source node:</strong> ${ev.source_node||'unknown'}</p><p><strong>Event ID:</strong> <code>${ev.fingerprint||'n/a'}</code></p><p><strong>Start:</strong> ${ev.start_utc||dt(ev.start_ts)}</p><p><strong>End:</strong> ${ev.end_utc||'OPEN'}</p><p><strong>Duration:</strong> ${fmt(ev.duration_sec||0)}</p><p><strong>Last reason:</strong> ${ev.reason_last||'n/a'}</p>${sm?`<ul class="samples">${sm}</ul>`:''}`;
         list.appendChild(div);
       }
       outageCursor=next;
