@@ -68,11 +68,11 @@
       </article>
       <article class="card">
         <h2>ATVPS</h2>
-        <p id="a_mode"></p><p id="a_sqld"></p><p id="a_agent"></p><p id="a_port"></p><p id="a_ns"></p><p id="a_uptime"></p>
+        <p id="a_country"></p><p id="a_mode"></p><p id="a_sqld"></p><p id="a_agent"></p><p id="a_port"></p><p id="a_ns"></p><p id="a_uptime"></p>
       </article>
       <article class="card">
         <h2>CloudVPS</h2>
-        <p id="c_reach"></p><p id="c_mode"></p><p id="c_sqld"></p><p id="c_agent"></p><p id="c_port"></p><p id="c_ns"></p><p id="c_uptime"></p>
+        <p id="c_country"></p><p id="c_reach"></p><p id="c_mode"></p><p id="c_sqld"></p><p id="c_agent"></p><p id="c_port"></p><p id="c_ns"></p><p id="c_uptime"></p>
       </article>
     </section>
 
@@ -91,12 +91,14 @@
         const b=document.getElementById('overall');b.textContent=String(j.overall).toUpperCase();b.className='badge '+j.overall;
         document.getElementById('primary').textContent='Primary: '+j.primary_node;
         document.getElementById('updated').textContent='Updated: '+j.updated_at_utc;
+        document.getElementById('a_country').textContent='Country: '+(a.country||'Unknown');
         document.getElementById('a_mode').textContent='Mode: '+a.mode;
         document.getElementById('a_sqld').textContent='sqld: '+a.sqld_active;
         document.getElementById('a_agent').textContent='agent: '+a.agent_active;
         document.getElementById('a_port').textContent='19001: '+(a.primary_port_19001?'open (primary)':'closed');
         document.getElementById('a_ns').textContent='Namespaces: '+a.namespaces;
         document.getElementById('a_uptime').textContent='Uptime: '+fmt(a.sqld_uptime_sec);
+        document.getElementById('c_country').textContent='Country: '+(c.country||'Unknown');
         document.getElementById('c_reach').textContent='Reachable: '+c.reachable;
         document.getElementById('c_mode').textContent='Mode: '+c.mode;
         document.getElementById('c_sqld').textContent='sqld: '+c.sqld_active;
