@@ -264,19 +264,14 @@ body.nav-hidden #nav-reveal-hint {
     opacity: 1;
 }
 
-.nav-group-tag {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgb(100 116 139);
-    border: 1px solid rgb(203 213 225 / 0.6);
-    border-radius: 9999px;
-    padding: 0.18rem 0.45rem;
+.nav-divider {
+    width: 1px;
+    height: 18px;
+    background: rgb(148 163 184 / 0.35);
 }
 
-.dark .nav-group-tag {
-    color: rgb(148 163 184);
-    border-color: rgb(148 163 184 / 0.35);
+.dark .nav-divider {
+    background: rgb(148 163 184 / 0.25);
 }
 
 body:hover .mouse-spotlight {

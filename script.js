@@ -443,6 +443,7 @@ function initNavigation() {
     if (nav) {
         let lastY = window.scrollY || 0;
         let hidden = false;
+        let hoverReveal = false;
         nav.style.willChange = 'transform';
 
         const showNav = () => {
@@ -466,13 +467,19 @@ function initNavigation() {
                 lastY = y;
                 return;
             }
-            if (y > lastY + 6) hideNav();
+            if (!hoverReveal && y > lastY + 6) hideNav();
             if (y < lastY - 6) showNav();
             lastY = y;
         }, { passive: true });
 
         document.addEventListener('mousemove', (e) => {
-            if (e.clientY <= 20) showNav();
+            if (e.clientY <= 20) {
+                hoverReveal = true;
+                showNav();
+                return;
+            }
+            hoverReveal = false;
+            if (window.scrollY > 120) hideNav();
         });
     }
 
