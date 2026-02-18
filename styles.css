@@ -288,13 +288,13 @@ body.nav-hidden #nav-reveal-hint {
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgb(226 232 240);
+    color: rgb(71 85 105);
     font-weight: 700;
     line-height: 1;
-    border: 1px solid rgba(148, 163, 184, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.6);
     border-radius: 9999px;
     padding: 0.24rem 0.52rem;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(255, 255, 255, 0.85);
 }
 
 .nav-cluster-links {
