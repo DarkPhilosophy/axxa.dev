@@ -14,6 +14,7 @@ const writingListState = {
 let revealObserver = null;
 let adminUnlocked = false;
 let sessionGithubToken = null;
+let activeOverlay = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -495,6 +496,25 @@ function initNavigation() {
         });
     }
 
+    const setOverlayLock = (locked) => {
+        const nav = document.getElementById('main-nav') || document.querySelector('nav');
+        if (locked) {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            if (nav) {
+                nav.style.transform = 'translateY(-120%)';
+                nav.style.pointerEvents = 'none';
+            }
+        } else {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            if (nav) {
+                nav.style.transform = '';
+                nav.style.pointerEvents = '';
+            }
+        }
+    };
+
     // Contact modal open/close hooks.
     const contactModal = document.getElementById('contact-modal');
     const contactBackdrop = document.getElementById('contact-modal-backdrop');
@@ -504,6 +524,9 @@ function initNavigation() {
 
     if (contactModal && contactBackdrop && contactContent) {
         const openContact = () => {
+            if (activeOverlay && activeOverlay !== 'contact') return;
+            activeOverlay = 'contact';
+            setOverlayLock(true);
             contactModal.classList.remove('hidden');
             requestAnimationFrame(() => {
                 contactBackdrop.classList.remove('opacity-0');
@@ -513,7 +536,11 @@ function initNavigation() {
         const closeContact = () => {
             contactBackdrop.classList.add('opacity-0');
             contactContent.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => contactModal.classList.add('hidden'), 250);
+            setTimeout(() => {
+                contactModal.classList.add('hidden');
+                if (activeOverlay === 'contact') activeOverlay = null;
+                setOverlayLock(false);
+            }, 250);
         };
         contactOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
             e.preventDefault();
@@ -534,6 +561,9 @@ function initNavigation() {
 
     if (sqlModal && sqlBackdrop && sqlContent) {
         const openSql = () => {
+            if (activeOverlay && activeOverlay !== 'sql') return;
+            activeOverlay = 'sql';
+            setOverlayLock(true);
             sqlModal.classList.remove('hidden');
             requestAnimationFrame(() => {
                 sqlBackdrop.classList.remove('opacity-0');
@@ -543,7 +573,11 @@ function initNavigation() {
         const closeSql = () => {
             sqlBackdrop.classList.add('opacity-0');
             sqlContent.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => sqlModal.classList.add('hidden'), 250);
+            setTimeout(() => {
+                sqlModal.classList.add('hidden');
+                if (activeOverlay === 'sql') activeOverlay = null;
+                setOverlayLock(false);
+            }, 250);
         };
         sqlOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
             e.preventDefault();
@@ -759,12 +793,29 @@ function initAdmin() {
     // Key Combo: Ctrl + Shift + L
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
+            if (activeOverlay && activeOverlay !== 'admin') return;
+            activeOverlay = 'admin';
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+            const nav = document.getElementById('main-nav') || document.querySelector('nav');
+            if (nav) {
+                nav.style.transform = 'translateY(-120%)';
+                nav.style.pointerEvents = 'none';
+            }
             overlay.classList.remove('hidden');
         }
     });
 
     closeBtn.addEventListener('click', () => {
         overlay.classList.add('hidden');
+        if (activeOverlay === 'admin') activeOverlay = null;
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        const nav = document.getElementById('main-nav') || document.querySelector('nav');
+        if (nav) {
+            nav.style.transform = '';
+            nav.style.pointerEvents = '';
+        }
         // Reset state
         loginForm.classList.remove('hidden');
         editor.classList.add('hidden');
