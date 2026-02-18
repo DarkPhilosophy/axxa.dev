@@ -13,9 +13,11 @@
     .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700}
     .healthy{background:rgba(34,197,94,.18);color:#86efac}.degraded{background:rgba(245,158,11,.18);color:#fcd34d}.danger{background:rgba(239,68,68,.18);color:#fca5a5}
     code{background:#0b1020;border:1px solid var(--line);padding:2px 6px;border-radius:6px}
+    .chart-wrap{margin-top:12px}
+    canvas{width:100%;height:220px;background:#0b1020;border:1px solid var(--line);border-radius:10px}
+    .legend{font-size:13px;color:var(--muted);margin-top:8px}
   </style>
-  <link rel="icon" type="image/png" href="https://sql.axxa.dev/favicon.png" />
-  <link rel="shortcut icon" href="https://sql.axxa.dev/favicon.ico" />
+  <link rel="icon" type="image/png" href="https://sql.axxa.dev/favicon.png?v=2" />
 </head>
 <body>
   <main class="wrap">
@@ -37,9 +39,16 @@
         <p id="c_reach"></p><p id="c_mode"></p><p id="c_sqld"></p><p id="c_agent"></p><p id="c_port"></p><p id="c_ns"></p><p id="c_uptime"></p>
       </article>
     </section>
+
+    <section class="card chart-wrap">
+      <h2>Health Timeline</h2>
+      <canvas id="healthChart" width="980" height="220"></canvas>
+      <div class="legend">Green = healthy, Yellow = degraded, Red = danger</div>
+    </section>
   </main>
   <script>
     function fmt(sec){sec=Number(sec||0);const d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60);return `${d}d ${h}h ${m}m`}
+
     async function load(){
       try{
         const r=await fetch('https://sql.axxa.dev/status.json',{cache:'no-store'}),j=await r.json();
@@ -63,17 +72,36 @@
       }catch(e){const b=document.getElementById('overall');b.textContent='UNAVAILABLE';b.className='badge danger';}
     }
 
-    const sourceLink = document.getElementById('sourceLink');
-    if (sourceLink) {
-      sourceLink.addEventListener('click', function (e) {
-        const selected = window.getSelection ? window.getSelection().toString() : '';
-        if (selected && selected.length > 0) {
-          e.preventDefault();
+    async function drawHistory(){
+      const c=document.getElementById('healthChart'); if(!c) return;
+      const ctx=c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      try{
+        const r=await fetch('https://sql.axxa.dev/history.json',{cache:'no-store'});
+        const h=await r.json();
+        const pts=(h.points||[]).slice(-180);
+        if(!pts.length){ctx.fillStyle='#9eabd2';ctx.fillText('No history yet',12,24);return;}
+        const map={healthy:2,degraded:1,danger:0};
+        const colors={healthy:'#22c55e',degraded:'#f59e0b',danger:'#ef4444'};
+        const w=c.width,hg=c.height,pad=20;
+        ctx.strokeStyle='#2a355c'; ctx.lineWidth=1;
+        for(let i=0;i<3;i++){const y=pad+((hg-2*pad)/2)*i; ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w-pad,y); ctx.stroke();}
+        for(let i=1;i<pts.length;i++){
+          const p0=pts[i-1], p1=pts[i];
+          const x0=pad+((w-2*pad)*(i-1)/(pts.length-1));
+          const x1=pad+((w-2*pad)*i/(pts.length-1));
+          const y0=pad+((hg-2*pad)*(2-(map[p0.overall]??1))/2);
+          const y1=pad+((hg-2*pad)*(2-(map[p1.overall]??1))/2);
+          ctx.strokeStyle=colors[p1.overall]||'#f59e0b'; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
         }
-      });
+      }catch(e){ctx.fillStyle='#ef4444';ctx.fillText('Failed to load history',12,24);}
     }
 
-    load();setInterval(load,10000);
+    const sourceLink=document.getElementById('sourceLink');
+    if(sourceLink){sourceLink.addEventListener('click',function(e){const selected=window.getSelection?window.getSelection().toString():'';if(selected&&selected.length>0){e.preventDefault();}})}
+
+    load();drawHistory();setInterval(load,10000);setInterval(drawHistory,10000);
   </script>
 </body>
 </html>
