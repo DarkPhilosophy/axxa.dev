@@ -446,6 +446,7 @@ function initNavigation() {
         let lastY = window.scrollY || 0;
         let hidden = false;
         let hoverReveal = false;
+        let navHovered = false;
         nav.style.willChange = 'transform';
 
         const showNav = () => {
@@ -469,10 +470,19 @@ function initNavigation() {
                 lastY = y;
                 return;
             }
-            if (!hoverReveal && y > lastY + 6) hideNav();
+            if (!hoverReveal && !navHovered && y > lastY + 6) hideNav();
             if (y < lastY - 6) showNav();
             lastY = y;
         }, { passive: true });
+
+        nav.addEventListener('mouseenter', () => {
+            navHovered = true;
+            showNav();
+        });
+        nav.addEventListener('mouseleave', () => {
+            navHovered = false;
+            if (window.scrollY > 120 && !hoverReveal) hideNav();
+        });
 
         document.addEventListener('mousemove', (e) => {
             if (e.clientY <= 20) {
@@ -481,7 +491,7 @@ function initNavigation() {
                 return;
             }
             hoverReveal = false;
-            if (window.scrollY > 120) hideNav();
+            if (window.scrollY > 120 && !navHovered) hideNav();
         });
     }
 
