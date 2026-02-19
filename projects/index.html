@@ -26,6 +26,11 @@
             var p = window.location.pathname;
             var isHome = p === '/' || p === '/index.html';
             var seen = sessionStorage.getItem('axxa_splash_seen') === '1';
+            var homeHashes = ['#home', '#about', '#services', '#experience', '#experienta', '#experiență', '#testimonials', '#customer'];
+            if (!isHome && homeHashes.indexOf(window.location.hash || '') !== -1) {
+                window.location.replace('/' + window.location.hash);
+                return;
+            }
             if (!isHome || seen) document.documentElement.setAttribute('data-splash', 'off');
         })();
     </script>
@@ -398,7 +403,7 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <!-- MAIN SCRIPT -->
-    <script src="/script.js?v=21"></script>
+    <script src="/script.js?v=22"></script>
     <style>
         .toast-enter { transform: translateY(20px); opacity: 0; transition: all 0.3s ease-out; }
         .toast-enter-active { transform: translateY(0); opacity: 1; }
