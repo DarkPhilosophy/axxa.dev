@@ -21,15 +21,7 @@
     <meta name="twitter:title" content="AXXA.DEV | Adalbert Alexandru Ungureanu">
     <meta name="twitter:description" content="Portofoliu personal, proiecte, articole și status infrastructură.">
     <meta name="twitter:image" content="https://axxa.dev/images/me.jpg">
-    <script>
-        (function () {
-            var p = window.location.pathname;
-            var isHome = p === '/' || p === '/index.html';
-            var seen = sessionStorage.getItem('axxa_splash_seen') === '1';
-            if (!isHome || seen) document.documentElement.setAttribute('data-splash', 'off');
-        })();
-    </script>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -594,7 +586,7 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <!-- MAIN SCRIPT -->
-    <script src="/script.js?v=25"></script>
+    <script src="/script.js?v=26"></script>
     <style>
         .toast-enter { transform: translateY(20px); opacity: 0; transition: all 0.3s ease-out; }
         .toast-enter-active { transform: translateY(0); opacity: 1; }

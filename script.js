@@ -98,7 +98,7 @@ async function bootApp() {
 // Fallback: Force remove preloader after 5 seconds max
 setTimeout(() => {
     const preloader = document.getElementById('preloader');
-    if (preloader && document.body.contains(preloader)) {
+    if (preloader && document.body && document.body.contains(preloader)) {
         preloader.remove();
     }
 }, 5000);
