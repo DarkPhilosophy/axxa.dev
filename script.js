@@ -1692,7 +1692,10 @@ function ensurePath(obj, path) {
     const keys = path.split('.');
     let current = obj;
     for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) current[keys[i]] = {};
+        if (!current[keys[i]]) {
+            const nextKey = keys[i + 1];
+            current[keys[i]] = /^\d+$/.test(nextKey) ? [] : {};
+        }
         current = current[keys[i]];
     }
 }
@@ -1755,24 +1758,33 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
     // 2. Translate Batch
     let successCount = 0;
     const translateEndpoint = 'https://contact.axxa.dev/translate';
+    const endpointBatchLimit = 50;
     
     try {
         const texts = missing.map(m => m.source);
         let translations = [];
 
         try {
-            const res = await fetch(translateEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sourceLang,
-                    targetLang,
-                    texts
-                })
-            });
-            if (!res.ok) throw new Error(`Translate API ${res.status}`);
-            const data = await res.json();
-            translations = Array.isArray(data.translations) ? data.translations : [];
+            const batches = [];
+            for (let i = 0; i < texts.length; i += endpointBatchLimit) {
+                batches.push(texts.slice(i, i + endpointBatchLimit));
+            }
+            for (const batch of batches) {
+                const res = await fetch(translateEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourceLang,
+                        targetLang,
+                        texts: batch
+                    })
+                });
+                if (!res.ok) throw new Error(`Translate API ${res.status}`);
+                const data = await res.json();
+                const chunk = Array.isArray(data.translations) ? data.translations : [];
+                if (chunk.length !== batch.length) throw new Error('Translate API length mismatch');
+                translations.push(...chunk);
+            }
         } catch (e) {
             console.warn('Translate endpoint failed, falling back to direct calls.', e);
         }
