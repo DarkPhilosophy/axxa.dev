@@ -19,6 +19,16 @@ let timeTicker = null;
 let softNavBound = false;
 let softNavLoading = false;
 
+function normalizeAssetUrl(url) {
+    const value = String(url || '').trim();
+    if (!value) return value;
+    if (/^(https?:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('/')) {
+        return value;
+    }
+    if (value.startsWith('images/')) return `/${value}`;
+    return value;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (normalizeHomeHashRouting()) return;
     await bootApp();
@@ -307,7 +317,7 @@ function populateLists() {
                     <div class="project-card group relative bg-white dark:bg-surface rounded-3xl overflow-hidden border border-slate-200 dark:border-white/5 reveal-on-scroll" data-cat="${item.filter_cat}">
                         <div class="relative h-64 overflow-hidden">
                             <div class="absolute inset-0 bg-dark/20 group-hover:bg-dark/0 transition-colors z-10"></div>
-                            <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                            <img src="${normalizeAssetUrl(item.image)}" alt="${item.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
                             
                              <div class="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <button class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg" onclick="openProjectModal('${item.id}')">
@@ -335,7 +345,7 @@ function populateLists() {
             container.innerHTML = siteConfig.writing.items.map(item => `
                  <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="group block bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden hover:border-primary/50 transition-all reveal-on-scroll">
                      <div class="h-48 overflow-hidden relative">
-                         <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                         <img src="${normalizeAssetUrl(item.image)}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                          <div class="absolute top-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/10">
                              ${item.category}
                          </div>
@@ -365,7 +375,7 @@ function populateLists() {
                         ${item.text}
                     </p>
                     <div class="flex items-center gap-4">
-                        <img src="${item.image}" alt="${item.author}" class="w-12 h-12 rounded-full border-2 border-primary/20 object-cover object-center">
+                        <img src="${normalizeAssetUrl(item.image)}" alt="${item.author}" class="w-12 h-12 rounded-full border-2 border-primary/20 object-cover object-center">
                         <div>
                             <div class="font-bold text-slate-900 dark:text-white">${item.author}</div>
                             <div class="text-xs text-primary font-bold uppercase">${item.role}</div>
@@ -2170,7 +2180,7 @@ function renderWritingList() {
         listContainer.innerHTML = slice.map(item => `
             <a href="#article-${item.id}" onclick="openArticle('${item.id}'); return false;" class="flex gap-4 group bg-white dark:bg-surface border border-slate-200 dark:border-white/5 rounded-2xl p-4 hover:border-primary/50 transition-all reveal-on-scroll">
                 <div class="w-24 h-24 shrink-0 rounded-xl overflow-hidden relative">
-                    <img src="${item.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <img src="${normalizeAssetUrl(item.image)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                 </div>
                 <div class="min-w-0">
                     <span class="text-xs font-bold text-primary uppercase">${item.category}</span>
