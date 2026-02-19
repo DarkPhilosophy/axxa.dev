@@ -774,7 +774,6 @@ function initSoftNavigation() {
             initAnimations();
             initBlog();
             initContact();
-            sanitizePageArtifacts();
             enforcePageContentForPath();
         } catch (e) {
             console.error('Soft nav failed:', e);
@@ -798,48 +797,6 @@ function initSoftNavigation() {
         swapPageContent(window.location.href, false);
     });
 }
-
-function sanitizePageArtifacts() {
-    const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
-    const homeOnlySectionIds = ['about', 'services', 'experience', 'testimonials', 'customer'];
-
-    if (path === '/projects/' || path === '/writing/') {
-        homeOnlySectionIds.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) {
-                const section = el.closest('section') || el;
-                section.remove();
-            }
-        });
-        return;
-    }
-
-    if ((path === '/' || isSectionAliasPath(path)) && !document.getElementById('testimonials')) {
-        repairHomeMainWithoutReload();
-    }
-}
-
-async function repairHomeMainWithoutReload() {
-    try {
-        const res = await fetch('/', { credentials: 'same-origin' });
-        if (!res.ok) return;
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const nextMain = doc.querySelector('#page-content');
-        const currMain = document.querySelector('#page-content');
-        if (!nextMain || !currMain) return;
-        const nextPage = (nextMain.getAttribute('data-page') || '').toLowerCase();
-        if (nextPage !== 'home') return;
-        currMain.replaceWith(nextMain);
-        applyLanguage(currentLang);
-        initAnimations();
-        initBlog();
-        initContact();
-    } catch (err) {
-        console.error('Home main repair failed:', err);
-    }
-}
-
 
 // --- UI: ANIMATIONS (Observer) ---
 function initAnimations() {
