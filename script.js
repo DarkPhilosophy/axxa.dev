@@ -67,7 +67,7 @@ function handleSectionQueryRouting() {
         experience: 'experience',
         experienta: 'experience',
         testimonials: 'testimonials',
-        customer: 'testimonials'
+        customer: 'customer'
     };
     const targetId = sectionMap[section];
     if (!targetId) return;
@@ -698,7 +698,7 @@ function initSoftNavigation() {
         '/experience/': 'experience',
         '/experienta/': 'experience',
         '/testimonials/': 'testimonials',
-        '/customer/': 'testimonials'
+        '/customer/': 'customer'
     };
 
     const isSoftPath = (url) => {
@@ -730,7 +730,7 @@ function initSoftNavigation() {
         };
 
         if (!isSoftPath(url)) {
-            window.location.href = url;
+            console.warn('Skipped non-soft navigation target:', url);
             return;
         }
         softNavLoading = true;
@@ -746,13 +746,13 @@ function initSoftNavigation() {
             const nextMain = doc.querySelector('#page-content');
             const currMain = document.querySelector('#page-content');
             if (!nextMain || !currMain) {
-                window.location.href = url;
+                console.warn('Soft nav aborted: missing #page-content in current or target document');
                 return;
             }
             const expectedPage = expectedPageByPath[reqPath] || expectedPageByPath[targetPath] || null;
             const nextPage = (nextMain.getAttribute('data-page') || '').toLowerCase();
             if (expectedPage && nextPage && nextPage !== expectedPage) {
-                window.location.href = targetPath;
+                console.warn('Soft nav page mismatch', { expectedPage, nextPage, targetPath });
                 return;
             }
             currMain.replaceWith(nextMain);
@@ -777,7 +777,6 @@ function initSoftNavigation() {
             enforcePageContentForPath();
         } catch (e) {
             console.error('Soft nav failed:', e);
-            window.location.href = url;
         } finally {
             softNavLoading = false;
         }
