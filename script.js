@@ -34,7 +34,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     await bootApp();
     handleSectionQueryRouting();
     initSoftNavigation();
+    enforcePageContentForPath();
 });
+
+function enforcePageContentForPath() {
+    const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
+    const main = document.querySelector('#page-content');
+    const page = (main?.getAttribute('data-page') || '').toLowerCase();
+    const expected = {
+        '/': 'home',
+        '/projects/': 'projects',
+        '/writing/': 'writing'
+    }[path];
+    if (!expected) return;
+    if (page === expected) return;
+
+    // Prevent URL/content desync (e.g., cached soft-nav state).
+    if (path === '/projects/' || path === '/writing/') {
+        window.location.replace(path);
+    } else {
+        window.location.replace('/');
+    }
+}
 
 function handleSectionQueryRouting() {
     const url = new URL(window.location.href);
@@ -733,6 +754,7 @@ function initSoftNavigation() {
             initAnimations();
             initBlog();
             initContact();
+            enforcePageContentForPath();
         } catch (e) {
             console.error('Soft nav failed:', e);
             window.location.href = url;
