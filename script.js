@@ -713,8 +713,24 @@ function initSoftNavigation() {
         }
     };
 
+    const isSectionAliasPath = (pathname) => {
+        const p = pathname.endsWith('/') ? pathname : `${pathname}/`;
+        return ['/home/', '/about/', '/services/', '/experience/', '/experienta/', '/testimonials/', '/customer/'].includes(p);
+    };
+
     const swapPageContent = async (url, push = true) => {
         if (softNavLoading || activeOverlay) return;
+        const targetUrl = new URL(url, window.location.origin);
+        const targetPath = targetUrl.pathname.endsWith('/') ? targetUrl.pathname : `${targetUrl.pathname}/`;
+        const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
+
+        // Prevent stale Home DOM being reused when leaving alias routes.
+        // For these transitions, hard navigation is more reliable than partial swap.
+        if (isSectionAliasPath(currentPath) && (targetPath === '/projects/' || targetPath === '/writing/')) {
+            window.location.href = targetPath;
+            return;
+        }
+
         if (!isSoftPath(url)) {
             window.location.href = url;
             return;
