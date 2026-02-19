@@ -212,6 +212,7 @@ function applyLanguage(lang) {
 
     populateText();
     populateLists();
+    rerenderExperienceAndTestimonials();
     renderWritingList();
     updateGithubSavedState();
     observeRevealElements();
@@ -664,6 +665,53 @@ function initNavigation() {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !sqlModal.classList.contains('hidden')) closeSql();
         });
+    }
+}
+
+function rerenderExperienceAndTestimonials() {
+    if (siteConfig.experience?.items) {
+        const experienceContainer = document.getElementById('experience-list');
+        if (experienceContainer) {
+            experienceContainer.innerHTML = siteConfig.experience.items.map(item => `
+                <div class="relative pl-8 md:pl-0 reveal-on-scroll">
+                    <div class="hidden md:block absolute left-[-60px] top-0 text-right w-40 pr-6 pt-1 z-20">
+                        <span class="text-primary font-mono font-bold bg-primary/10 px-2 py-1 rounded inline-block text-xs">${item.year}</span>
+                    </div>
+                    
+                    <div class="absolute left-[-5px] top-6 w-3 h-3 rounded-full bg-primary shadow-[0_0_10px_rgba(0,255,136,0.5)] z-10 border border-black"></div>
+                    
+                    <div class="bg-white dark:bg-surface p-6 rounded-2xl border border-slate-200 dark:border-white/5 hover:border-primary/30 transition-all duration-300 hover:transform hover:translate-x-2 shadow-sm dark:shadow-none">
+                        <div class="md:hidden text-primary font-mono font-bold text-xs mb-2 inline-block bg-primary/10 px-2 py-1 rounded">${item.year}</div>
+                        <h3 class="text-xl font-bold mb-1 text-slate-800 dark:text-white">${item.role}</h3>
+                        <div class="text-sm text-slate-500 mb-4 font-bold">${item.company}</div>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed border-l-2 border-slate-100 dark:border-white/10 pl-4">
+                            ${item.desc}
+                        </p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    if(siteConfig.testimonials?.items) {
+        const testimonialsContainer = document.getElementById('testimonials-grid');
+        if(testimonialsContainer) {
+            testimonialsContainer.innerHTML = siteConfig.testimonials.items.map(item => `
+                 <div class="bg-white dark:bg-surface p-8 rounded-3xl border border-slate-200 dark:border-white/5 relative reveal-on-scroll">
+                    <i class="fas fa-quote-left text-4xl text-primary/20 mb-6"></i>
+                    <p class="text-lg text-slate-700 dark:text-slate-300 italic mb-6 leading-relaxed">
+                        ${item.text}
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <img src="${normalizeAssetUrl(item.image)}" alt="${item.author}" class="w-12 h-12 rounded-full border-2 border-primary/20 object-cover object-center">
+                        <div>
+                            <div class="font-bold text-slate-900 dark:text-white">${item.author}</div>
+                            <div class="text-xs text-primary font-bold uppercase">${item.role}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 }
 
