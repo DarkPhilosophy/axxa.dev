@@ -723,6 +723,13 @@ function initSoftNavigation() {
         const targetUrl = new URL(url, window.location.origin);
         const targetPath = targetUrl.pathname.endsWith('/') ? targetUrl.pathname : `${targetUrl.pathname}/`;
         const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
+        const primaryPages = ['/', '/projects/', '/writing/'];
+
+        // Always hard-load between primary pages to avoid stale mixed DOM state.
+        if (primaryPages.includes(targetPath) && targetPath !== currentPath) {
+            window.location.href = targetPath;
+            return;
+        }
 
         // Prevent stale Home DOM being reused when leaving alias routes.
         // For these transitions, hard navigation is more reliable than partial swap.
