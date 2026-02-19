@@ -662,12 +662,21 @@ function normalizeHomeHashRouting() {
 function initSoftNavigation() {
     if (softNavBound) return;
     softNavBound = true;
+    const sectionRouteToId = {
+        '/home/': 'home',
+        '/about/': 'about',
+        '/services/': 'services',
+        '/experience/': 'experience',
+        '/experienta/': 'experience',
+        '/testimonials/': 'testimonials',
+        '/customer/': 'testimonials'
+    };
 
     const isSoftPath = (url) => {
         try {
             const u = new URL(url, window.location.origin);
             const p = u.pathname.endsWith('/') ? u.pathname : `${u.pathname}/`;
-            return u.origin === window.location.origin && ['/', '/projects/', '/writing/'].includes(p);
+            return u.origin === window.location.origin && (['/', '/projects/', '/writing/'].includes(p) || !!sectionRouteToId[p]);
         } catch {
             return false;
         }
@@ -681,7 +690,11 @@ function initSoftNavigation() {
         }
         softNavLoading = true;
         try {
-            const res = await fetch(url, { credentials: 'same-origin' });
+            const reqUrl = new URL(url, window.location.origin);
+            const reqPath = reqUrl.pathname.endsWith('/') ? reqUrl.pathname : `${reqUrl.pathname}/`;
+            const isSectionRoute = !!sectionRouteToId[reqPath];
+            const fetchUrl = isSectionRoute ? '/' : url;
+            const res = await fetch(fetchUrl, { credentials: 'same-origin' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const html = await res.text();
             const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -698,8 +711,12 @@ function initSoftNavigation() {
             if (nextDesc && currDesc) currDesc.setAttribute('content', nextDesc.getAttribute('content') || '');
             if (push) history.pushState({}, '', url);
             window.scrollTo({ top: 0, behavior: 'auto' });
-            if (new URL(url, window.location.origin).hash) {
-                const target = document.querySelector(new URL(url, window.location.origin).hash);
+            const sectionId = sectionRouteToId[reqPath];
+            if (sectionId) {
+                const target = document.getElementById(sectionId);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (reqUrl.hash) {
+                const target = document.querySelector(reqUrl.hash);
                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             applyLanguage(currentLang);
