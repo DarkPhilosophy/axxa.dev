@@ -29,6 +29,11 @@ function normalizeAssetUrl(url) {
     return value;
 }
 
+function isSectionAliasPath(pathname) {
+    const p = pathname.endsWith('/') ? pathname : `${pathname}/`;
+    return ['/home/', '/about/', '/services/', '/experience/', '/experienta/', '/testimonials/', '/customer/'].includes(p);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (normalizeHomeHashRouting()) return;
     await bootApp();
@@ -48,13 +53,6 @@ function enforcePageContentForPath() {
     }[path];
     if (!expected) return;
     if (page === expected) return;
-
-    // Prevent URL/content desync (e.g., cached soft-nav state).
-    if (path === '/projects/' || path === '/writing/') {
-        window.location.replace(path);
-    } else {
-        window.location.replace('/');
-    }
 }
 
 function handleSectionQueryRouting() {
@@ -684,8 +682,8 @@ function normalizeHomeHashRouting() {
     const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
     const hash = window.location.hash || '';
     if ((path === '/writing/' || path === '/projects/') && homeHashMap[hash]) {
-        window.location.replace(homeHashMap[hash]);
-        return true;
+        history.replaceState({}, '', homeHashMap[hash]);
+        return false;
     }
     return false;
 }
@@ -713,30 +711,23 @@ function initSoftNavigation() {
         }
     };
 
-    const isSectionAliasPath = (pathname) => {
-        const p = pathname.endsWith('/') ? pathname : `${pathname}/`;
-        return ['/home/', '/about/', '/services/', '/experience/', '/experienta/', '/testimonials/', '/customer/'].includes(p);
-    };
-
     const swapPageContent = async (url, push = true) => {
         if (softNavLoading || activeOverlay) return;
         const targetUrl = new URL(url, window.location.origin);
         const targetPath = targetUrl.pathname.endsWith('/') ? targetUrl.pathname : `${targetUrl.pathname}/`;
         const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
-        const primaryPages = ['/', '/projects/', '/writing/'];
-
-        // Always hard-load between primary pages to avoid stale mixed DOM state.
-        if (primaryPages.includes(targetPath) && targetPath !== currentPath) {
-            window.location.href = targetPath;
-            return;
-        }
-
-        // Prevent stale Home DOM being reused when leaving alias routes.
-        // For these transitions, hard navigation is more reliable than partial swap.
-        if (isSectionAliasPath(currentPath) && (targetPath === '/projects/' || targetPath === '/writing/')) {
-            window.location.href = targetPath;
-            return;
-        }
+        const expectedPageByPath = {
+            '/': 'home',
+            '/home/': 'home',
+            '/about/': 'home',
+            '/services/': 'home',
+            '/experience/': 'home',
+            '/experienta/': 'home',
+            '/testimonials/': 'home',
+            '/customer/': 'home',
+            '/projects/': 'projects',
+            '/writing/': 'writing'
+        };
 
         if (!isSoftPath(url)) {
             window.location.href = url;
@@ -758,6 +749,12 @@ function initSoftNavigation() {
                 window.location.href = url;
                 return;
             }
+            const expectedPage = expectedPageByPath[reqPath] || expectedPageByPath[targetPath] || null;
+            const nextPage = (nextMain.getAttribute('data-page') || '').toLowerCase();
+            if (expectedPage && nextPage && nextPage !== expectedPage) {
+                window.location.href = targetPath;
+                return;
+            }
             currMain.replaceWith(nextMain);
             document.title = doc.title || document.title;
             const nextDesc = doc.querySelector('meta[name="description"]');
@@ -777,6 +774,7 @@ function initSoftNavigation() {
             initAnimations();
             initBlog();
             initContact();
+            sanitizePageArtifacts();
             enforcePageContentForPath();
         } catch (e) {
             console.error('Soft nav failed:', e);
@@ -799,6 +797,47 @@ function initSoftNavigation() {
     window.addEventListener('popstate', () => {
         swapPageContent(window.location.href, false);
     });
+}
+
+function sanitizePageArtifacts() {
+    const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
+    const homeOnlySectionIds = ['about', 'services', 'experience', 'testimonials', 'customer'];
+
+    if (path === '/projects/' || path === '/writing/') {
+        homeOnlySectionIds.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) {
+                const section = el.closest('section') || el;
+                section.remove();
+            }
+        });
+        return;
+    }
+
+    if ((path === '/' || isSectionAliasPath(path)) && !document.getElementById('testimonials')) {
+        repairHomeMainWithoutReload();
+    }
+}
+
+async function repairHomeMainWithoutReload() {
+    try {
+        const res = await fetch('/', { credentials: 'same-origin' });
+        if (!res.ok) return;
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextMain = doc.querySelector('#page-content');
+        const currMain = document.querySelector('#page-content');
+        if (!nextMain || !currMain) return;
+        const nextPage = (nextMain.getAttribute('data-page') || '').toLowerCase();
+        if (nextPage !== 'home') return;
+        currMain.replaceWith(nextMain);
+        applyLanguage(currentLang);
+        initAnimations();
+        initBlog();
+        initContact();
+    } catch (err) {
+        console.error('Home main repair failed:', err);
+    }
 }
 
 
