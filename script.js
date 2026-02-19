@@ -708,11 +708,40 @@ function initSoftNavigation() {
         }
     };
 
+    const extractMainFromHtml = (html) => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return {
+            doc,
+            main: doc.querySelector('#page-content'),
+        };
+    };
+
+    const fetchMainWithRetry = async (targetPath, expectedPage) => {
+        const first = await fetch(targetPath, { credentials: 'same-origin' });
+        if (first.ok) {
+            const html = await first.text();
+            const { doc, main } = extractMainFromHtml(html);
+            const page = (main?.getAttribute('data-page') || '').toLowerCase();
+            if (main && (!expectedPage || page === expectedPage)) return { doc, main, page };
+        }
+
+        // Retry once with cache-bust if edge/browser returned stale content.
+        const retryUrl = `${targetPath}${targetPath.includes('?') ? '&' : '?'}_axxa_nav=${Date.now()}`;
+        const retry = await fetch(retryUrl, { credentials: 'same-origin', cache: 'no-store' });
+        if (!retry.ok) return null;
+        const retryHtml = await retry.text();
+        const { doc: retryDoc, main: retryMain } = extractMainFromHtml(retryHtml);
+        const retryPage = (retryMain?.getAttribute('data-page') || '').toLowerCase();
+        if (retryMain && (!expectedPage || retryPage === expectedPage)) {
+            return { doc: retryDoc, main: retryMain, page: retryPage };
+        }
+        return null;
+    };
+
     const swapPageContent = async (url, push = true) => {
         if (softNavLoading || activeOverlay) return;
         const targetUrl = new URL(url, window.location.origin);
         const targetPath = targetUrl.pathname.endsWith('/') ? targetUrl.pathname : `${targetUrl.pathname}/`;
-        const currentPath = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
         const expectedPageByPath = {
             '/': 'home',
             '/home/': 'home',
@@ -735,25 +764,33 @@ function initSoftNavigation() {
             const reqPath = reqUrl.pathname.endsWith('/') ? reqUrl.pathname : `${reqUrl.pathname}/`;
             const isSectionRoute = !!sectionRouteToId[reqPath];
             const fetchUrl = isSectionRoute ? '/' : url;
-            const res = await fetch(fetchUrl, { credentials: 'same-origin' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const html = await res.text();
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const nextMain = doc.querySelector('#page-content');
             const currMain = document.querySelector('#page-content');
-            if (!nextMain || !currMain) {
+            if (!currMain) {
                 console.warn('Soft nav aborted: missing #page-content in current or target document');
                 return;
             }
             const expectedPage = expectedPageByPath[reqPath] || expectedPageByPath[targetPath] || null;
-            const nextPage = (nextMain.getAttribute('data-page') || '').toLowerCase();
-            if (expectedPage && nextPage && nextPage !== expectedPage) {
-                console.warn('Soft nav page mismatch', { expectedPage, nextPage, targetPath });
+            let payload = null;
+            const res = await fetch(fetchUrl, { credentials: 'same-origin' });
+            if (res.ok) {
+                const html = await res.text();
+                const parsed = extractMainFromHtml(html);
+                const nextPage = (parsed.main?.getAttribute('data-page') || '').toLowerCase();
+                if (parsed.main && (!expectedPage || nextPage === expectedPage)) {
+                    payload = { doc: parsed.doc, main: parsed.main, page: nextPage };
+                }
+            }
+
+            if (!payload) {
+                payload = await fetchMainWithRetry(targetPath, expectedPage);
+            }
+            if (!payload) {
+                console.warn('Soft nav failed to resolve expected page payload', { expectedPage, targetPath });
                 return;
             }
-            currMain.replaceWith(nextMain);
-            document.title = doc.title || document.title;
-            const nextDesc = doc.querySelector('meta[name="description"]');
+            currMain.replaceWith(payload.main);
+            document.title = payload.doc.title || document.title;
+            const nextDesc = payload.doc.querySelector('meta[name="description"]');
             const currDesc = document.querySelector('meta[name="description"]');
             if (nextDesc && currDesc) currDesc.setAttribute('content', nextDesc.getAttribute('content') || '');
             if (push) history.pushState({}, '', url);
