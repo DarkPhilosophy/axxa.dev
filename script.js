@@ -31,7 +31,7 @@ function normalizeAssetUrl(url) {
 
 function isSectionAliasPath(pathname) {
     const p = pathname.endsWith('/') ? pathname : `${pathname}/`;
-    return ['/home/', '/about/', '/services/', '/experience/', '/experienta/', '/testimonials/', '/customer/'].includes(p);
+    return ['/home/', '/about/', '/services/', '/experience/', '/experienta/', '/testimonials/'].includes(p);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -66,8 +66,7 @@ function handleSectionQueryRouting() {
         services: 'services',
         experience: 'experience',
         experienta: 'experience',
-        testimonials: 'testimonials',
-        customer: 'customer'
+        testimonials: 'testimonials'
     };
     const targetId = sectionMap[section];
     if (!targetId) return;
@@ -676,8 +675,7 @@ function normalizeHomeHashRouting() {
         '#experience': '/experience',
         '#experienta': '/experienta',
         '#experiență': '/experience',
-        '#testimonials': '/testimonials',
-        '#customer': '/customer'
+        '#testimonials': '/testimonials'
     };
     const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
     const hash = window.location.hash || '';
@@ -697,8 +695,7 @@ function initSoftNavigation() {
         '/services/': 'services',
         '/experience/': 'experience',
         '/experienta/': 'experience',
-        '/testimonials/': 'testimonials',
-        '/customer/': 'customer'
+        '/testimonials/': 'testimonials'
     };
 
     const isSoftPath = (url) => {
@@ -724,7 +721,6 @@ function initSoftNavigation() {
             '/experience/': 'home',
             '/experienta/': 'home',
             '/testimonials/': 'home',
-            '/customer/': 'home',
             '/projects/': 'projects',
             '/writing/': 'writing'
         };
