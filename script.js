@@ -22,8 +22,33 @@ let softNavLoading = false;
 document.addEventListener('DOMContentLoaded', async () => {
     if (normalizeHomeHashRouting()) return;
     await bootApp();
+    handleSectionQueryRouting();
     initSoftNavigation();
 });
+
+function handleSectionQueryRouting() {
+    const url = new URL(window.location.href);
+    const section = (url.searchParams.get('section') || '').toLowerCase();
+    if (!section) return;
+
+    const sectionMap = {
+        home: 'home',
+        about: 'about',
+        services: 'services',
+        experience: 'experience',
+        experienta: 'experience',
+        testimonials: 'testimonials',
+        customer: 'testimonials'
+    };
+    const targetId = sectionMap[section];
+    if (!targetId) return;
+
+    const target = document.getElementById(targetId);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const cleanPath = `/${section}`;
+    history.replaceState({}, '', cleanPath);
+}
 
 async function bootApp() {
     try {
