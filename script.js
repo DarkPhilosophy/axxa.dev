@@ -615,13 +615,20 @@ function initNavigation() {
 }
 
 function normalizeHomeHashRouting() {
-    const homeOnlyHashes = new Set([
-        '#home', '#about', '#services', '#experience', '#experienta', '#experiență', '#testimonials', '#customer'
-    ]);
+    const homeHashMap = {
+        '#home': '/home',
+        '#about': '/about',
+        '#services': '/services',
+        '#experience': '/experience',
+        '#experienta': '/experienta',
+        '#experiență': '/experience',
+        '#testimonials': '/testimonials',
+        '#customer': '/customer'
+    };
     const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
     const hash = window.location.hash || '';
-    if ((path === '/writing/' || path === '/projects/') && homeOnlyHashes.has(hash)) {
-        window.location.replace(`/${hash}`);
+    if ((path === '/writing/' || path === '/projects/') && homeHashMap[hash]) {
+        window.location.replace(homeHashMap[hash]);
         return true;
     }
     return false;
