@@ -20,6 +20,7 @@ let softNavBound = false;
 let softNavLoading = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if (normalizeHomeHashRouting()) return;
     await bootApp();
     initSoftNavigation();
 });
@@ -534,8 +535,7 @@ function initNavigation() {
     const contactModal = document.getElementById('contact-modal');
     const contactBackdrop = document.getElementById('contact-modal-backdrop');
     const contactContent = document.getElementById('contact-modal-content');
-    const contactOpeners = document.querySelectorAll('[data-open-contact]');
-    const contactClosers = document.querySelectorAll('[data-close-contact]');
+    let closeContact = null;
 
     if (contactModal && contactBackdrop && contactContent) {
         const openContact = () => {
@@ -548,7 +548,7 @@ function initNavigation() {
                 contactContent.classList.remove('opacity-0', 'scale-95');
             });
         };
-        const closeContact = () => {
+        closeContact = () => {
             contactBackdrop.classList.add('opacity-0');
             contactContent.classList.add('opacity-0', 'scale-95');
             setTimeout(() => {
@@ -557,11 +557,16 @@ function initNavigation() {
                 setOverlayLock(false);
             }, 250);
         };
-        contactOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
-            e.preventDefault();
-            openContact();
-        }));
-        contactClosers.forEach(btnEl => btnEl.addEventListener('click', closeContact));
+        document.addEventListener('click', (e) => {
+            const opener = e.target.closest('[data-open-contact]');
+            if (opener) {
+                e.preventDefault();
+                openContact();
+                return;
+            }
+            const closer = e.target.closest('[data-close-contact]');
+            if (closer) closeContact();
+        });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !contactModal.classList.contains('hidden')) closeContact();
         });
@@ -571,8 +576,7 @@ function initNavigation() {
     const sqlModal = document.getElementById('sql-modal');
     const sqlBackdrop = document.getElementById('sql-modal-backdrop');
     const sqlContent = document.getElementById('sql-modal-content');
-    const sqlOpeners = document.querySelectorAll('[data-open-sql]');
-    const sqlClosers = document.querySelectorAll('[data-close-sql]');
+    let closeSql = null;
 
     if (sqlModal && sqlBackdrop && sqlContent) {
         const openSql = () => {
@@ -585,7 +589,7 @@ function initNavigation() {
                 sqlContent.classList.remove('opacity-0', 'scale-95');
             });
         };
-        const closeSql = () => {
+        closeSql = () => {
             sqlBackdrop.classList.add('opacity-0');
             sqlContent.classList.add('opacity-0', 'scale-95');
             setTimeout(() => {
@@ -594,15 +598,33 @@ function initNavigation() {
                 setOverlayLock(false);
             }, 250);
         };
-        sqlOpeners.forEach(btnEl => btnEl.addEventListener('click', (e) => {
-            e.preventDefault();
-            openSql();
-        }));
-        sqlClosers.forEach(btnEl => btnEl.addEventListener('click', closeSql));
+        document.addEventListener('click', (e) => {
+            const opener = e.target.closest('[data-open-sql]');
+            if (opener) {
+                e.preventDefault();
+                openSql();
+                return;
+            }
+            const closer = e.target.closest('[data-close-sql]');
+            if (closer) closeSql();
+        });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !sqlModal.classList.contains('hidden')) closeSql();
         });
     }
+}
+
+function normalizeHomeHashRouting() {
+    const homeOnlyHashes = new Set([
+        '#home', '#about', '#services', '#experience', '#experienta', '#experiență', '#testimonials', '#customer'
+    ]);
+    const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
+    const hash = window.location.hash || '';
+    if ((path === '/writing/' || path === '/projects/') && homeOnlyHashes.has(hash)) {
+        window.location.replace(`/${hash}`);
+        return true;
+    }
+    return false;
 }
 
 function initSoftNavigation() {
@@ -644,8 +666,14 @@ function initSoftNavigation() {
             if (nextDesc && currDesc) currDesc.setAttribute('content', nextDesc.getAttribute('content') || '');
             if (push) history.pushState({}, '', url);
             window.scrollTo({ top: 0, behavior: 'auto' });
+            if (new URL(url, window.location.origin).hash) {
+                const target = document.querySelector(new URL(url, window.location.origin).hash);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             applyLanguage(currentLang);
             initAnimations();
+            initBlog();
+            initContact();
         } catch (e) {
             console.error('Soft nav failed:', e);
             window.location.href = url;
