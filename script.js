@@ -1702,7 +1702,13 @@ function ensurePath(obj, path) {
 
 // Real AI Translator using Google GTX API
 async function realAutoTranslate(targetLang, sourceLang, config, container) {
-    if (!confirm(`Translate missing fields to '${targetLang.toUpperCase()}' using Google Translate?`)) return;
+    const normalizedTargetLang = String(targetLang || '').trim().toLowerCase().replace('_', '-');
+    const normalizedSourceLang = String(sourceLang || config?.i18n?.default || '').trim().toLowerCase().replace('_', '-');
+    if (!normalizedTargetLang || !normalizedSourceLang) {
+        showToast('Missing source/target language. Check i18n.default and supported languages.', 'error');
+        return;
+    }
+    if (!confirm(`Translate missing fields to '${normalizedTargetLang.toUpperCase()}' using Google Translate?`)) return;
 
     const btn = container.querySelector(`.btn-ai-trans[data-lang="${targetLang}"]`);
     const originalText = btn.innerHTML;
@@ -1725,7 +1731,7 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
             for (const key in schema) {
                 const val = schema[key];
                 const path = prefix ? `${prefix}.${key}` : key;
-                const targetPath = `translations.${targetLang}.${path}`;
+                const targetPath = `translations.${normalizedTargetLang}.${path}`;
                 const currentVal = getNestedValue(config, targetPath);
 
                 if (typeof val === 'object' && val !== null) {
@@ -1761,7 +1767,7 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
     const endpointBatchLimit = 50;
     
     try {
-        const texts = missing.map(m => m.source);
+        const texts = missing.map(m => String(m.source || '').trim());
         let translations = [];
 
         try {
@@ -1774,12 +1780,15 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        sourceLang,
-                        targetLang,
+                        sourceLang: normalizedSourceLang,
+                        targetLang: normalizedTargetLang,
                         texts: batch
                     })
                 });
-                if (!res.ok) throw new Error(`Translate API ${res.status}`);
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => '');
+                    throw new Error(`Translate API ${res.status}${errText ? `: ${errText}` : ''}`);
+                }
                 const data = await res.json();
                 const chunk = Array.isArray(data.translations) ? data.translations : [];
                 if (chunk.length !== batch.length) throw new Error('Translate API length mismatch');
@@ -1791,17 +1800,33 @@ async function realAutoTranslate(targetLang, sourceLang, config, container) {
 
         if (translations.length !== texts.length) {
             translations = [];
-            for (const item of missing) {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(item.source)}`;
-                const res = await fetch(url);
-                if (!res.ok) {
+            // Safer fallback: one-by-one via the same endpoint (avoids browser CORS limits to Google GTX).
+            for (const text of texts) {
+                if (!text) {
                     translations.push('');
                     continue;
                 }
-                const data = await res.json();
-                const translatedText = data && data[0] && data[0][0] && data[0][0][0] ? data[0][0][0] : '';
-                translations.push(translatedText);
-                await new Promise(r => setTimeout(r, 200));
+                try {
+                    const res = await fetch(translateEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sourceLang: normalizedSourceLang,
+                            targetLang: normalizedTargetLang,
+                            texts: [text]
+                        })
+                    });
+                    if (!res.ok) {
+                        translations.push('');
+                        continue;
+                    }
+                    const data = await res.json().catch(() => null);
+                    const translatedText = Array.isArray(data?.translations) ? (data.translations[0] || '') : '';
+                    translations.push(translatedText);
+                } catch {
+                    translations.push('');
+                }
+                await new Promise(r => setTimeout(r, 120));
             }
         }
 
