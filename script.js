@@ -745,6 +745,17 @@ function initSoftNavigation() {
         '/experienta/': 'experience',
         '/testimonials/': 'testimonials'
     };
+    const pageHtmlByPath = {
+        '/': '/index.html',
+        '/projects/': '/projects/index.html',
+        '/writing/': '/writing/index.html',
+        '/home/': '/index.html',
+        '/about/': '/index.html',
+        '/services/': '/index.html',
+        '/experience/': '/index.html',
+        '/experienta/': '/index.html',
+        '/testimonials/': '/index.html'
+    };
 
     const isSoftPath = (url) => {
         try {
@@ -765,7 +776,8 @@ function initSoftNavigation() {
     };
 
     const fetchMainWithRetry = async (targetPath, expectedPage) => {
-        const first = await fetch(targetPath, { credentials: 'same-origin' });
+        const sourceUrl = pageHtmlByPath[targetPath] || targetPath;
+        const first = await fetch(sourceUrl, { credentials: 'same-origin' });
         if (first.ok) {
             const html = await first.text();
             const { doc, main } = extractMainFromHtml(html);
@@ -774,7 +786,7 @@ function initSoftNavigation() {
         }
 
         // Retry once with cache-bust if edge/browser returned stale content.
-        const retryUrl = `${targetPath}${targetPath.includes('?') ? '&' : '?'}_axxa_nav=${Date.now()}`;
+        const retryUrl = `${sourceUrl}${sourceUrl.includes('?') ? '&' : '?'}_axxa_nav=${Date.now()}`;
         const retry = await fetch(retryUrl, { credentials: 'same-origin', cache: 'no-store' });
         if (!retry.ok) return null;
         const retryHtml = await retry.text();
@@ -811,7 +823,7 @@ function initSoftNavigation() {
             const reqUrl = new URL(url, window.location.origin);
             const reqPath = reqUrl.pathname.endsWith('/') ? reqUrl.pathname : `${reqUrl.pathname}/`;
             const isSectionRoute = !!sectionRouteToId[reqPath];
-            const fetchUrl = isSectionRoute ? '/' : url;
+            const fetchUrl = isSectionRoute ? '/index.html' : (pageHtmlByPath[reqPath] || url);
             const currMain = document.querySelector('#page-content');
             if (!currMain) {
                 console.warn('Soft nav aborted: missing #page-content in current or target document');
