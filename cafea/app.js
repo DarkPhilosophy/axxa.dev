@@ -272,13 +272,13 @@
 
   function renderStockRow(field, label, value, isAdmin) {
     return `
-      <div class="flex items-center justify-between rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
-        <div>
+      <div class="relative rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
+        <div class="text-center">
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
           <p id="stock-value-${field}" class="text-2xl font-bold">${esc(value)}</p>
-          <input id="stock-input-${field}" class="cafea-input hidden mt-2 w-32" type="number" min="0" value="${esc(value)}" />
+          <input id="stock-input-${field}" class="cafea-input hidden mt-2 w-32 mx-auto text-center" type="number" min="0" value="${esc(value)}" />
         </div>
-        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted">Edit</button>` : ''}
+        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted absolute right-3 top-1/2 -translate-y-1/2">Edit</button>` : ''}
       </div>
     `;
   }

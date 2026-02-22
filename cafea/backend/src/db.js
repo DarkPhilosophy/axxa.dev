@@ -14,7 +14,11 @@ function withRetry(fn) {
     return fn();
   } catch (err) {
     const message = String(err?.message || '');
-    if (!message.includes('STREAM_EXPIRED')) throw err;
+    const isRetryable =
+      message.includes('STREAM_EXPIRED') ||
+      message.includes('invalid baton') ||
+      message.includes('Received an invalid baton');
+    if (!isRetryable) throw err;
     reconnect();
     return fn();
   }
