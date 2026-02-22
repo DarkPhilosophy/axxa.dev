@@ -21,7 +21,13 @@ export const config = {
   corsOrigin: process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
   bootstrapAdminEmail: process.env.ADMIN_EMAIL || 'alexa@axxa.dev',
   bootstrapAdminPassword: process.env.ADMIN_PASSWORD || '',
-  bootstrapAdminName: process.env.ADMIN_NAME || 'Alex'
+  bootstrapAdminName: process.env.ADMIN_NAME || 'Alex',
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpSecure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  mailFrom: process.env.MAIL_FROM || process.env.SMTP_USER || 'alexa@axxa.dev'
 };
 
 export const resolvedDbUrl = namespaceUrl(config.dbUrlBase, config.dbNamespace);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { many, one, run } from '../db.js';
 import { requireAuth } from '../middleware.js';
+import { notifyCoffeeConsumed } from '../services/mailer.js';
 
 export const coffeeRouter = Router();
 coffeeRouter.use(requireAuth);
@@ -43,6 +44,18 @@ coffeeRouter.post('/consume', (req, res) => {
   const next = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
   if (!next || next.current_stock >= stock.current_stock) return res.status(409).json({ error: 'Stock epuizat' });
   run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', req.user.id);
+
+  const recipients = many('SELECT email, name FROM users WHERE active = 1');
+  notifyCoffeeConsumed({
+    actorName: req.user.name,
+    actorEmail: req.user.email,
+    recipients,
+    stockCurrent: next.current_stock,
+    consumedAt: next.updated_at
+  }).catch((err) => {
+    console.error('[mail] consume notification failed:', err?.message || err);
+  });
+
   res.json({ ok: true, stock: { ...next, low: next.current_stock <= next.min_stock } });
 });
 
