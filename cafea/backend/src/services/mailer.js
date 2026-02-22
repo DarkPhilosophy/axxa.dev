@@ -137,12 +137,9 @@ export async function notifyCoffeeConsumed({
     actorConsumedCount, actorRemaining
   });
 
-  let sent = 0;
-  for (const r of validRecipients) {
-    await sendMailUnified({ to: r.email, subject, text, html });
-    sent += 1;
-  }
-  return { sent, skipped: (recipients?.length || 0) - sent };
+  const to = Array.from(new Set(validRecipients.map((r) => r.email)));
+  await sendMailUnified({ to, subject, text, html });
+  return { sent: to.length, skipped: (recipients?.length || 0) - to.length };
 }
 
 export async function sendCoffeeTestEmail({ to, actorName, actorEmail, actorAvatarUrl, consumedAt, stockInitial, stockCurrent, stockMin, stockExpectedCurrent, stockManualDelta, actorConsumedCount, actorRemaining }) {
