@@ -19,7 +19,7 @@ export const config = {
   dbUrlBase: process.env.DB_URL || 'https://sql.axxa.dev',
   dbToken: process.env.DB_TOKEN || '',
   corsOrigin: process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
-  bootstrapAdminEmail: process.env.ADMIN_EMAIL || 'alex@axxa.dev',
+  bootstrapAdminEmail: process.env.ADMIN_EMAIL || 'alexa@axxa.dev',
   bootstrapAdminPassword: process.env.ADMIN_PASSWORD || '',
   bootstrapAdminName: process.env.ADMIN_NAME || 'Alex'
 };
