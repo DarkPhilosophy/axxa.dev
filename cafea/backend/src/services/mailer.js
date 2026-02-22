@@ -12,6 +12,7 @@ function getTransport() {
     port: config.smtpPort,
     secure: config.smtpSecure,
     auth: { user: config.smtpUser, pass: config.smtpPass },
+    tls: config.smtpServername ? { servername: config.smtpServername } : undefined,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000
