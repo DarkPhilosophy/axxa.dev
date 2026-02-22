@@ -145,6 +145,14 @@
               <div><p class="text-xs uppercase tracking-wider text-slate-500">Curent</p><p class="text-2xl font-bold">${esc(state.stock?.current_stock ?? 0)}</p></div>
               <div><p class="text-xs uppercase tracking-wider text-slate-500">Minim</p><p class="text-2xl font-bold">${esc(state.stock?.min_stock ?? 0)}</p></div>
             </div>
+            ${isAdmin ? `
+              <form id="form-stock-inline" class="grid md:grid-cols-4 gap-3 mb-4">
+                <input id="stock-inline-initial" class="cafea-input" type="number" min="0" value="${esc(state.stock?.initial_stock ?? 0)}" placeholder="stoc inițial" required />
+                <input id="stock-inline-current" class="cafea-input" type="number" min="0" value="${esc(state.stock?.current_stock ?? 0)}" placeholder="stoc curent" required />
+                <input id="stock-inline-min" class="cafea-input" type="number" min="0" value="${esc(state.stock?.min_stock ?? 20)}" placeholder="stoc minim" required />
+                <button class="cafea-btn cafea-btn-primary" type="submit">Salvează stoc</button>
+              </form>
+            ` : ''}
             <button id="btn-consume" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea</button>
           </div>
 
@@ -167,15 +175,6 @@
           <section class="cafea-glass p-5 space-y-5">
             <h3 class="font-bold text-lg">Admin Controls</h3>
             ${pending.length ? `<div><h4 class="font-semibold mb-2">Cereri pending (${pending.length})</h4><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${pendingHtml}</div></div>` : ''}
-            <div>
-              <h4 class="font-semibold mb-2">Setează stoc</h4>
-              <form id="form-stock" class="grid md:grid-cols-4 gap-3">
-                <input id="stock-initial" class="cafea-input" type="number" min="0" value="${esc(state.stock?.initial_stock ?? 0)}" placeholder="stoc inițial" required />
-                <input id="stock-current" class="cafea-input" type="number" min="0" value="${esc(state.stock?.current_stock ?? 0)}" placeholder="stoc curent" required />
-                <input id="stock-min" class="cafea-input" type="number" min="0" value="${esc(state.stock?.min_stock ?? 20)}" placeholder="stoc minim" required />
-                <button class="cafea-btn cafea-btn-primary" type="submit">Salvează stoc</button>
-              </form>
-            </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btn-export" class="cafea-btn cafea-btn-muted">Export CSV</button>
             </div>
@@ -228,7 +227,7 @@
     }
 
     if (isAdmin) {
-      const stockForm = document.getElementById('form-stock');
+      const stockForm = document.getElementById('form-stock-inline');
       if (stockForm) {
         stockForm.onsubmit = async (e) => {
           e.preventDefault();
@@ -237,9 +236,9 @@
             await api('/api/admin/stock/init', {
               method: 'POST',
               body: {
-                initial_stock: Number(document.getElementById('stock-initial').value),
-                current_stock: Number(document.getElementById('stock-current').value),
-                min_stock: Number(document.getElementById('stock-min').value)
+                initial_stock: Number(document.getElementById('stock-inline-initial').value),
+                current_stock: Number(document.getElementById('stock-inline-current').value),
+                min_stock: Number(document.getElementById('stock-inline-min').value)
               }
             });
             await loadDashboard();
