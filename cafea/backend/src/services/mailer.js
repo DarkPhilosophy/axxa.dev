@@ -49,12 +49,14 @@ async function sendMailUnified({ to, subject, text, html }) {
       const body = await res.text().catch(() => '');
       throw new Error(`Resend error ${res.status}: ${body || 'unknown'}`);
     }
-    return;
+    const payload = await res.json().catch(() => ({}));
+    return { provider: 'resend', id: payload?.id || null };
   }
 
   const tx = getTransport();
   if (!tx) throw new Error('No mail provider configured');
-  await tx.sendMail({ from: formatFrom(), to, subject, text, html });
+  const info = await tx.sendMail({ from: formatFrom(), to, subject, text, html });
+  return { provider: 'smtp', id: info?.messageId || null };
 }
 
 function buildCoffeeTemplate({
@@ -170,10 +172,11 @@ export async function sendRegistrationEmails({
   const when = registeredAt ? new Date(`${registeredAt}Z`).toLocaleString('ro-RO') : new Date().toLocaleString('ro-RO');
   let sent = 0;
   const errors = [];
+  const receipts = [];
 
   if (isValidEmail(userEmail)) {
     try {
-      await sendMailUnified({
+      const receipt = await sendMailUnified({
         to: userEmail,
         subject: 'Cafea Office: contul tau asteapta aprobarea adminului',
         text: `Salut ${userName}, contul tau (${userEmail}) a fost inregistrat la ${when} si asteapta aprobarea adminului.`,
@@ -199,6 +202,7 @@ export async function sendRegistrationEmails({
       `
       });
       sent += 1;
+      receipts.push({ kind: 'user', to: userEmail, provider: receipt?.provider || 'unknown', id: receipt?.id || null });
     } catch (err) {
       errors.push(`user:${err?.message || err}`);
     }
@@ -215,7 +219,7 @@ export async function sendRegistrationEmails({
 
   for (const target of adminTargets) {
     try {
-      await sendMailUnified({
+      const receipt = await sendMailUnified({
         to: target,
         subject: 'Cafea Office: utilizator nou in asteptare',
         text:
@@ -251,11 +255,12 @@ export async function sendRegistrationEmails({
       `
       });
       sent += 1;
+      receipts.push({ kind: 'admin', to: target, provider: receipt?.provider || 'unknown', id: receipt?.id || null });
     } catch (err) {
       errors.push(`admin:${target}:${err?.message || err}`);
     }
   }
-  return { sent, errors };
+  return { sent, errors, receipts };
 }
 
 export async function sendApprovalResultEmail({ to, userName, approved }) {

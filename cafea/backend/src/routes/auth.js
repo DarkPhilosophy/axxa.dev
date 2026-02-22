@@ -77,6 +77,12 @@ authRouter.post('/register', async (req, res) => {
         if (Array.isArray(mailResult?.errors) && mailResult.errors.length) {
           console.error('[mail] registration notification partial failure:', mailResult.errors.join(' | '));
         }
+        if (Array.isArray(mailResult?.receipts) && mailResult.receipts.length) {
+          const summary = mailResult.receipts
+            .map((r) => `${r.kind}:${r.to}:${r.provider}:${r.id || '-'}`)
+            .join(' | ');
+          console.log('[mail] registration notification receipts:', summary);
+        }
       } catch (err) {
         console.error('[mail] registration notification failed:', err?.message || err);
       }
