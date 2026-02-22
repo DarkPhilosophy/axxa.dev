@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { hashPassword, signActionToken, signToken, verifyActionToken, verifyPassword } from '../auth.js';
-import { all, one, run } from '../db.js';
+import { many, one, run } from '../db.js';
 import { config } from '../config.js';
 import { requireAuth } from '../middleware.js';
 import { sendApprovalResultEmail, sendRegistrationEmails } from '../services/mailer.js';
@@ -56,7 +56,7 @@ authRouter.post('/register', async (req, res) => {
     const approveUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=approve&token=${encodeURIComponent(token)}`;
     const rejectUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=reject&token=${encodeURIComponent(token)}`;
     const sourceIp = String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-    const adminRows = all('SELECT email FROM users WHERE role = ? AND active = 1', 'admin');
+    const adminRows = many('SELECT email FROM users WHERE role = ? AND active = 1', 'admin');
     const adminEmails = Array.from(new Set([
       ...adminRows.map((r) => String(r.email || '').trim().toLowerCase()),
       String(config.bootstrapAdminEmail || '').trim().toLowerCase()
