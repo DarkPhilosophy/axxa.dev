@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { hashPassword, signActionToken, signToken, verifyActionToken, verifyPassword } from '../auth.js';
-import { one, run } from '../db.js';
+import { all, one, run } from '../db.js';
 import { config } from '../config.js';
 import { requireAuth } from '../middleware.js';
 import { sendApprovalResultEmail, sendRegistrationEmails } from '../services/mailer.js';
@@ -56,18 +56,31 @@ authRouter.post('/register', async (req, res) => {
     const approveUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=approve&token=${encodeURIComponent(token)}`;
     const rejectUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=reject&token=${encodeURIComponent(token)}`;
     const sourceIp = String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-    sendRegistrationEmails({
-      userName: created.name,
-      userEmail: created.email,
-      userAvatarUrl: created.avatar_url,
-      registeredAt: created.created_at,
-      registeredIp: sourceIp,
-      adminEmail: config.bootstrapAdminEmail,
-      approveUrl,
-      rejectUrl
-    }).catch((err) => {
-      console.error('[mail] registration notification failed:', err?.message || err);
-    });
+    const adminRows = all('SELECT email FROM users WHERE role = ? AND active = 1', 'admin');
+    const adminEmails = Array.from(new Set([
+      ...adminRows.map((r) => String(r.email || '').trim().toLowerCase()),
+      String(config.bootstrapAdminEmail || '').trim().toLowerCase()
+    ].filter(Boolean)));
+    void (async () => {
+      try {
+        const mailResult = await sendRegistrationEmails({
+          userName: created.name,
+          userEmail: created.email,
+          userAvatarUrl: created.avatar_url,
+          registeredAt: created.created_at,
+          registeredIp: sourceIp,
+          adminEmail: config.bootstrapAdminEmail,
+          adminEmails,
+          approveUrl,
+          rejectUrl
+        });
+        if (Array.isArray(mailResult?.errors) && mailResult.errors.length) {
+          console.error('[mail] registration notification partial failure:', mailResult.errors.join(' | '));
+        }
+      } catch (err) {
+        console.error('[mail] registration notification failed:', err?.message || err);
+      }
+    })();
   }
 
   return res.status(201).json({ ok: true, status: 'pending_approval' });

@@ -165,6 +165,7 @@ export async function sendRegistrationEmails({
   registeredAt,
   registeredIp,
   adminEmail,
+  adminEmails,
   approveUrl,
   rejectUrl
 }) {
@@ -206,10 +207,19 @@ export async function sendRegistrationEmails({
     }
   }
 
-  if (isValidEmail(adminEmail)) {
+  const adminTargets = Array.from(new Set(
+    [
+      ...(Array.isArray(adminEmails) ? adminEmails : []),
+      adminEmail
+    ]
+      .map((x) => String(x || '').trim().toLowerCase())
+      .filter((x) => x && isValidEmail(x))
+  ));
+
+  for (const target of adminTargets) {
     try {
       await sendMailUnified({
-        to: adminEmail,
+        to: target,
         subject: 'Cafea Office: utilizator nou in asteptare',
         text:
         `Utilizator nou: ${userName} (${userEmail})\n` +
@@ -245,7 +255,7 @@ export async function sendRegistrationEmails({
       });
       sent += 1;
     } catch (err) {
-      errors.push(`admin:${err?.message || err}`);
+      errors.push(`admin:${target}:${err?.message || err}`);
     }
   }
   return { sent, errors };
