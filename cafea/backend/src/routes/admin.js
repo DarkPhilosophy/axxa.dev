@@ -142,3 +142,10 @@ adminRouter.delete('/history', (req, res) => {
   run('DELETE FROM coffee_logs WHERE user_id = ?', userId);
   return res.json({ ok: true, deleted: `user:${userId}` });
 });
+
+adminRouter.delete('/history/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  run('DELETE FROM coffee_logs WHERE id = ?', id);
+  return res.json({ ok: true, deleted: `log:${id}` });
+});

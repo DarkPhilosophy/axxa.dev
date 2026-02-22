@@ -115,12 +115,13 @@
           <p id="stock-value-${field}" class="text-2xl font-bold">${esc(value)}</p>
           <input id="stock-input-${field}" class="cafea-input hidden mt-2 w-32 mx-auto text-center" type="number" min="0" value="${esc(value)}" />
         </div>
-        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted absolute right-3 top-1/2 -translate-y-1/2">Edit</button>` : ''}
+        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
       </div>
     `;
   }
 
   function renderHistoryRows() {
+    const isAdmin = state.user?.role === ROLE_ADMIN;
     return state.rows.map((r) => `
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-2">
@@ -133,7 +134,12 @@
           </div>
         </td>
         <td class="py-2">${esc(new Date(r.consumed_at + 'Z').toLocaleString('ro-RO'))}</td>
-        <td class="py-2">-${esc(r.delta)}</td>
+        <td class="py-2">
+          <div class="flex items-center gap-2">
+            <span>-${esc(r.delta)}</span>
+            ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}">Delete</button>` : ''}
+          </div>
+        </td>
       </tr>
     `).join('');
   }
@@ -154,7 +160,6 @@
         <div class="cafea-glass p-5">
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
-            ${isAdmin ? '<button id="btn-history-clear" class="cafea-btn cafea-btn-muted">Șterge istoric</button>' : ''}
           </div>
           <div class="overflow-auto"><table class="w-full text-sm"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th></tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>
         </div>
@@ -227,7 +232,6 @@
 
         <div class="flex gap-2 flex-wrap justify-center">
           <button id="btn-export" class="cafea-btn cafea-btn-muted">Export CSV</button>
-          <button id="btn-history-clear-all" class="cafea-btn cafea-btn-muted">Șterge tot istoricul</button>
         </div>
       </section>
     `;
@@ -247,19 +251,16 @@
               <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
             </div>
           </div>
+          <div class="flex gap-2 justify-center flex-wrap">
+            ${renderTabButton('user', 'Acasă')}
+            ${renderTabButton('profile', 'Profile')}
+            ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
+          </div>
           <div class="flex gap-2">
             <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
             <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
           </div>
         </header>
-
-        <section class="cafea-glass p-3">
-          <div class="flex gap-2 justify-center flex-wrap">
-            ${renderTabButton('user', 'User')}
-            ${renderTabButton('profile', 'Profile')}
-            ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
-          </div>
-        </section>
 
         ${state.error ? `<div class="cafea-glass p-3 text-red-500">${esc(state.error)}</div>` : ''}
 
@@ -340,19 +341,6 @@
         };
       }
 
-      const clearBtn = document.getElementById('btn-history-clear');
-      if (clearBtn) {
-        clearBtn.onclick = async () => {
-          if (!window.confirm('Ștergi tot istoricul?')) return;
-          try {
-            await api('/api/admin/history', { method: 'DELETE' });
-            await loadDashboard();
-          } catch (err) {
-            state.error = err.message;
-          }
-          renderApp();
-        };
-      }
     }
 
     const profileForm = document.getElementById('form-profile');
@@ -377,20 +365,6 @@
     if (isAdmin && state.activeTab === 'admin') {
       const exportBtn = document.getElementById('btn-export');
       if (exportBtn) exportBtn.onclick = () => window.open('/api/admin/export.csv', '_blank');
-
-      const clearAllBtn = document.getElementById('btn-history-clear-all');
-      if (clearAllBtn) {
-        clearAllBtn.onclick = async () => {
-          if (!window.confirm('Ștergi tot istoricul?')) return;
-          try {
-            await api('/api/admin/history', { method: 'DELETE' });
-            await loadDashboard();
-          } catch (err) {
-            state.error = err.message;
-          }
-          renderApp();
-        };
-      }
 
       const formAdd = document.getElementById('form-user-add');
       if (formAdd) {
@@ -446,6 +420,21 @@
                 active: fd.get('active') === 'on'
               }
             });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      });
+    }
+
+    if (isAdmin) {
+      document.querySelectorAll('.btn-delete-log').forEach((btn) => {
+        btn.onclick = async () => {
+          if (!window.confirm('Ștergi acest record din istoric?')) return;
+          try {
+            await api(`/api/admin/history/${btn.dataset.id}`, { method: 'DELETE' });
             await loadDashboard();
           } catch (err) {
             state.error = err.message;
