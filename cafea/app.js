@@ -146,6 +146,34 @@
   }
 
   function renderUserTab(isAdmin) {
+    const selectedUser = isAdmin ? (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null : null;
+    const adminUserList = isAdmin ? `
+      <div class="cafea-glass p-5">
+        <h3 class="font-bold text-lg mb-3">Consum în numele userului</h3>
+        <div class="grid md:grid-cols-[280px_1fr] gap-3">
+          <div class="space-y-2">
+            ${(state.users || []).filter((u) => u.active).map((u) => `
+              <button class="w-full text-left border rounded-xl p-2 btn-pick-consume-user ${state.selectedAdminUserId === u.id ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
+                <div class="flex items-center gap-2">
+                  <img src="${esc(u.avatar_url || 'https://placehold.co/40x40?text=U')}" style="width:32px;height:32px;min-width:32px;max-width:32px;" class="rounded-full object-cover" />
+                  <div>
+                    <p class="font-semibold leading-tight">${esc(u.name)}</p>
+                    <p class="text-xs text-slate-500">${esc(u.email)}</p>
+                  </div>
+                </div>
+              </button>
+            `).join('')}
+          </div>
+          <div class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3">
+            ${selectedUser ? `
+              <p class="mb-3">Selectat: <span class="font-semibold">${esc(selectedUser.name)}</span></p>
+              <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
+            ` : '<p class="text-slate-500">Selectează un user din listă.</p>'}
+          </div>
+        </div>
+      </div>
+    ` : '';
+
     return `
       <section class="grid md:grid-cols-2 gap-4">
         <div class="cafea-glass p-5">
@@ -165,6 +193,7 @@
           <div class="overflow-auto"><table class="w-full text-sm"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th></tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>
         </div>
       </section>
+      ${adminUserList}
     `;
   }
 
@@ -354,6 +383,28 @@
               min_stock: Number(field === 'min_stock' ? inputEl.value : state.stock.min_stock)
             };
             await api('/api/admin/stock/init', { method: 'POST', body: payload });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      }
+
+      document.querySelectorAll('.btn-pick-consume-user').forEach((btn) => {
+        btn.onclick = () => {
+          state.selectedAdminUserId = Number(btn.dataset.id);
+          renderApp();
+        };
+      });
+
+      const consumeSelectedBtn = document.getElementById('btn-consume-selected-user');
+      if (consumeSelectedBtn) {
+        consumeSelectedBtn.onclick = async () => {
+          if (!state.selectedAdminUserId) return;
+          try {
+            state.error = '';
+            await api(`/api/admin/consume/${state.selectedAdminUserId}`, { method: 'POST' });
             await loadDashboard();
           } catch (err) {
             state.error = err.message;

@@ -162,3 +162,25 @@ adminRouter.delete('/users/:id', (req, res) => {
   run('DELETE FROM users WHERE id = ?', id);
   return res.json({ ok: true, deleted: `user:${id}` });
 });
+
+adminRouter.post('/consume/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+
+  const target = one('SELECT id, active FROM users WHERE id = ?', id);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  if (!target.active) return res.status(400).json({ error: 'User pending approval' });
+
+  const stock = one('SELECT current_stock, min_stock FROM stock_settings WHERE id = 1');
+  if (!stock || stock.current_stock <= 0) return res.status(409).json({ error: 'Stock epuizat' });
+
+  run(
+    'UPDATE stock_settings SET current_stock = current_stock - 1, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1 AND current_stock > 0',
+    req.user.id
+  );
+  const next = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
+  if (!next || next.current_stock >= stock.current_stock) return res.status(409).json({ error: 'Stock epuizat' });
+
+  run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', id);
+  return res.json({ ok: true, stock: { ...next, low: next.current_stock <= next.min_stock } });
+});
