@@ -140,19 +140,11 @@
         <section class="grid md:grid-cols-2 gap-4">
           <div class="cafea-glass p-5">
             <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-xl">Stoc Cafea</h2>${stockBadge()}</div>
-            <div class="grid grid-cols-3 gap-3 text-center mb-5">
-              <div><p class="text-xs uppercase tracking-wider text-slate-500">Inițial</p><p class="text-2xl font-bold">${esc(state.stock?.initial_stock ?? 0)}</p></div>
-              <div><p class="text-xs uppercase tracking-wider text-slate-500">Curent</p><p class="text-2xl font-bold">${esc(state.stock?.current_stock ?? 0)}</p></div>
-              <div><p class="text-xs uppercase tracking-wider text-slate-500">Minim</p><p class="text-2xl font-bold">${esc(state.stock?.min_stock ?? 0)}</p></div>
+            <div class="space-y-3 mb-5">
+              ${renderStockRow('initial_stock', 'Inițial', state.stock?.initial_stock ?? 0, isAdmin)}
+              ${renderStockRow('current_stock', 'Curent', state.stock?.current_stock ?? 0, isAdmin)}
+              ${renderStockRow('min_stock', 'Minim', state.stock?.min_stock ?? 0, isAdmin)}
             </div>
-            ${isAdmin ? `
-              <form id="form-stock-inline" class="grid md:grid-cols-4 gap-3 mb-4">
-                <input id="stock-inline-initial" class="cafea-input" type="number" min="0" value="${esc(state.stock?.initial_stock ?? 0)}" placeholder="stoc inițial" required />
-                <input id="stock-inline-current" class="cafea-input" type="number" min="0" value="${esc(state.stock?.current_stock ?? 0)}" placeholder="stoc curent" required />
-                <input id="stock-inline-min" class="cafea-input" type="number" min="0" value="${esc(state.stock?.min_stock ?? 20)}" placeholder="stoc minim" required />
-                <button class="cafea-btn cafea-btn-primary" type="submit">Salvează stoc</button>
-              </form>
-            ` : ''}
             <button id="btn-consume" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea</button>
           </div>
 
@@ -227,20 +219,32 @@
     }
 
     if (isAdmin) {
-      const stockForm = document.getElementById('form-stock-inline');
-      if (stockForm) {
-        stockForm.onsubmit = async (e) => {
-          e.preventDefault();
+      const fields = ['initial_stock', 'current_stock', 'min_stock'];
+      for (const field of fields) {
+        const btn = document.getElementById(`btn-edit-${field}`);
+        if (!btn) continue;
+        btn.onclick = async () => {
+          const valueEl = document.getElementById(`stock-value-${field}`);
+          const inputEl = document.getElementById(`stock-input-${field}`);
+          const editing = btn.dataset.mode === 'editing';
+
+          if (!editing) {
+            btn.dataset.mode = 'editing';
+            btn.textContent = 'Save';
+            valueEl.classList.add('hidden');
+            inputEl.classList.remove('hidden');
+            inputEl.focus();
+            return;
+          }
+
           try {
             state.error = '';
-            await api('/api/admin/stock/init', {
-              method: 'POST',
-              body: {
-                initial_stock: Number(document.getElementById('stock-inline-initial').value),
-                current_stock: Number(document.getElementById('stock-inline-current').value),
-                min_stock: Number(document.getElementById('stock-inline-min').value)
-              }
-            });
+            const payload = {
+              initial_stock: Number(field === 'initial_stock' ? inputEl.value : state.stock.initial_stock),
+              current_stock: Number(field === 'current_stock' ? inputEl.value : state.stock.current_stock),
+              min_stock: Number(field === 'min_stock' ? inputEl.value : state.stock.min_stock)
+            };
+            await api('/api/admin/stock/init', { method: 'POST', body: payload });
             await loadDashboard();
           } catch (err) {
             state.error = err.message;
@@ -264,6 +268,19 @@
         };
       });
     }
+  }
+
+  function renderStockRow(field, label, value, isAdmin) {
+    return `
+      <div class="flex items-center justify-between rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
+          <p id="stock-value-${field}" class="text-2xl font-bold">${esc(value)}</p>
+          <input id="stock-input-${field}" class="cafea-input hidden mt-2 w-32" type="number" min="0" value="${esc(value)}" />
+        </div>
+        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted">Edit</button>` : ''}
+      </div>
+    `;
   }
 
   async function loadMe() {
