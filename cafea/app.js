@@ -276,14 +276,15 @@
               <p class="mb-3">Selectat: <span class="font-semibold">${esc(selectedUser.name)}</span></p>
               <div class="grid md:grid-cols-2 gap-2 mb-3 text-sm">
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Consumate: <span class="font-semibold">${esc(userStats?.consumed_count ?? 0)}</span></div>
-                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Maxim: <span class="font-semibold">${esc(maxLabel)}</span></div>
+                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2 relative">
+                  Maxim:
+                  <span id="max-value-inline" class="font-semibold">${esc(maxLabel)}</span>
+                  <input id="max-input-inline" class="cafea-input hidden" type="number" min="0" placeholder="nelimitat" value="${esc(userStats?.max_coffees ?? '')}" style="max-width:140px;display:none;margin-top:6px;" />
+                  <button id="btn-edit-max-inline" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>
+                </div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Rămase: <span class="font-semibold">${esc(remainingLabel)}</span></div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Ultima: <span class="font-semibold">${esc(userStats?.last_consumed_at || '-')}</span></div>
               </div>
-              <form id="form-set-user-max" class="flex items-center gap-2 mb-3">
-                <input id="input-user-max" class="cafea-input" type="number" min="0" placeholder="max cafele (gol = nelimitat)" value="${esc(userStats?.max_coffees ?? '')}" />
-                <button class="cafea-btn cafea-btn-muted" type="submit" style="white-space:nowrap;">Setează maxim</button>
-              </form>
               <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
               <form id="form-add-history-user" class="grid md:grid-cols-[120px_1fr_auto] gap-2 mt-3">
                 <input id="input-add-delta" class="cafea-input" type="number" min="1" value="1" />
@@ -550,12 +551,23 @@
         };
       }
 
-      const setMaxForm = document.getElementById('form-set-user-max');
-      if (setMaxForm) {
-        setMaxForm.onsubmit = async (e) => {
-          e.preventDefault();
+      const editMaxBtn = document.getElementById('btn-edit-max-inline');
+      if (editMaxBtn) {
+        editMaxBtn.onclick = async () => {
+          const maxValueEl = document.getElementById('max-value-inline');
+          const maxInputEl = document.getElementById('max-input-inline');
+          const editing = editMaxBtn.dataset.mode === 'editing';
+          if (!editing) {
+            editMaxBtn.dataset.mode = 'editing';
+            editMaxBtn.textContent = 'Save';
+            maxValueEl?.classList.add('hidden');
+            maxInputEl?.classList.remove('hidden');
+            if (maxInputEl) maxInputEl.style.display = 'block';
+            maxInputEl?.focus();
+            return;
+          }
           try {
-            const raw = document.getElementById('input-user-max').value.trim();
+            const raw = maxInputEl?.value?.trim() || '';
             await api(`/api/admin/users/${state.selectedAdminUserId}/max`, {
               method: 'PUT',
               body: { max_coffees: raw === '' ? null : Number(raw) }
