@@ -11,7 +11,8 @@
     users: [],
     info: '',
     error: '',
-    activeTab: 'user'
+    activeTab: 'user',
+    selectedAdminUserId: null
   };
 
   async function api(path, opts = {}) {
@@ -126,7 +127,7 @@
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-2">
           <div class="flex items-center gap-2">
-            <img src="${esc(r.avatar_url || 'https://placehold.co/40x40?text=U')}" class="w-8 h-8 rounded-full object-cover" />
+            <img src="${esc(r.avatar_url || 'https://placehold.co/40x40?text=U')}" class="rounded-full object-cover" style="width:32px;height:32px;min-width:32px;max-width:32px;" />
             <div>
               <p class="font-semibold leading-tight">${esc(r.name || r.email)}</p>
               <p class="text-xs text-slate-500">${esc(r.email || '')}</p>
@@ -175,6 +176,7 @@
           <input id="profile-name" class="cafea-input" value="${esc(state.user?.name || '')}" placeholder="nume" required />
           <input id="profile-email" type="email" class="cafea-input" value="${esc(state.user?.email || '')}" placeholder="email" required />
           <input id="profile-avatar" class="cafea-input md:col-span-2" value="${esc(state.user?.avatar_url || '')}" placeholder="avatar url" />
+          <input id="profile-password" type="password" class="cafea-input md:col-span-2" placeholder="parolă nouă (opțional)" />
           <input class="cafea-input" value="${state.user?.active ? 'active' : 'pending'}" placeholder="status" disabled />
           <input class="cafea-input" value="${esc(state.user?.role || 'user')}" placeholder="rol" disabled />
           <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">Salvează profil</button>
@@ -185,17 +187,30 @@
 
   function renderAdminTab() {
     const pending = (state.users || []).filter((u) => !u.active);
-    const users = (state.users || []).map((u) => `
-      <form class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 grid md:grid-cols-6 gap-2 form-user-edit" data-id="${u.id}">
-        <input class="cafea-input" name="name" value="${esc(u.name)}" placeholder="nume" required />
-        <input class="cafea-input" name="email" type="email" value="${esc(u.email)}" placeholder="email" required />
-        <input class="cafea-input" name="avatar_url" value="${esc(u.avatar_url || '')}" placeholder="avatar url" />
-        <input class="cafea-input" name="password" type="password" placeholder="parolă nouă (opțional)" />
-        <select class="cafea-input" name="role"><option value="user" ${u.role === 'user' ? 'selected' : ''}>user</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option></select>
-        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="active" ${u.active ? 'checked' : ''}/> active</label>
-        <button class="cafea-btn cafea-btn-primary md:col-span-6" type="submit">Save ${esc(u.name)}</button>
-      </form>
+    const list = (state.users || []).map((u) => `
+      <button class="w-full text-left border rounded-xl p-2 btn-pick-user ${state.selectedAdminUserId === u.id ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
+        <div class="flex items-center gap-2">
+          <img src="${esc(u.avatar_url || 'https://placehold.co/40x40?text=U')}" style="width:32px;height:32px;min-width:32px;max-width:32px;" class="rounded-full object-cover" />
+          <div>
+            <p class="font-semibold leading-tight">${esc(u.name)}</p>
+            <p class="text-xs text-slate-500">${esc(u.email)}</p>
+          </div>
+        </div>
+      </button>
     `).join('');
+    const selectedUser = (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null;
+    const editor = selectedUser ? `
+      <form id="form-user-edit-selected" data-id="${selectedUser.id}" class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 grid md:grid-cols-2 gap-2">
+        <input class="cafea-input" name="name" value="${esc(selectedUser.name)}" placeholder="nume" required />
+        <input class="cafea-input" name="email" type="email" value="${esc(selectedUser.email)}" placeholder="email" required />
+        <input class="cafea-input md:col-span-2" name="avatar_url" value="${esc(selectedUser.avatar_url || '')}" placeholder="avatar url" />
+        <input class="cafea-input md:col-span-2" name="password" type="password" placeholder="parolă nouă (opțional)" />
+        <select class="cafea-input" name="role"><option value="user" ${selectedUser.role === 'user' ? 'selected' : ''}>user</option><option value="admin" ${selectedUser.role === 'admin' ? 'selected' : ''}>admin</option></select>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="active" ${selectedUser.active ? 'checked' : ''}/> active</label>
+        <button class="cafea-btn cafea-btn-primary" type="submit">Save ${esc(selectedUser.name)}</button>
+        <button class="cafea-btn" id="btn-delete-user" type="button" style="background:#7f1d1d;color:#fff;border-color:#ef4444;">Delete ${esc(selectedUser.name)}</button>
+      </form>
+    ` : '<div class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 text-slate-500">Selectează un user din listă.</div>';
 
     return `
       <section class="cafea-glass p-5 space-y-5">
@@ -207,7 +222,10 @@
               <div class="border border-amber-400/40 rounded-xl p-3">
                 <p class="font-bold">${esc(u.name)}</p>
                 <p class="text-xs text-slate-500 mb-2">${esc(u.email)}</p>
-                <button class="cafea-btn cafea-btn-primary w-full btn-approve" data-id="${u.id}">Aprobă</button>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="cafea-btn cafea-btn-primary w-full btn-approve" data-id="${u.id}">Aprobă</button>
+                  <button class="cafea-btn w-full btn-reject" data-id="${u.id}" style="background:#7f1d1d;color:#fff;border-color:#ef4444;">Respinge</button>
+                </div>
               </div>
             `).join('') || '<p class="text-slate-500">Nu există cereri pending.</p>'}
           </div>
@@ -227,7 +245,10 @@
 
         <div>
           <h4 class="font-semibold mb-2">Editează useri</h4>
-          <div class="space-y-3">${users}</div>
+          <div class="grid md:grid-cols-[280px_1fr] gap-3">
+            <div class="space-y-2">${list}</div>
+            <div>${editor}</div>
+          </div>
         </div>
 
         <div class="flex gap-2 flex-wrap justify-center">
@@ -352,7 +373,8 @@
           const name = document.getElementById('profile-name').value.trim();
           const avatar_url = document.getElementById('profile-avatar').value.trim();
           const email = document.getElementById('profile-email').value.trim().toLowerCase();
-          const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url, email } });
+          const password = document.getElementById('profile-password').value.trim();
+          const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url, email, password } });
           state.user = d.user;
           await loadDashboard();
         } catch (err) {
@@ -403,12 +425,33 @@
         };
       });
 
-      document.querySelectorAll('.form-user-edit').forEach((form) => {
-        form.onsubmit = async (e) => {
+      document.querySelectorAll('.btn-reject').forEach((btn) => {
+        btn.onclick = async () => {
+          if (!window.confirm('Respingi și ștergi userul pending?')) return;
+          try {
+            await api(`/api/admin/users/${btn.dataset.id}`, { method: 'DELETE' });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      });
+
+      document.querySelectorAll('.btn-pick-user').forEach((btn) => {
+        btn.onclick = () => {
+          state.selectedAdminUserId = Number(btn.dataset.id);
+          renderApp();
+        };
+      });
+
+      const selectedForm = document.getElementById('form-user-edit-selected');
+      if (selectedForm) {
+        selectedForm.onsubmit = async (e) => {
           e.preventDefault();
           try {
-            const id = form.dataset.id;
-            const fd = new FormData(form);
+            const id = selectedForm.dataset.id;
+            const fd = new FormData(selectedForm);
             await api(`/api/admin/users/${id}`, {
               method: 'PUT',
               body: {
@@ -426,7 +469,24 @@
           }
           renderApp();
         };
-      });
+      }
+
+      const deleteUserBtn = document.getElementById('btn-delete-user');
+      if (deleteUserBtn) {
+        deleteUserBtn.onclick = async () => {
+          const id = state.selectedAdminUserId;
+          if (!id) return;
+          if (!window.confirm('Ștergi userul selectat?')) return;
+          try {
+            await api(`/api/admin/users/${id}`, { method: 'DELETE' });
+            state.selectedAdminUserId = null;
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      }
     }
 
     if (isAdmin) {
@@ -463,8 +523,12 @@
     if (isAdmin) {
       const u = await api('/api/admin/users');
       state.users = u.users || [];
+      if (!state.selectedAdminUserId || !state.users.some((x) => x.id === state.selectedAdminUserId)) {
+        state.selectedAdminUserId = state.users[0]?.id || null;
+      }
     } else {
       state.users = [];
+      state.selectedAdminUserId = null;
     }
   }
 

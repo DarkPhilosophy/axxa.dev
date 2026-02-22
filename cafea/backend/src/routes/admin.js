@@ -149,3 +149,16 @@ adminRouter.delete('/history/:id', (req, res) => {
   run('DELETE FROM coffee_logs WHERE id = ?', id);
   return res.json({ ok: true, deleted: `log:${id}` });
 });
+
+adminRouter.delete('/users/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  if (id === req.user.id) return res.status(400).json({ error: 'Nu poți șterge propriul cont admin' });
+
+  const existing = one('SELECT id FROM users WHERE id = ?', id);
+  if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  run('DELETE FROM coffee_logs WHERE user_id = ?', id);
+  run('DELETE FROM users WHERE id = ?', id);
+  return res.json({ ok: true, deleted: `user:${id}` });
+});

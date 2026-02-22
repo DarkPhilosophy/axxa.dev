@@ -54,8 +54,8 @@ authRouter.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
-authRouter.put('/profile', requireAuth, (req, res) => {
-  const { name, avatar_url, email } = req.body || {};
+authRouter.put('/profile', requireAuth, async (req, res) => {
+  const { name, avatar_url, email, password } = req.body || {};
   const nextName = String(name || '').trim();
   const nextAvatar = String(avatar_url || '').trim();
   const nextEmail = String(email || '').trim().toLowerCase();
@@ -64,7 +64,20 @@ authRouter.put('/profile', requireAuth, (req, res) => {
   const duplicate = one('SELECT id FROM users WHERE email = ? AND id <> ?', nextEmail, req.user.id);
   if (duplicate) return res.status(409).json({ error: 'Email already exists' });
 
-  run('UPDATE users SET name = ?, avatar_url = ?, email = ? WHERE id = ?', nextName, nextAvatar, nextEmail, req.user.id);
+  const nextPassword = String(password || '').trim();
+  if (nextPassword) {
+    const passwordHash = await hashPassword(nextPassword);
+    run(
+      'UPDATE users SET name = ?, avatar_url = ?, email = ?, password_hash = ? WHERE id = ?',
+      nextName,
+      nextAvatar,
+      nextEmail,
+      passwordHash,
+      req.user.id
+    );
+  } else {
+    run('UPDATE users SET name = ?, avatar_url = ?, email = ? WHERE id = ?', nextName, nextAvatar, nextEmail, req.user.id);
+  }
   const updated = one('SELECT id, email, name, role, avatar_url, active FROM users WHERE id = ?', req.user.id);
   res.json({ ok: true, user: updated });
 });
