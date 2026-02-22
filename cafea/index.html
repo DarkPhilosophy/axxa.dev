@@ -1,17 +1,28 @@
 <!doctype html>
-<html lang="ro">
+<html lang="ro" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cafea Office</title>
+  <meta name="theme-color" content="#00ff88" />
+  <title>Cafea Office | AXXA.DEV</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
   <link rel="stylesheet" href="/dist/tailwind.css?v=3" />
-  <link rel="stylesheet" href="/cafea/app.css?v=1" />
+  <link rel="stylesheet" href="/styles.css?v=12" />
+  <link rel="stylesheet" href="/cafea/app.css?v=2" />
 </head>
-<body class="min-h-screen bg-dark text-white">
+<body class="bg-gray-50 text-slate-800 dark:bg-black dark:text-slate-200 transition-colors duration-300 overflow-x-hidden selection:bg-primary selection:text-black">
+  <div class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/10 blur-[120px]"></div>
+    <div class="bg-grid-pattern absolute inset-0 opacity-[0.35]"></div>
+    <div class="bg-noise absolute inset-0 opacity-[0.03]"></div>
+  </div>
+
   <div id="root"></div>
+
   <script>
     window.CAFEA_API_BASE = window.CAFEA_API_BASE || 'https://cafea-api.axxa.dev';
   </script>
-  <script type="module" src="/cafea/app.js?v=1"></script>
+  <script type="module" src="/cafea/app.js?v=2"></script>
 </body>
 </html>

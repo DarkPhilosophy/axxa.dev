@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'https://esm.sh/react@18.3.1';
+import React, { useEffect, useState } from 'https://esm.sh/react@18.3.1';
 import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
 import htm from 'https://esm.sh/htm@3.1.1';
 
@@ -53,20 +53,43 @@ function useSession() {
   return { token, user, login, logout };
 }
 
+function TopNav({ user, onLogout }) {
+  return html`
+    <nav className="fixed w-full top-0 z-50 backdrop-blur-md bg-white/95 dark:bg-black border-b border-slate-200/50 dark:border-white/5">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
+        <a href="/" className="relative group brand-neo">
+          <span className="brand-neo-text text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
+            A<span className="brand-overlap-xx text-slate-800 dark:text-white group-hover:text-primary transition-colors">XX</span>A<span className="text-primary">.DEV</span>
+          </span>
+        </a>
+        <div className="flex items-center gap-3">
+          <a href="/projects/" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary">Projects</a>
+          <a href="/sql-status.html" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary">SQL Status</a>
+          ${user ? html`<button className="cafea-btn cafea-btn-muted text-sm" onClick=${onLogout}>Logout</button>` : null}
+        </div>
+      </div>
+    </nav>
+  `;
+}
+
 function Login({ onLogin, error }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   return html`
-    <div className="min-h-screen grid place-items-center p-4">
-      <div className="card w-full max-w-md p-6">
-        <h1 className="text-3xl font-bold mb-1">Cafea Office</h1>
-        <p className="text-slate-300 mb-5">Autentificare cu email și parolă</p>
-        <form onSubmit=${(e) => { e.preventDefault(); onLogin(email, password); }} className="space-y-3">
-          <input className="input" type="email" placeholder="email" value=${email} onChange=${(e) => setEmail(e.target.value)} required />
-          <input className="input" type="password" placeholder="parolă" value=${password} onChange=${(e) => setPassword(e.target.value)} required />
-          <button className="btn btn-primary w-full" type="submit">Login</button>
+    <div className="cafea-shell">
+      <div className="max-w-3xl mx-auto cafea-glass p-6 md:p-8">
+        <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+          <span className="w-2 h-2 rounded-full bg-primary"></span>
+          Cafea Namespace
+        </p>
+        <h1 className="text-3xl md:text-5xl font-bold mt-4">Cafea Office Dashboard</h1>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">Login cu cont existent. Nu există register public, utilizatorii sunt creați de admin.</p>
+        <form className="grid md:grid-cols-2 gap-3 mt-6" onSubmit=${(e) => { e.preventDefault(); onLogin(email, password); }}>
+          <input className="cafea-input" type="email" placeholder="email" value=${email} onChange=${(e) => setEmail(e.target.value)} required />
+          <input className="cafea-input" type="password" placeholder="parolă" value=${password} onChange=${(e) => setPassword(e.target.value)} required />
+          <button className="cafea-btn cafea-btn-primary md:col-span-2" type="submit">Intră în aplicație</button>
         </form>
-        ${error ? html`<p className="text-red-300 mt-3">${error}</p>` : null}
+        ${error ? html`<p className="text-red-500 mt-3">${error}</p>` : null}
       </div>
     </div>
   `;
@@ -74,34 +97,35 @@ function Login({ onLogin, error }) {
 
 function StockCard({ stock, onConsume }) {
   const badge = stock.current_stock <= 0
-    ? ['badge-empty', 'Epuizat']
+    ? ['cafea-badge-empty', 'Epuizat']
     : stock.low
-      ? ['badge-low', 'Stoc minim']
-      : ['badge-ok', 'OK'];
+      ? ['cafea-badge-low', 'Stoc minim']
+      : ['cafea-badge-ok', 'OK'];
+
   return html`
-    <div className="card p-5">
-      <div className="flex items-center justify-between mb-3">
+    <div className="cafea-glass p-5">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="font-bold text-xl">Stoc Cafea</h2>
-        <span className=${`badge ${badge[0]}`}>${badge[1]}</span>
+        <span className=${`cafea-badge ${badge[0]}`}>${badge[1]}</span>
       </div>
-      <div className="grid grid-cols-3 gap-3 text-center mb-4">
-        <div><p className="text-slate-400 text-sm">Inițial</p><p className="text-2xl font-bold">${stock.initial_stock}</p></div>
-        <div><p className="text-slate-400 text-sm">Curent</p><p className="text-2xl font-bold">${stock.current_stock}</p></div>
-        <div><p className="text-slate-400 text-sm">Minim</p><p className="text-2xl font-bold">${stock.min_stock}</p></div>
+      <div className="grid grid-cols-3 gap-3 text-center mb-5">
+        <div><p className="text-xs uppercase tracking-wider text-slate-500">Inițial</p><p className="text-2xl font-bold">${stock.initial_stock}</p></div>
+        <div><p className="text-xs uppercase tracking-wider text-slate-500">Curent</p><p className="text-2xl font-bold">${stock.current_stock}</p></div>
+        <div><p className="text-xs uppercase tracking-wider text-slate-500">Minim</p><p className="text-2xl font-bold">${stock.min_stock}</p></div>
       </div>
-      <button className="btn btn-primary w-full" disabled=${stock.current_stock <= 0} onClick=${onConsume}>Consumă 1 cafea</button>
+      <button className="cafea-btn cafea-btn-primary w-full" disabled=${stock.current_stock <= 0} onClick=${onConsume}>Consumă 1 cafea</button>
     </div>
   `;
 }
 
-function HistoryTable({ rows, title = 'Istoric' }) {
+function HistoryTable({ rows, title }) {
   return html`
-    <div className="card p-5">
+    <div className="cafea-glass p-5">
       <h3 className="font-bold text-lg mb-3">${title}</h3>
       <div className="overflow-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-slate-300">
+            <tr className="border-b border-slate-300/20 dark:border-white/10 text-slate-500">
               <th className="text-left py-2">Cine</th>
               <th className="text-left py-2">Când</th>
               <th className="text-left py-2">Delta</th>
@@ -109,7 +133,7 @@ function HistoryTable({ rows, title = 'Istoric' }) {
           </thead>
           <tbody>
             ${rows.map((r) => html`
-              <tr key=${r.id} className="border-t border-white/10">
+              <tr key=${r.id} className="border-b border-slate-300/10 dark:border-white/5">
                 <td className="py-2">${r.name || r.email}</td>
                 <td className="py-2">${new Date(r.consumed_at + 'Z').toLocaleString('ro-RO')}</td>
                 <td className="py-2">-${r.delta}</td>
@@ -147,42 +171,42 @@ function AdminPanel({ token, users, onRefresh }) {
   };
 
   return html`
-    <div className="card p-5 space-y-5">
-      <h3 className="font-bold text-lg">Admin</h3>
+    <div className="cafea-glass p-5 space-y-5">
+      <h3 className="font-bold text-lg">Admin Controls</h3>
 
       <form className="grid md:grid-cols-4 gap-3" onSubmit=${submitStock}>
-        <input className="input" type="number" min="0" placeholder="stoc inițial" value=${stockForm.initial_stock} onChange=${(e) => setStockForm({ ...stockForm, initial_stock: Number(e.target.value) })} />
-        <input className="input" type="number" min="0" placeholder="stoc curent" value=${stockForm.current_stock} onChange=${(e) => setStockForm({ ...stockForm, current_stock: Number(e.target.value) })} />
-        <input className="input" type="number" min="0" placeholder="stoc minim" value=${stockForm.min_stock} onChange=${(e) => setStockForm({ ...stockForm, min_stock: Number(e.target.value) })} />
-        <button className="btn btn-primary" type="submit">Setează stoc</button>
+        <input className="cafea-input" type="number" min="0" placeholder="stoc inițial" value=${stockForm.initial_stock} onChange=${(e) => setStockForm({ ...stockForm, initial_stock: Number(e.target.value) })} />
+        <input className="cafea-input" type="number" min="0" placeholder="stoc curent" value=${stockForm.current_stock} onChange=${(e) => setStockForm({ ...stockForm, current_stock: Number(e.target.value) })} />
+        <input className="cafea-input" type="number" min="0" placeholder="stoc minim" value=${stockForm.min_stock} onChange=${(e) => setStockForm({ ...stockForm, min_stock: Number(e.target.value) })} />
+        <button className="cafea-btn cafea-btn-primary" type="submit">Setează stoc</button>
       </form>
 
       <form className="grid md:grid-cols-6 gap-3" onSubmit=${submitUser}>
-        <input className="input" placeholder="nume" value=${userForm.name} onChange=${(e) => setUserForm({ ...userForm, name: e.target.value })} />
-        <input className="input" type="email" placeholder="email" value=${userForm.email} onChange=${(e) => setUserForm({ ...userForm, email: e.target.value })} />
-        <input className="input" type="password" placeholder="parolă" value=${userForm.password} onChange=${(e) => setUserForm({ ...userForm, password: e.target.value })} />
-        <input className="input" placeholder="avatar url" value=${userForm.avatar_url} onChange=${(e) => setUserForm({ ...userForm, avatar_url: e.target.value })} />
-        <select className="input" value=${userForm.role} onChange=${(e) => setUserForm({ ...userForm, role: e.target.value })}>
+        <input className="cafea-input" placeholder="nume" value=${userForm.name} onChange=${(e) => setUserForm({ ...userForm, name: e.target.value })} required />
+        <input className="cafea-input" type="email" placeholder="email" value=${userForm.email} onChange=${(e) => setUserForm({ ...userForm, email: e.target.value })} required />
+        <input className="cafea-input" type="password" placeholder="parolă" value=${userForm.password} onChange=${(e) => setUserForm({ ...userForm, password: e.target.value })} required />
+        <input className="cafea-input" placeholder="avatar url" value=${userForm.avatar_url} onChange=${(e) => setUserForm({ ...userForm, avatar_url: e.target.value })} />
+        <select className="cafea-input" value=${userForm.role} onChange=${(e) => setUserForm({ ...userForm, role: e.target.value })}>
           <option value="user">user</option>
           <option value="admin">admin</option>
         </select>
-        <button className="btn btn-primary" type="submit">Adaugă user</button>
+        <button className="cafea-btn cafea-btn-primary" type="submit">Adaugă user</button>
       </form>
 
-      <div className="flex gap-3 items-center">
-        <button className="btn btn-danger" onClick=${exportCsv}>Export CSV</button>
-        <button className="btn" onClick=${onRefresh}>Refresh</button>
-        ${msg ? html`<span className="text-green-300 text-sm">${msg}</span>` : null}
+      <div className="flex gap-3 items-center flex-wrap">
+        <button className="cafea-btn cafea-btn-muted" onClick=${exportCsv}>Export CSV</button>
+        <button className="cafea-btn cafea-btn-muted" onClick=${onRefresh}>Refresh</button>
+        ${msg ? html`<span className="text-green-500 text-sm">${msg}</span>` : null}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         ${users.map((u) => html`
-          <div className="border border-white/10 rounded-xl p-3" key=${u.id}>
+          <div className="border border-slate-300/25 dark:border-white/10 rounded-xl p-3" key=${u.id}>
             <div className="flex items-center gap-3">
               <img src=${u.avatar_url || 'https://placehold.co/64x64?text=U'} className="w-10 h-10 rounded-full object-cover" />
               <div>
                 <p className="font-bold">${u.name}</p>
-                <p className="text-xs text-slate-300">${u.email}</p>
+                <p className="text-xs text-slate-500">${u.email}</p>
               </div>
             </div>
             <p className="text-xs mt-2">rol: ${u.role} • activ: ${u.active ? 'da' : 'nu'}</p>
@@ -220,7 +244,9 @@ function App() {
     }
   };
 
-  useEffect(() => { refresh(); }, [token, user?.role]);
+  useEffect(() => {
+    refresh();
+  }, [token, user?.role]);
 
   const consume = async () => {
     try {
@@ -233,30 +259,34 @@ function App() {
   };
 
   if (!user) {
-    return html`<${Login} onLogin=${async (email, pass) => {
-      try {
-        setError('');
-        await login(email, pass);
-      } catch (e) {
-        setError(e.message);
-      }
-    }} error=${error} />`;
+    return html`
+      <${TopNav} user=${null} onLogout=${() => {}} />
+      <${Login} onLogin=${async (email, pass) => {
+        try {
+          setError('');
+          await login(email, pass);
+        } catch (e) {
+          setError(e.message);
+        }
+      }} error=${error} />
+    `;
   }
 
   return html`
-    <main className="max-w-6xl mx-auto p-4 md:p-8 space-y-4">
-      <header className="card p-4 flex items-center justify-between">
+    <${TopNav} user=${user} onLogout=${logout} />
+    <main className="cafea-shell space-y-4">
+      <header className="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <img src=${user.avatar_url || 'https://placehold.co/72x72?text=U'} className="w-12 h-12 rounded-full object-cover" />
           <div>
             <h1 className="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
-            <p className="text-slate-300">${user.name} • ${user.role}</p>
+            <p className="text-slate-600 dark:text-slate-300">${user.name} • ${user.role}</p>
           </div>
         </div>
-        <button className="btn" onClick=${logout}>Logout</button>
+        <button className="cafea-btn cafea-btn-muted" onClick=${refresh}>Refresh</button>
       </header>
 
-      ${error ? html`<div className="card p-3 text-red-300">${error}</div>` : null}
+      ${error ? html`<div className="cafea-glass p-3 text-red-500">${error}</div>` : null}
 
       <section className="grid md:grid-cols-2 gap-4">
         <${StockCard} stock=${stock} onConsume=${consume} />
