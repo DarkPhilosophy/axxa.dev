@@ -58,6 +58,7 @@
       const startedAt = performance.now();
       state.pendingRequests += 1;
       updateNetworkUi();
+      renderBusyTick();
       const headers = { 'Content-Type': 'application/json' };
       if (state.token) headers.Authorization = `Bearer ${state.token}`;
       const controller = new AbortController();
@@ -80,6 +81,7 @@
         clearTimeout(timeout);
         state.pendingRequests = Math.max(0, state.pendingRequests - 1);
         updateNetworkUi();
+        renderBusyTick();
       }
     })();
 
@@ -94,6 +96,10 @@
   function loadingBadge() {
     if (!state.pendingRequests) return '';
     return '<div class="text-xs px-2 py-1 rounded-lg border border-emerald-400/50 text-emerald-300">Se încarcă...</div>';
+  }
+
+  function skeleton(width = '100%', height = '14px') {
+    return `<span class="cafea-skeleton" style="width:${width};height:${height};"></span>`;
   }
 
   function esc(s) {
@@ -176,12 +182,14 @@
   }
 
   function renderStockRow(field, label, value, isAdmin, extraHtml = '') {
+    const busy = state.pendingRequests > 0;
+    const shownValue = busy ? skeleton('72px', '30px') : esc(value);
     return `
       <div class="relative rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
         <div class="text-center pr-28">
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
-          <p id="stock-value-${field}" class="text-2xl font-bold">${esc(value)}</p>
-          ${extraHtml}
+          <p id="stock-value-${field}" class="text-2xl font-bold flex justify-center">${shownValue}</p>
+          ${busy ? `<p class="text-xs mt-1 text-slate-500 flex justify-center">${skeleton('180px', '12px')}</p>` : extraHtml}
           <input id="stock-input-${field}" class="cafea-input hidden text-center" style="width:160px;max-width:160px;margin:8px auto 0 auto;" type="number" min="0" value="${esc(value)}" />
         </div>
         ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
@@ -191,6 +199,15 @@
 
   function renderHistoryRows() {
     const isAdmin = state.user?.role === ROLE_ADMIN;
+    if (state.pendingRequests > 0 && (!state.rows || !state.rows.length)) {
+      return Array.from({ length: 5 }).map(() => `
+        <tr class="border-b border-slate-300/10 dark:border-white/5">
+          <td class="py-2">${skeleton('180px', '14px')}</td>
+          <td class="py-2">${skeleton('150px', '14px')}</td>
+          <td class="py-2">${skeleton('70px', '14px')}</td>
+        </tr>
+      `).join('');
+    }
     return state.rows.map((r) => `
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-2">
@@ -801,6 +818,11 @@
       state.error = err.message;
       renderAuth('login');
     }
+  }
+
+  function renderBusyTick() {
+    if (!state.user) return;
+    renderApp();
   }
 
   boot();
