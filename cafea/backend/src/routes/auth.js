@@ -3,7 +3,7 @@ import { hashPassword, signActionToken, signToken, verifyActionToken, verifyPass
 import { one, run } from '../db.js';
 import { config } from '../config.js';
 import { requireAuth } from '../middleware.js';
-import { sendRegistrationEmails } from '../services/mailer.js';
+import { sendApprovalResultEmail, sendRegistrationEmails } from '../services/mailer.js';
 
 export const authRouter = Router();
 
@@ -55,11 +55,13 @@ authRouter.post('/register', async (req, res) => {
     const token = signActionToken({ uid: created.id });
     const approveUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=approve&token=${encodeURIComponent(token)}`;
     const rejectUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=reject&token=${encodeURIComponent(token)}`;
+    const sourceIp = String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
     sendRegistrationEmails({
       userName: created.name,
       userEmail: created.email,
       userAvatarUrl: created.avatar_url,
       registeredAt: created.created_at,
+      registeredIp: sourceIp,
       adminEmail: config.bootstrapAdminEmail,
       approveUrl,
       rejectUrl
@@ -82,13 +84,19 @@ authRouter.get('/registration-action', (req, res) => {
     const id = Number(payload.uid);
     if (!Number.isInteger(id)) return res.status(400).send('Invalid token payload');
 
-    const user = one('SELECT id, active FROM users WHERE id = ?', id);
+    const user = one('SELECT id, active, email, name FROM users WHERE id = ?', id);
     if (!user) return res.status(404).send('User not found');
 
     if (action === 'approve') {
       run('UPDATE users SET active = 1 WHERE id = ?', id);
+      sendApprovalResultEmail({ to: user.email, userName: user.name, approved: true }).catch((err) => {
+        console.error('[mail] approval notification failed:', err?.message || err);
+      });
       return res.send('<h1>Cerere aprobata</h1><p>Utilizatorul este acum activ.</p>');
     }
+    sendApprovalResultEmail({ to: user.email, userName: user.name, approved: false }).catch((err) => {
+      console.error('[mail] rejection notification failed:', err?.message || err);
+    });
     run('DELETE FROM coffee_logs WHERE user_id = ?', id);
     run('DELETE FROM users WHERE id = ?', id);
     return res.send('<h1>Cerere respinsa</h1><p>Utilizatorul a fost sters.</p>');

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { hashPassword, ROLES } from '../auth.js';
 import { many, one, run } from '../db.js';
 import { requireAdmin, requireAuth } from '../middleware.js';
-import { sendCoffeeTestEmail } from '../services/mailer.js';
+import { sendApprovalResultEmail, sendCoffeeTestEmail } from '../services/mailer.js';
 
 export const adminRouter = Router();
 
@@ -116,10 +116,13 @@ adminRouter.post('/users/:id/approve', (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
 
-  const existing = one('SELECT id FROM users WHERE id = ?', id);
+  const existing = one('SELECT id, email, name FROM users WHERE id = ?', id);
   if (!existing) return res.status(404).json({ error: 'User not found' });
 
   run('UPDATE users SET active = 1 WHERE id = ?', id);
+  sendApprovalResultEmail({ to: existing.email, userName: existing.name, approved: true }).catch((err) => {
+    console.error('[mail] approval notification failed:', err?.message || err);
+  });
   res.json({ ok: true });
 });
 
