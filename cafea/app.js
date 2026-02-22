@@ -259,6 +259,7 @@
           <input class="cafea-input" value="${state.user?.active ? 'active' : 'pending'}" placeholder="status" disabled />
           <input class="cafea-input" value="${esc(state.user?.role || 'user')}" placeholder="rol" disabled />
           <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">Salvează profil</button>
+          ${state.user?.role === ROLE_ADMIN ? '<button id="btn-test-mail" class="cafea-btn cafea-btn-muted md:col-span-2" type="button">Trimite email test (doar mie)</button>' : ''}
         </form>
       </section>
     `;
@@ -535,6 +536,20 @@
           const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url, email, password, notify_enabled } });
           state.user = d.user;
           await loadDashboard();
+        } catch (err) {
+          state.error = err.message;
+        }
+        renderApp();
+      };
+    }
+
+    const testMailBtn = document.getElementById('btn-test-mail');
+    if (testMailBtn) {
+      testMailBtn.onclick = async () => {
+        try {
+          state.error = '';
+          await api('/api/admin/mail/test', { method: 'POST' });
+          state.info = 'Email test trimis.';
         } catch (err) {
           state.error = err.message;
         }

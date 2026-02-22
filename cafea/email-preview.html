@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cafea Office Email Preview</title>
+    <style>
+      body { margin:0; background:#020617; padding:24px; font-family:Inter,Segoe UI,Arial,sans-serif; color:#e2e8f0; }
+      .card { max-width:640px; margin:0 auto; background:#0f172a; border:1px solid #1e293b; border-radius:14px; overflow:hidden; }
+      .head { padding:16px 20px; background:#052e1e; border-bottom:1px solid #134e4a; }
+      .head h1 { margin:0; font-size:20px; color:#34d399; }
+      .head p { margin:4px 0 0; color:#a7f3d0; }
+      .content { padding:20px; }
+      .user { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+      .avatar { width:54px; height:54px; border-radius:999px; object-fit:cover; border:2px solid #334155; }
+      .name { margin:0; color:#f8fafc; font-weight:700; }
+      .mail { margin:2px 0 0; color:#94a3b8; font-size:13px; }
+      .when { margin:0 0 12px; color:#cbd5e1; }
+      table { width:100%; border-collapse:collapse; font-size:14px; }
+      td { padding:8px; }
+      tr td:first-child { color:#94a3b8; border-bottom:1px solid #1e293b; }
+      tr td:last-child { color:#f8fafc; text-align:right; border-bottom:1px solid #1e293b; }
+      tr:last-child td { border-bottom:none; }
+      .delta-negative { color:#ef4444 !important; }
+      .delta-positive { color:#22c55e !important; }
+      .note { max-width:640px; margin:14px auto 0; color:#94a3b8; font-size:12px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="head">
+        <h1>Cafea Office</h1>
+        <p>Consum nou inregistrat</p>
+      </div>
+
+      <div class="content">
+        <div class="user">
+          <img class="avatar" src="https://avatars.githubusercontent.com/u/19309990" alt="avatar" />
+          <div>
+            <p class="name">Alex</p>
+            <p class="mail">alexa@axxa.dev</p>
+          </div>
+        </div>
+
+        <p class="when"><strong>Data:</strong> 22.02.2026, 19:07:11</p>
+
+        <table role="presentation">
+          <tr>
+            <td>Stoc curent</td>
+            <td>186</td>
+          </tr>
+          <tr>
+            <td>Stoc real</td>
+            <td>187</td>
+          </tr>
+          <tr>
+            <td>Ajustare manuala</td>
+            <td class="delta-negative">-1 (deficit)</td>
+          </tr>
+          <tr>
+            <td>Stoc initial / minim</td>
+            <td>200 / 20</td>
+          </tr>
+          <tr>
+            <td>Consum total utilizator</td>
+            <td>14</td>
+          </tr>
+          <tr>
+            <td>Cafele ramase utilizator</td>
+            <td>6</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <p class="note">Preview local static pentru review vizual. În email-ul real valorile sunt dinamice.</p>
+  </body>
+</html>

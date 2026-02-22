@@ -44,15 +44,27 @@ coffeeRouter.post('/consume', (req, res) => {
   const next = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
   if (!next || next.current_stock >= stock.current_stock) return res.status(409).json({ error: 'Stock epuizat' });
   run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', req.user.id);
+  const consumedAfterRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', req.user.id);
+  const consumedAfter = Number(consumedAfterRow?.consumed_count || 0);
+  const consumedTotalRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
+  const consumedTotal = Number(consumedTotalRow?.consumed_total || 0);
+  const expectedCurrent = Number(next.initial_stock || 0) - consumedTotal;
+  const manualDelta = Number(next.current_stock || 0) - expectedCurrent;
+  const actorRemaining = me?.max_coffees == null ? null : Math.max(0, Number(me.max_coffees) - consumedAfter);
 
   const recipients = many('SELECT email, name, notify_enabled FROM users WHERE active = 1');
   notifyCoffeeConsumed({
     actorName: req.user.name,
     actorEmail: req.user.email,
+    actorAvatarUrl: req.user.avatar_url,
     recipients,
     stockCurrent: next.current_stock,
     stockInitial: next.initial_stock,
     stockMin: next.min_stock,
+    stockExpectedCurrent: expectedCurrent,
+    stockManualDelta: manualDelta,
+    actorConsumedCount: consumedAfter,
+    actorRemaining,
     consumedAt: next.updated_at
   }).catch((err) => {
     console.error('[mail] consume notification failed:', err?.message || err);
