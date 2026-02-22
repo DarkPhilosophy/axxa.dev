@@ -15,9 +15,38 @@
     selectedAdminUserId: null,
     selectedUserStats: null,
     selectedUserHistory: [],
-    pendingRequests: 0
+    pendingRequests: 0,
+    lastRequestMs: 0
   };
   const inflight = new Map();
+  let loadingEl = null;
+
+  function ensureLoadingEl() {
+    if (loadingEl) return loadingEl;
+    loadingEl = document.createElement('div');
+    loadingEl.id = 'cafea-global-loading';
+    loadingEl.className = 'cafea-global-loading hidden';
+    loadingEl.innerHTML = `
+      <div class="cafea-global-loading__dot" aria-hidden="true"></div>
+      <div class="cafea-global-loading__text">Se procesează cererea...</div>
+    `;
+    document.body.appendChild(loadingEl);
+    return loadingEl;
+  }
+
+  function updateNetworkUi() {
+    const el = ensureLoadingEl();
+    const busy = state.pendingRequests > 0;
+    root?.classList.toggle('is-busy', busy);
+    if (!busy) {
+      el.classList.add('hidden');
+      return;
+    }
+    const t = state.lastRequestMs > 0 ? ` (${(state.lastRequestMs / 1000).toFixed(1)}s ultima)` : '';
+    const textEl = el.querySelector('.cafea-global-loading__text');
+    if (textEl) textEl.textContent = `Se procesează cererea...${t}`;
+    el.classList.remove('hidden');
+  }
 
   async function api(path, opts = {}) {
     const method = opts.method || 'GET';
@@ -26,9 +55,11 @@
     if (requestKey && inflight.has(requestKey)) return inflight.get(requestKey);
 
     const runReq = (async () => {
+      const startedAt = performance.now();
       state.pendingRequests += 1;
-    const headers = { 'Content-Type': 'application/json' };
-    if (state.token) headers.Authorization = `Bearer ${state.token}`;
+      updateNetworkUi();
+      const headers = { 'Content-Type': 'application/json' };
+      if (state.token) headers.Authorization = `Bearer ${state.token}`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 20000);
       try {
@@ -45,8 +76,10 @@
         if (err?.name === 'AbortError') throw new Error('Cererea a expirat. Încearcă din nou.');
         throw err;
       } finally {
+        state.lastRequestMs = Math.max(0, performance.now() - startedAt);
         clearTimeout(timeout);
         state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+        updateNetworkUi();
       }
     })();
 
