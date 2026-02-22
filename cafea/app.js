@@ -1,5 +1,5 @@
 (() => {
-  const API_BASE = window.CAFEA_API_BASE || 'https://cafea-api.axxa.dev';
+  const API_BASE = (window.CAFEA_API_BASE || '/api').replace(/\/$/, '');
   const ROLE_ADMIN = 'admin';
   const root = document.getElementById('root');
 
@@ -17,7 +17,8 @@
     const method = opts.method || 'GET';
     const headers = { 'Content-Type': 'application/json' };
     if (state.token) headers.Authorization = `Bearer ${state.token}`;
-    const res = await fetch(`${API_BASE}${path}`, {
+    const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
+    const res = await fetch(`${API_BASE}${normalizedPath}`, {
       method,
       headers,
       body: opts.body ? JSON.stringify(opts.body) : undefined
@@ -48,7 +49,6 @@
             ${mode === 'register' ? '<input id="avatar_url" class="cafea-input md:col-span-2" placeholder="avatar url (opțional)" />' : ''}
             <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">${mode === 'login' ? 'Intră în aplicație' : 'Trimite cerere cont'}</button>
           </form>
-          <div class="mt-4 text-sm text-slate-500 dark:text-slate-400">Admin email: alexa@axxa.dev. Parola este cea configurată pe backend.</div>
           ${state.info ? `<p class="text-green-500 mt-3">${esc(state.info)}</p>` : ''}
           ${state.error ? `<p class="text-red-500 mt-3">${esc(state.error)}</p>` : ''}
         </div>
