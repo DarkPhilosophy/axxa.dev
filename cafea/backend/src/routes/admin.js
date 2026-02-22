@@ -33,17 +33,20 @@ adminRouter.get('/users', (_req, res) => {
 adminRouter.post('/users', async (req, res) => {
   const { email, password, name, role, avatar_url } = req.body || {};
   if (!email || !password || !name) return res.status(400).json({ error: 'email, password, name required' });
-  if (![ROLES.ADMIN, ROLES.USER].includes(role)) return res.status(400).json({ error: 'Invalid role' });
-  const exists = one('SELECT id FROM users WHERE email = ?', String(email).trim().toLowerCase());
+  const effectiveRole = role || ROLES.USER;
+  if (![ROLES.ADMIN, ROLES.USER].includes(effectiveRole)) return res.status(400).json({ error: 'Invalid role' });
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const exists = one('SELECT id FROM users WHERE email = ?', normalizedEmail);
   if (exists) return res.status(409).json({ error: 'Email already exists' });
 
   const passwordHash = await hashPassword(password);
   run(
     'INSERT INTO users(email, password_hash, name, role, avatar_url, active) VALUES(?, ?, ?, ?, ?, 1)',
-    String(email).trim().toLowerCase(),
+    normalizedEmail,
     passwordHash,
     String(name).trim(),
-    role,
+    effectiveRole,
     avatar_url || ''
   );
   res.json({ ok: true });
@@ -66,6 +69,17 @@ adminRouter.put('/users/:id', (req, res) => {
     active == null ? existing.active : Number(Boolean(active)),
     id
   );
+  res.json({ ok: true });
+});
+
+adminRouter.post('/users/:id/approve', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+
+  const existing = one('SELECT id FROM users WHERE id = ?', id);
+  if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  run('UPDATE users SET active = 1 WHERE id = ?', id);
   res.json({ ok: true });
 });
 
