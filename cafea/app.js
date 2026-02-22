@@ -110,12 +110,13 @@
     return `<button id="tab-${id}" class="cafea-btn ${active ? 'cafea-btn-primary' : 'cafea-btn-muted'}">${esc(label)}</button>`;
   }
 
-  function renderStockRow(field, label, value, isAdmin) {
+  function renderStockRow(field, label, value, isAdmin, extraHtml = '') {
     return `
       <div class="relative rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
         <div class="text-center pr-28">
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
           <p id="stock-value-${field}" class="text-2xl font-bold">${esc(value)}</p>
+          ${extraHtml}
           <input id="stock-input-${field}" class="cafea-input hidden text-center" style="width:160px;max-width:160px;margin:8px auto 0 auto;" type="number" min="0" value="${esc(value)}" />
         </div>
         ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
@@ -160,6 +161,17 @@
         <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
       </tr>
     `).join('');
+    const manualDelta = Number(state.stock?.manual_delta || 0);
+    const expectedCurrent = state.stock?.expected_current ?? 0;
+    const deltaColor = manualDelta > 0 ? '#22c55e' : (manualDelta < 0 ? '#ef4444' : '#94a3b8');
+    const deltaPrefix = manualDelta > 0 ? '+' : '';
+    const currentExtra = `
+      <p class="text-xs mt-1 text-slate-400">
+        Real: ${esc(expectedCurrent)} · Ajustare:
+        <span style="color:${deltaColor};font-weight:700;">${esc(deltaPrefix + manualDelta)}</span>
+      </p>
+    `;
+
     const adminUserList = isAdmin ? `
       <div class="cafea-glass p-5">
         <h3 class="font-bold text-lg mb-3">Consum în numele userului</h3>
@@ -186,9 +198,9 @@
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Rămase: <span class="font-semibold">${esc(remainingLabel)}</span></div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Ultima: <span class="font-semibold">${esc(userStats?.last_consumed_at || '-')}</span></div>
               </div>
-              <form id="form-set-user-max" class="grid md:grid-cols-[1fr_auto] gap-2 mb-3">
+              <form id="form-set-user-max" class="flex items-center gap-2 mb-3">
                 <input id="input-user-max" class="cafea-input" type="number" min="0" placeholder="max cafele (gol = nelimitat)" value="${esc(userStats?.max_coffees ?? '')}" />
-                <button class="cafea-btn cafea-btn-muted" type="submit">Setează maxim</button>
+                <button class="cafea-btn cafea-btn-muted" type="submit" style="white-space:nowrap;">Setează maxim</button>
               </form>
               <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
               <form id="form-add-history-user" class="grid md:grid-cols-[120px_1fr_auto] gap-2 mt-3">
@@ -214,7 +226,7 @@
           <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-xl">Stoc Cafea</h2>${stockBadge()}</div>
           <div class="space-y-3 mb-5">
             ${renderStockRow('initial_stock', 'Inițial', state.stock?.initial_stock ?? 0, isAdmin)}
-            ${renderStockRow('current_stock', 'Curent', state.stock?.current_stock ?? 0, isAdmin)}
+            ${renderStockRow('current_stock', 'Curent', state.stock?.current_stock ?? 0, isAdmin, currentExtra)}
             ${renderStockRow('min_stock', 'Minim', state.stock?.min_stock ?? 0, isAdmin)}
           </div>
           <button id="btn-consume" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea</button>

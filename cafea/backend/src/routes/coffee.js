@@ -7,8 +7,21 @@ coffeeRouter.use(requireAuth);
 
 coffeeRouter.get('/status', (req, res) => {
   const stock = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
+  const consumed = one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
+  const consumedTotal = Number(consumed?.consumed_total || 0);
+  const expectedCurrent = Number(stock.initial_stock || 0) - consumedTotal;
+  const manualDelta = Number(stock.current_stock || 0) - expectedCurrent;
   const low = stock.current_stock <= stock.min_stock;
-  res.json({ stock: { ...stock, low }, user: req.user });
+  res.json({
+    stock: {
+      ...stock,
+      low,
+      consumed_total: consumedTotal,
+      expected_current: expectedCurrent,
+      manual_delta: manualDelta
+    },
+    user: req.user
+  });
 });
 
 coffeeRouter.post('/consume', (req, res) => {
