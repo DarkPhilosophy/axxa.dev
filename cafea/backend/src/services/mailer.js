@@ -29,6 +29,34 @@ function formatFrom() {
   return `${name} <${config.mailFrom}>`;
 }
 
+async function sendMailUnified({ to, subject, text, html }) {
+  if (config.resendApiKey) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: formatFrom(),
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        text,
+        html
+      })
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Resend error ${res.status}: ${body || 'unknown'}`);
+    }
+    return;
+  }
+
+  const tx = getTransport();
+  if (!tx) throw new Error('No mail provider configured');
+  await tx.sendMail({ from: formatFrom(), to, subject, text, html });
+}
+
 function buildCoffeeTemplate({
   actorName,
   actorEmail,
@@ -94,8 +122,7 @@ export async function notifyCoffeeConsumed({
   stockInitial, stockCurrent, stockMin, stockExpectedCurrent, stockManualDelta,
   actorConsumedCount, actorRemaining
 }) {
-  const tx = getTransport();
-  if (!tx) return { sent: 0, skipped: recipients?.length || 0, reason: 'smtp_not_configured' };
+  if (!config.resendApiKey && !getTransport()) return { sent: 0, skipped: recipients?.length || 0, reason: 'mail_not_configured' };
 
   const validRecipients = (recipients || [])
     .filter((r) => Number(r.notify_enabled ?? 1) === 1)
@@ -112,21 +139,14 @@ export async function notifyCoffeeConsumed({
 
   let sent = 0;
   for (const r of validRecipients) {
-    await tx.sendMail({
-      from: formatFrom(),
-      to: r.email,
-      subject,
-      text,
-      html
-    });
+    await sendMailUnified({ to: r.email, subject, text, html });
     sent += 1;
   }
   return { sent, skipped: (recipients?.length || 0) - sent };
 }
 
 export async function sendCoffeeTestEmail({ to, actorName, actorEmail, actorAvatarUrl, consumedAt, stockInitial, stockCurrent, stockMin, stockExpectedCurrent, stockManualDelta, actorConsumedCount, actorRemaining }) {
-  const tx = getTransport();
-  if (!tx) throw new Error('SMTP not configured');
+  if (!config.resendApiKey && !getTransport()) throw new Error('Mail provider not configured');
   if (!isValidEmail(to)) throw new Error('Invalid destination email');
 
   const { text, html } = buildCoffeeTemplate({
@@ -134,13 +154,7 @@ export async function sendCoffeeTestEmail({ to, actorName, actorEmail, actorAvat
     stockInitial, stockCurrent, stockMin, stockExpectedCurrent, stockManualDelta,
     actorConsumedCount, actorRemaining
   });
-  await tx.sendMail({
-    from: formatFrom(),
-    to,
-    subject: 'Cafea Office: email test notificare',
-    text,
-    html
-  });
+  await sendMailUnified({ to, subject: 'Cafea Office: email test notificare', text, html });
   return { ok: true };
 }
 
@@ -149,21 +163,23 @@ export async function sendRegistrationEmails({
   userEmail,
   userAvatarUrl,
   registeredAt,
+  registeredIp,
   adminEmail,
   approveUrl,
   rejectUrl
 }) {
-  const tx = getTransport();
-  if (!tx) return { sent: 0, reason: 'smtp_not_configured' };
+  if (!config.resendApiKey && !getTransport()) return { sent: 0, reason: 'mail_not_configured' };
   const when = registeredAt ? new Date(`${registeredAt}Z`).toLocaleString('ro-RO') : new Date().toLocaleString('ro-RO');
+  let sent = 0;
+  const errors = [];
 
   if (isValidEmail(userEmail)) {
-    await tx.sendMail({
-      from: formatFrom(),
-      to: userEmail,
-      subject: 'Cafea Office: contul tau asteapta aprobarea adminului',
-      text: `Salut ${userName}, contul tau (${userEmail}) a fost inregistrat la ${when} si asteapta aprobarea adminului.`,
-      html: `
+    try {
+      await sendMailUnified({
+        to: userEmail,
+        subject: 'Cafea Office: contul tau asteapta aprobarea adminului',
+        text: `Salut ${userName}, contul tau (${userEmail}) a fost inregistrat la ${when} si asteapta aprobarea adminului.`,
+        html: `
         <div style="background:#020617;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e2e8f0">
           <div style="max-width:640px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden">
             <div style="padding:16px 20px;background:#052e1e;border-bottom:1px solid #134e4a">
@@ -183,20 +199,25 @@ export async function sendRegistrationEmails({
           </div>
         </div>
       `
-    });
+      });
+      sent += 1;
+    } catch (err) {
+      errors.push(`user:${err?.message || err}`);
+    }
   }
 
   if (isValidEmail(adminEmail)) {
-    await tx.sendMail({
-      from: formatFrom(),
-      to: adminEmail,
-      subject: 'Cafea Office: utilizator nou in asteptare',
-      text:
+    try {
+      await sendMailUnified({
+        to: adminEmail,
+        subject: 'Cafea Office: utilizator nou in asteptare',
+        text:
         `Utilizator nou: ${userName} (${userEmail})\n` +
         `Data: ${when}\n` +
+        `IP: ${registeredIp || '-'}\n` +
         `Aproba: ${approveUrl}\n` +
         `Respinge: ${rejectUrl}\n`,
-      html: `
+        html: `
         <div style="background:#020617;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e2e8f0">
           <div style="max-width:680px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden">
             <div style="padding:16px 20px;background:#052e1e;border-bottom:1px solid #134e4a">
@@ -212,6 +233,7 @@ export async function sendRegistrationEmails({
                 </div>
               </div>
               <p style="margin:0 0 16px 0;color:#cbd5e1;"><strong>Data:</strong> ${when}</p>
+              <p style="margin:0 0 16px 0;color:#cbd5e1;"><strong>IP:</strong> ${registeredIp || '-'}</p>
               <div style="display:flex;gap:10px;">
                 <a href="${rejectUrl}" style="display:inline-block;padding:10px 14px;background:#7f1d1d;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Respingere</a>
                 <a href="${approveUrl}" style="display:inline-block;padding:10px 14px;background:#065f46;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;margin-left:auto">Aprobare</a>
@@ -220,7 +242,35 @@ export async function sendRegistrationEmails({
           </div>
         </div>
       `
-    });
+      });
+      sent += 1;
+    } catch (err) {
+      errors.push(`admin:${err?.message || err}`);
+    }
   }
-  return { sent: 2 };
+  return { sent, errors };
+}
+
+export async function sendApprovalResultEmail({ to, userName, approved }) {
+  if ((!config.resendApiKey && !getTransport()) || !isValidEmail(to)) return { sent: false };
+  const subject = approved
+    ? 'Cafea Office: contul tau a fost aprobat'
+    : 'Cafea Office: contul tau a fost respins';
+  const text = approved
+    ? `Salut ${userName}, contul tau a fost aprobat. Te poti autentifica acum.`
+    : `Salut ${userName}, contul tau a fost respins de admin.`;
+  const html = `
+    <div style="background:#020617;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e2e8f0">
+      <div style="max-width:640px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden">
+        <div style="padding:16px 20px;background:${approved ? '#052e1e' : '#3f1d1d'};border-bottom:1px solid ${approved ? '#134e4a' : '#7f1d1d'}">
+          <h1 style="margin:0;font-size:20px;color:${approved ? '#34d399' : '#fca5a5'};">Cafea Office</h1>
+        </div>
+        <div style="padding:20px">
+          <p style="margin:0;color:#cbd5e1">${text}</p>
+        </div>
+      </div>
+    </div>
+  `;
+  await sendMailUnified({ to, subject, text, html });
+  return { sent: true };
 }
