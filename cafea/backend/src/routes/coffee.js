@@ -12,6 +12,13 @@ coffeeRouter.get('/status', (req, res) => {
 });
 
 coffeeRouter.post('/consume', (req, res) => {
+  const me = one('SELECT id, max_coffees FROM users WHERE id = ?', req.user.id);
+  const consumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', req.user.id);
+  const consumedCount = Number(consumedRow?.consumed_count || 0);
+  if (me?.max_coffees != null && consumedCount >= Number(me.max_coffees)) {
+    return res.status(409).json({ error: 'Ai atins limita maximă de cafele' });
+  }
+
   const stock = one('SELECT current_stock FROM stock_settings WHERE id = 1');
   if (!stock || stock.current_stock <= 0) return res.status(409).json({ error: 'Stock epuizat' });
 

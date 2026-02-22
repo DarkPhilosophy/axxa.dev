@@ -26,7 +26,7 @@ adminRouter.post('/stock/init', (req, res) => {
 });
 
 adminRouter.get('/users', (_req, res) => {
-  const users = many('SELECT id, email, name, role, avatar_url, active, created_at FROM users ORDER BY created_at DESC');
+  const users = many('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users ORDER BY created_at DESC');
   res.json({ users });
 });
 
@@ -54,7 +54,7 @@ adminRouter.post('/users', async (req, res) => {
 
 adminRouter.put('/users/:id', (req, res) => {
   const id = Number(req.params.id);
-  const { name, role, avatar_url, active, email, password } = req.body || {};
+  const { name, role, avatar_url, active, email, password, max_coffees } = req.body || {};
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
   if (role && ![ROLES.ADMIN, ROLES.USER].includes(role)) return res.status(400).json({ error: 'Invalid role' });
 
@@ -67,21 +67,26 @@ adminRouter.put('/users/:id', (req, res) => {
 
   const nextActive = active == null ? existing.active : Number(Boolean(active));
   const nextName = name == null ? existing.name : String(name).trim();
+  const nextMax = max_coffees == null || max_coffees === '' ? null : Number(max_coffees);
+  if (nextMax != null && (!Number.isInteger(nextMax) || nextMax < 0)) {
+    return res.status(400).json({ error: 'Invalid max_coffees' });
+  }
   if (!nextName) return res.status(400).json({ error: 'name required' });
 
   if (password != null && String(password).trim()) {
     hashPassword(String(password)).then((passwordHash) => {
       run(
-        'UPDATE users SET email = ?, password_hash = ?, name = ?, role = ?, avatar_url = ?, active = ? WHERE id = ?',
+        'UPDATE users SET email = ?, password_hash = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ? WHERE id = ?',
         normalizedEmail,
         passwordHash,
         nextName,
         role ?? existing.role,
         avatar_url ?? existing.avatar_url,
         nextActive,
+        nextMax,
         id
       );
-      const updated = one('SELECT id, email, name, role, avatar_url, active, created_at FROM users WHERE id = ?', id);
+      const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
       res.json({ ok: true, user: updated });
     }).catch((err) => {
       res.status(500).json({ error: err.message || 'Failed to update password' });
@@ -90,15 +95,16 @@ adminRouter.put('/users/:id', (req, res) => {
   }
 
   run(
-    'UPDATE users SET email = ?, name = ?, role = ?, avatar_url = ?, active = ? WHERE id = ?',
+    'UPDATE users SET email = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ? WHERE id = ?',
     normalizedEmail,
     nextName,
     role ?? existing.role,
     avatar_url ?? existing.avatar_url,
     nextActive,
+    nextMax,
     id
   );
-  const updated = one('SELECT id, email, name, role, avatar_url, active, created_at FROM users WHERE id = ?', id);
+  const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
   res.json({ ok: true, user: updated });
 });
 
@@ -167,9 +173,14 @@ adminRouter.post('/consume/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
 
-  const target = one('SELECT id, active FROM users WHERE id = ?', id);
+  const target = one('SELECT id, active, max_coffees FROM users WHERE id = ?', id);
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (!target.active) return res.status(400).json({ error: 'User pending approval' });
+  const consumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', id);
+  const consumedCount = Number(consumedRow?.consumed_count || 0);
+  if (target.max_coffees != null && consumedCount >= Number(target.max_coffees)) {
+    return res.status(409).json({ error: 'Limita maximă de cafele a fost atinsă pentru utilizator' });
+  }
 
   const stock = one('SELECT current_stock, min_stock FROM stock_settings WHERE id = 1');
   if (!stock || stock.current_stock <= 0) return res.status(409).json({ error: 'Stock epuizat' });
@@ -183,4 +194,80 @@ adminRouter.post('/consume/:id', (req, res) => {
 
   run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', id);
   return res.json({ ok: true, stock: { ...next, low: next.current_stock <= next.min_stock } });
+});
+
+adminRouter.get('/users/:id/stats', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+
+  const user = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const agg = one(
+    'SELECT COALESCE(SUM(delta),0) AS consumed_count, MAX(consumed_at) AS last_consumed_at FROM coffee_logs WHERE user_id = ?',
+    id
+  );
+  const consumedCount = Number(agg?.consumed_count || 0);
+  const maxCoffees = user.max_coffees == null ? null : Number(user.max_coffees);
+  const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
+  const rows = many('SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY consumed_at DESC LIMIT 200', id);
+
+  res.json({
+    user,
+    stats: {
+      consumed_count: consumedCount,
+      max_coffees: maxCoffees,
+      remaining,
+      last_consumed_at: agg?.last_consumed_at || null
+    },
+    rows
+  });
+});
+
+adminRouter.put('/users/:id/max', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  const { max_coffees } = req.body || {};
+  const nextMax = max_coffees == null || max_coffees === '' ? null : Number(max_coffees);
+  if (nextMax != null && (!Number.isInteger(nextMax) || nextMax < 0)) {
+    return res.status(400).json({ error: 'Invalid max_coffees' });
+  }
+  const existing = one('SELECT id FROM users WHERE id = ?', id);
+  if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  run('UPDATE users SET max_coffees = ? WHERE id = ?', nextMax, id);
+  return res.json({ ok: true });
+});
+
+adminRouter.post('/users/:id/history', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  const { delta, consumed_at } = req.body || {};
+  const nextDelta = delta == null ? 1 : Number(delta);
+  if (!Number.isInteger(nextDelta) || nextDelta <= 0) return res.status(400).json({ error: 'Invalid delta' });
+
+  const user = one('SELECT id FROM users WHERE id = ?', id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  if (consumed_at) {
+    run('INSERT INTO coffee_logs(user_id, delta, consumed_at) VALUES(?, ?, ?)', id, nextDelta, String(consumed_at));
+  } else {
+    run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, ?)', id, nextDelta);
+  }
+  return res.json({ ok: true });
+});
+
+adminRouter.put('/history/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  const { consumed_at, delta } = req.body || {};
+  const existing = one('SELECT id, consumed_at, delta FROM coffee_logs WHERE id = ?', id);
+  if (!existing) return res.status(404).json({ error: 'Log not found' });
+
+  const nextDelta = delta == null ? existing.delta : Number(delta);
+  if (!Number.isInteger(nextDelta) || nextDelta <= 0) return res.status(400).json({ error: 'Invalid delta' });
+  const nextConsumedAt = consumed_at == null || consumed_at === '' ? existing.consumed_at : String(consumed_at);
+
+  run('UPDATE coffee_logs SET consumed_at = ?, delta = ? WHERE id = ?', nextConsumedAt, nextDelta, id);
+  return res.json({ ok: true });
 });

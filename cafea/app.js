@@ -12,7 +12,9 @@
     info: '',
     error: '',
     activeTab: 'user',
-    selectedAdminUserId: null
+    selectedAdminUserId: null,
+    selectedUserStats: null,
+    selectedUserHistory: []
   };
 
   async function api(path, opts = {}) {
@@ -147,6 +149,17 @@
 
   function renderUserTab(isAdmin) {
     const selectedUser = isAdmin ? (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null : null;
+    const userStats = state.selectedUserStats;
+    const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
+    const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
+    const selectedHistoryRows = (state.selectedUserHistory || []).map((r) => `
+      <tr class="border-b border-slate-300/10 dark:border-white/5">
+        <td class="py-1">${esc(r.id)}</td>
+        <td class="py-1"><input class="cafea-input input-log-datetime" style="max-width:220px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
+        <td class="py-1"><input class="cafea-input input-log-delta" style="max-width:90px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
+        <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
+      </tr>
+    `).join('');
     const adminUserList = isAdmin ? `
       <div class="cafea-glass p-5">
         <h3 class="font-bold text-lg mb-3">Consum în numele userului</h3>
@@ -167,7 +180,28 @@
           <div class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3">
             ${selectedUser ? `
               <p class="mb-3">Selectat: <span class="font-semibold">${esc(selectedUser.name)}</span></p>
+              <div class="grid md:grid-cols-2 gap-2 mb-3 text-sm">
+                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Consumate: <span class="font-semibold">${esc(userStats?.consumed_count ?? 0)}</span></div>
+                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Maxim: <span class="font-semibold">${esc(maxLabel)}</span></div>
+                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Rămase: <span class="font-semibold">${esc(remainingLabel)}</span></div>
+                <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Ultima: <span class="font-semibold">${esc(userStats?.last_consumed_at || '-')}</span></div>
+              </div>
+              <form id="form-set-user-max" class="grid md:grid-cols-[1fr_auto] gap-2 mb-3">
+                <input id="input-user-max" class="cafea-input" type="number" min="0" placeholder="max cafele (gol = nelimitat)" value="${esc(userStats?.max_coffees ?? '')}" />
+                <button class="cafea-btn cafea-btn-muted" type="submit">Setează maxim</button>
+              </form>
               <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
+              <form id="form-add-history-user" class="grid md:grid-cols-[120px_1fr_auto] gap-2 mt-3">
+                <input id="input-add-delta" class="cafea-input" type="number" min="1" value="1" />
+                <input id="input-add-datetime" class="cafea-input" placeholder="YYYY-MM-DD HH:mm:ss (opțional)" />
+                <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
+              </form>
+              <div class="mt-3 overflow-auto">
+                <table class="w-full text-xs">
+                  <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
+                  <tbody>${selectedHistoryRows}</tbody>
+                </table>
+              </div>
             ` : '<p class="text-slate-500">Selectează un user din listă.</p>'}
           </div>
         </div>
@@ -392,8 +426,9 @@
       }
 
       document.querySelectorAll('.btn-pick-consume-user').forEach((btn) => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           state.selectedAdminUserId = Number(btn.dataset.id);
+          await loadDashboard();
           renderApp();
         };
       });
@@ -412,6 +447,61 @@
           renderApp();
         };
       }
+
+      const setMaxForm = document.getElementById('form-set-user-max');
+      if (setMaxForm) {
+        setMaxForm.onsubmit = async (e) => {
+          e.preventDefault();
+          try {
+            const raw = document.getElementById('input-user-max').value.trim();
+            await api(`/api/admin/users/${state.selectedAdminUserId}/max`, {
+              method: 'PUT',
+              body: { max_coffees: raw === '' ? null : Number(raw) }
+            });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      }
+
+      const addHistoryForm = document.getElementById('form-add-history-user');
+      if (addHistoryForm) {
+        addHistoryForm.onsubmit = async (e) => {
+          e.preventDefault();
+          try {
+            const delta = Number(document.getElementById('input-add-delta').value || 1);
+            const consumed_at = document.getElementById('input-add-datetime').value.trim();
+            await api(`/api/admin/users/${state.selectedAdminUserId}/history`, {
+              method: 'POST',
+              body: { delta, consumed_at: consumed_at || null }
+            });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      }
+
+      document.querySelectorAll('.btn-save-log').forEach((btn) => {
+        btn.onclick = async () => {
+          try {
+            const id = btn.dataset.id;
+            const consumedAt = document.querySelector(`.input-log-datetime[data-id="${id}"]`)?.value?.trim();
+            const delta = Number(document.querySelector(`.input-log-delta[data-id="${id}"]`)?.value || 1);
+            await api(`/api/admin/history/${id}`, {
+              method: 'PUT',
+              body: { consumed_at: consumedAt, delta }
+            });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      });
 
     }
 
@@ -577,9 +667,19 @@
       if (!state.selectedAdminUserId || !state.users.some((x) => x.id === state.selectedAdminUserId)) {
         state.selectedAdminUserId = state.users[0]?.id || null;
       }
+      if (state.selectedAdminUserId) {
+        const stats = await api(`/api/admin/users/${state.selectedAdminUserId}/stats`);
+        state.selectedUserStats = stats.stats || null;
+        state.selectedUserHistory = stats.rows || [];
+      } else {
+        state.selectedUserStats = null;
+        state.selectedUserHistory = [];
+      }
     } else {
       state.users = [];
       state.selectedAdminUserId = null;
+      state.selectedUserStats = null;
+      state.selectedUserHistory = [];
     }
   }
 
