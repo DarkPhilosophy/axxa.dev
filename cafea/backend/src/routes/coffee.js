@@ -97,3 +97,84 @@ coffeeRouter.get('/history', (req, res) => {
 
   res.json({ rows });
 });
+
+coffeeRouter.get('/snapshot', (req, res) => {
+  const isAdmin = req.user.role === 'admin';
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit || 100)));
+  const selectedRequested = req.query.selected_user_id == null ? null : Number(req.query.selected_user_id);
+
+  const stock = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
+  const consumed = one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
+  const consumedTotal = Number(consumed?.consumed_total || 0);
+  const expectedCurrent = Number(stock.initial_stock || 0) - consumedTotal;
+  const manualDelta = Number(stock.current_stock || 0) - expectedCurrent;
+  const low = stock.current_stock <= stock.min_stock;
+
+  let rows;
+  if (isAdmin) {
+    rows = many(
+      `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
+       FROM coffee_logs l JOIN users u ON u.id = l.user_id
+       ORDER BY l.consumed_at DESC LIMIT ?`,
+      limit
+    );
+  } else {
+    rows = many(
+      `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
+       FROM coffee_logs l JOIN users u ON u.id = l.user_id
+       WHERE l.user_id = ? ORDER BY l.consumed_at DESC LIMIT ?`,
+      req.user.id,
+      limit
+    );
+  }
+
+  let users = [];
+  let selectedUserId = null;
+  let selectedUserStats = null;
+  let selectedUserHistory = [];
+
+  if (isAdmin) {
+    users = many('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users ORDER BY created_at DESC');
+    const selectedExists = Number.isInteger(selectedRequested) && users.some((u) => u.id === selectedRequested);
+    selectedUserId = selectedExists ? selectedRequested : (users[0]?.id || null);
+
+    if (selectedUserId != null) {
+      const user = one('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users WHERE id = ?', selectedUserId);
+      if (user) {
+        const agg = one(
+          'SELECT COALESCE(SUM(delta),0) AS consumed_count, MAX(consumed_at) AS last_consumed_at FROM coffee_logs WHERE user_id = ?',
+          selectedUserId
+        );
+        const consumedCount = Number(agg?.consumed_count || 0);
+        const maxCoffees = user.max_coffees == null ? null : Number(user.max_coffees);
+        const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
+        selectedUserStats = {
+          consumed_count: consumedCount,
+          max_coffees: maxCoffees,
+          remaining,
+          last_consumed_at: agg?.last_consumed_at || null
+        };
+        selectedUserHistory = many(
+          'SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY consumed_at DESC LIMIT 200',
+          selectedUserId
+        );
+      }
+    }
+  }
+
+  res.json({
+    stock: {
+      ...stock,
+      low,
+      consumed_total: consumedTotal,
+      expected_current: expectedCurrent,
+      manual_delta: manualDelta
+    },
+    user: req.user,
+    rows,
+    users,
+    selected_user_id: selectedUserId,
+    selected_user_stats: selectedUserStats,
+    selected_user_history: selectedUserHistory
+  });
+});

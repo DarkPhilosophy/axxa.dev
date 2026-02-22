@@ -771,28 +771,17 @@
 
   async function loadDashboard() {
     if (!state.user) return;
+    const selected = state.selectedAdminUserId != null ? `&selected_user_id=${encodeURIComponent(state.selectedAdminUserId)}` : '';
+    const snap = await api(`/api/coffee/snapshot?limit=100${selected}`);
+    state.stock = snap.stock;
+    state.user = snap.user || state.user;
+    state.rows = snap.rows || [];
     const isAdmin = state.user.role === ROLE_ADMIN;
-    const [s, h] = await Promise.all([
-      api('/api/coffee/status'),
-      api(`/api/coffee/history?mine=${isAdmin ? '0' : '1'}&limit=100`)
-    ]);
-    state.stock = s.stock;
-    state.user = s.user || state.user;
-    state.rows = h.rows || [];
     if (isAdmin) {
-      const u = await api('/api/admin/users');
-      state.users = u.users || [];
-      if (!state.selectedAdminUserId || !state.users.some((x) => x.id === state.selectedAdminUserId)) {
-        state.selectedAdminUserId = state.users[0]?.id || null;
-      }
-      if (state.selectedAdminUserId) {
-        const stats = await api(`/api/admin/users/${state.selectedAdminUserId}/stats`);
-        state.selectedUserStats = stats.stats || null;
-        state.selectedUserHistory = stats.rows || [];
-      } else {
-        state.selectedUserStats = null;
-        state.selectedUserHistory = [];
-      }
+      state.users = snap.users || [];
+      state.selectedAdminUserId = snap.selected_user_id || null;
+      state.selectedUserStats = snap.selected_user_stats || null;
+      state.selectedUserHistory = snap.selected_user_history || [];
     } else {
       state.users = [];
       state.selectedAdminUserId = null;
