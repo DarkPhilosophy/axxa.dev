@@ -14,22 +14,53 @@
     activeTab: 'user',
     selectedAdminUserId: null,
     selectedUserStats: null,
-    selectedUserHistory: []
+    selectedUserHistory: [],
+    pendingRequests: 0
   };
+  const inflight = new Map();
 
   async function api(path, opts = {}) {
     const method = opts.method || 'GET';
+    const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
+    const requestKey = opts.dedupeKey || ((method !== 'GET') ? `${method}:${normalizedPath}` : null);
+    if (requestKey && inflight.has(requestKey)) return inflight.get(requestKey);
+
+    const runReq = (async () => {
+      state.pendingRequests += 1;
     const headers = { 'Content-Type': 'application/json' };
     if (state.token) headers.Authorization = `Bearer ${state.token}`;
-    const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
-    const res = await fetch(`${API_BASE}${normalizedPath}`, {
-      method,
-      headers,
-      body: opts.body ? JSON.stringify(opts.body) : undefined
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    return data;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 20000);
+      try {
+        const res = await fetch(`${API_BASE}${normalizedPath}`, {
+          method,
+          headers,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+          signal: controller.signal
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        return data;
+      } catch (err) {
+        if (err?.name === 'AbortError') throw new Error('Cererea a expirat. Încearcă din nou.');
+        throw err;
+      } finally {
+        clearTimeout(timeout);
+        state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+      }
+    })();
+
+    if (requestKey) inflight.set(requestKey, runReq);
+    try {
+      return await runReq;
+    } finally {
+      if (requestKey) inflight.delete(requestKey);
+    }
+  }
+
+  function loadingBadge() {
+    if (!state.pendingRequests) return '';
+    return '<div class="text-xs px-2 py-1 rounded-lg border border-emerald-400/50 text-emerald-300">Se încarcă...</div>';
   }
 
   function esc(s) {
@@ -43,6 +74,7 @@
           <div class="flex gap-2 mb-5">
             <button id="tab-login" class="cafea-btn ${mode === 'login' ? 'cafea-btn-primary' : 'cafea-btn-muted'}">Login</button>
             <button id="tab-register" class="cafea-btn ${mode === 'register' ? 'cafea-btn-primary' : 'cafea-btn-muted'}">Register</button>
+            ${loadingBadge()}
           </div>
           <h1 class="text-3xl md:text-5xl font-bold">Cafea Office Dashboard</h1>
           <p class="mt-2 text-slate-600 dark:text-slate-300">${mode === 'login' ? 'Login cu cont existent.' : 'Creezi cont nou (pending), apoi admin aprobă.'}</p>
@@ -359,12 +391,14 @@
             ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
           </div>
           <div class="flex gap-2">
+            ${loadingBadge()}
             <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
             <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
           </div>
         </header>
 
         ${state.error ? `<div class="cafea-glass p-3 text-red-500">${esc(state.error)}</div>` : ''}
+        ${state.info ? `<div class="cafea-glass p-3 text-emerald-400">${esc(state.info)}</div>` : ''}
 
         ${state.activeTab === 'user' ? renderUserTab(isAdmin) : ''}
         ${state.activeTab === 'profile' ? renderProfileTab() : ''}

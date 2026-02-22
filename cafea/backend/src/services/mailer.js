@@ -143,3 +143,84 @@ export async function sendCoffeeTestEmail({ to, actorName, actorEmail, actorAvat
   });
   return { ok: true };
 }
+
+export async function sendRegistrationEmails({
+  userName,
+  userEmail,
+  userAvatarUrl,
+  registeredAt,
+  adminEmail,
+  approveUrl,
+  rejectUrl
+}) {
+  const tx = getTransport();
+  if (!tx) return { sent: 0, reason: 'smtp_not_configured' };
+  const when = registeredAt ? new Date(`${registeredAt}Z`).toLocaleString('ro-RO') : new Date().toLocaleString('ro-RO');
+
+  if (isValidEmail(userEmail)) {
+    await tx.sendMail({
+      from: formatFrom(),
+      to: userEmail,
+      subject: 'Cafea Office: contul tau asteapta aprobarea adminului',
+      text: `Salut ${userName}, contul tau (${userEmail}) a fost inregistrat la ${when} si asteapta aprobarea adminului.`,
+      html: `
+        <div style="background:#020617;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e2e8f0">
+          <div style="max-width:640px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden">
+            <div style="padding:16px 20px;background:#052e1e;border-bottom:1px solid #134e4a">
+              <h1 style="margin:0;font-size:20px;color:#34d399;">Cafea Office</h1>
+              <p style="margin:4px 0 0 0;color:#a7f3d0;">Cerere inregistrare primita</p>
+            </div>
+            <div style="padding:20px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                <img src="${userAvatarUrl || 'https://placehold.co/72x72?text=U'}" width="54" height="54" style="border-radius:999px;object-fit:cover;border:2px solid #334155" />
+                <div>
+                  <p style="margin:0;color:#f8fafc;font-weight:700">${userName}</p>
+                  <p style="margin:2px 0 0 0;color:#94a3b8;font-size:13px">${userEmail}</p>
+                </div>
+              </div>
+              <p style="margin:0;color:#cbd5e1;">Contul tau a fost inregistrat la <strong>${when}</strong> si este in asteptarea aprobarii adminului.</p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+  }
+
+  if (isValidEmail(adminEmail)) {
+    await tx.sendMail({
+      from: formatFrom(),
+      to: adminEmail,
+      subject: 'Cafea Office: utilizator nou in asteptare',
+      text:
+        `Utilizator nou: ${userName} (${userEmail})\n` +
+        `Data: ${when}\n` +
+        `Aproba: ${approveUrl}\n` +
+        `Respinge: ${rejectUrl}\n`,
+      html: `
+        <div style="background:#020617;padding:24px;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e2e8f0">
+          <div style="max-width:680px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;overflow:hidden">
+            <div style="padding:16px 20px;background:#052e1e;border-bottom:1px solid #134e4a">
+              <h1 style="margin:0;font-size:20px;color:#34d399;">Cafea Office</h1>
+              <p style="margin:4px 0 0 0;color:#a7f3d0;">Utilizator nou in asteptare</p>
+            </div>
+            <div style="padding:20px">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                <img src="${userAvatarUrl || 'https://placehold.co/72x72?text=U'}" width="54" height="54" style="border-radius:999px;object-fit:cover;border:2px solid #334155" />
+                <div>
+                  <p style="margin:0;color:#f8fafc;font-weight:700">${userName}</p>
+                  <p style="margin:2px 0 0 0;color:#94a3b8;font-size:13px">${userEmail}</p>
+                </div>
+              </div>
+              <p style="margin:0 0 16px 0;color:#cbd5e1;"><strong>Data:</strong> ${when}</p>
+              <div style="display:flex;gap:10px;">
+                <a href="${rejectUrl}" style="display:inline-block;padding:10px 14px;background:#7f1d1d;color:#fff;text-decoration:none;border-radius:8px;font-weight:700">Respingere</a>
+                <a href="${approveUrl}" style="display:inline-block;padding:10px 14px;background:#065f46;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;margin-left:auto">Aprobare</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    });
+  }
+  return { sent: 2 };
+}

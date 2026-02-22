@@ -1,7 +1,9 @@
 import { Router } from 'express';
-import { hashPassword, signToken, verifyPassword } from '../auth.js';
+import { hashPassword, signActionToken, signToken, verifyActionToken, verifyPassword } from '../auth.js';
 import { one, run } from '../db.js';
+import { config } from '../config.js';
 import { requireAuth } from '../middleware.js';
+import { sendRegistrationEmails } from '../services/mailer.js';
 
 export const authRouter = Router();
 
@@ -48,7 +50,51 @@ authRouter.post('/register', async (req, res) => {
     avatar_url || ''
   );
 
+  const created = one('SELECT id, email, name, avatar_url, created_at FROM users WHERE email = ?', normalizedEmail);
+  if (created) {
+    const token = signActionToken({ uid: created.id });
+    const approveUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=approve&token=${encodeURIComponent(token)}`;
+    const rejectUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=reject&token=${encodeURIComponent(token)}`;
+    sendRegistrationEmails({
+      userName: created.name,
+      userEmail: created.email,
+      userAvatarUrl: created.avatar_url,
+      registeredAt: created.created_at,
+      adminEmail: config.bootstrapAdminEmail,
+      approveUrl,
+      rejectUrl
+    }).catch((err) => {
+      console.error('[mail] registration notification failed:', err?.message || err);
+    });
+  }
+
   return res.status(201).json({ ok: true, status: 'pending_approval' });
+});
+
+authRouter.get('/registration-action', (req, res) => {
+  try {
+    const action = String(req.query.action || '').toLowerCase();
+    const token = String(req.query.token || '');
+    if (!['approve', 'reject'].includes(action)) return res.status(400).send('Invalid action');
+    if (!token) return res.status(400).send('Missing token');
+
+    const payload = verifyActionToken(token);
+    const id = Number(payload.uid);
+    if (!Number.isInteger(id)) return res.status(400).send('Invalid token payload');
+
+    const user = one('SELECT id, active FROM users WHERE id = ?', id);
+    if (!user) return res.status(404).send('User not found');
+
+    if (action === 'approve') {
+      run('UPDATE users SET active = 1 WHERE id = ?', id);
+      return res.send('<h1>Cerere aprobata</h1><p>Utilizatorul este acum activ.</p>');
+    }
+    run('DELETE FROM coffee_logs WHERE user_id = ?', id);
+    run('DELETE FROM users WHERE id = ?', id);
+    return res.send('<h1>Cerere respinsa</h1><p>Utilizatorul a fost sters.</p>');
+  } catch (err) {
+    return res.status(400).send(`Invalid or expired token: ${err?.message || err}`);
+  }
 });
 
 authRouter.get('/me', requireAuth, (req, res) => {
