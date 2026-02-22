@@ -55,12 +55,16 @@ authRouter.get('/me', requireAuth, (req, res) => {
 });
 
 authRouter.put('/profile', requireAuth, (req, res) => {
-  const { name, avatar_url } = req.body || {};
+  const { name, avatar_url, email } = req.body || {};
   const nextName = String(name || '').trim();
   const nextAvatar = String(avatar_url || '').trim();
+  const nextEmail = String(email || '').trim().toLowerCase();
   if (!nextName) return res.status(400).json({ error: 'name required' });
+  if (!nextEmail) return res.status(400).json({ error: 'email required' });
+  const duplicate = one('SELECT id FROM users WHERE email = ? AND id <> ?', nextEmail, req.user.id);
+  if (duplicate) return res.status(409).json({ error: 'Email already exists' });
 
-  run('UPDATE users SET name = ?, avatar_url = ? WHERE id = ?', nextName, nextAvatar, req.user.id);
-  const updated = one('SELECT id, email, name, role, avatar_url FROM users WHERE id = ?', req.user.id);
+  run('UPDATE users SET name = ?, avatar_url = ?, email = ? WHERE id = ?', nextName, nextAvatar, nextEmail, req.user.id);
+  const updated = one('SELECT id, email, name, role, avatar_url, active FROM users WHERE id = ?', req.user.id);
   res.json({ ok: true, user: updated });
 });
