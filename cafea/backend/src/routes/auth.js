@@ -24,7 +24,8 @@ authRouter.post('/login', async (req, res) => {
       email: user.email,
       name: user.name,
       role: user.role,
-      avatar_url: user.avatar_url
+      avatar_url: user.avatar_url,
+      notify_enabled: Number(user.notify_enabled ?? 1)
     }
   });
 });
@@ -55,7 +56,7 @@ authRouter.get('/me', requireAuth, (req, res) => {
 });
 
 authRouter.put('/profile', requireAuth, async (req, res) => {
-  const { name, avatar_url, email, password } = req.body || {};
+  const { name, avatar_url, email, password, notify_enabled } = req.body || {};
   const nextName = String(name || '').trim();
   const nextAvatar = String(avatar_url || '').trim();
   const nextEmail = String(email || '').trim().toLowerCase();
@@ -64,20 +65,22 @@ authRouter.put('/profile', requireAuth, async (req, res) => {
   const duplicate = one('SELECT id FROM users WHERE email = ? AND id <> ?', nextEmail, req.user.id);
   if (duplicate) return res.status(409).json({ error: 'Email already exists' });
 
+  const nextNotify = notify_enabled == null ? Number(req.user.notify_enabled ?? 1) : Number(Boolean(notify_enabled));
   const nextPassword = String(password || '').trim();
   if (nextPassword) {
     const passwordHash = await hashPassword(nextPassword);
     run(
-      'UPDATE users SET name = ?, avatar_url = ?, email = ?, password_hash = ? WHERE id = ?',
+      'UPDATE users SET name = ?, avatar_url = ?, email = ?, password_hash = ?, notify_enabled = ? WHERE id = ?',
       nextName,
       nextAvatar,
       nextEmail,
       passwordHash,
+      nextNotify,
       req.user.id
     );
   } else {
-    run('UPDATE users SET name = ?, avatar_url = ?, email = ? WHERE id = ?', nextName, nextAvatar, nextEmail, req.user.id);
+    run('UPDATE users SET name = ?, avatar_url = ?, email = ?, notify_enabled = ? WHERE id = ?', nextName, nextAvatar, nextEmail, nextNotify, req.user.id);
   }
-  const updated = one('SELECT id, email, name, role, avatar_url, active FROM users WHERE id = ?', req.user.id);
+  const updated = one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', req.user.id);
   res.json({ ok: true, user: updated });
 });

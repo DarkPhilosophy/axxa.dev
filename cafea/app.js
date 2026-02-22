@@ -252,6 +252,10 @@
           <input id="profile-email" type="email" class="cafea-input" value="${esc(state.user?.email || '')}" placeholder="email" required />
           <input id="profile-avatar" class="cafea-input md:col-span-2" value="${esc(state.user?.avatar_url || '')}" placeholder="avatar url" />
           <input id="profile-password" type="password" class="cafea-input md:col-span-2" placeholder="parolă nouă (opțional)" />
+          <label class="flex items-center gap-2 text-sm md:col-span-2">
+            <input id="profile-notify" type="checkbox" ${state.user?.notify_enabled === 0 ? '' : 'checked'} />
+            Notificări email la consum cafea
+          </label>
           <input class="cafea-input" value="${state.user?.active ? 'active' : 'pending'}" placeholder="status" disabled />
           <input class="cafea-input" value="${esc(state.user?.role || 'user')}" placeholder="rol" disabled />
           <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">Salvează profil</button>
@@ -527,7 +531,8 @@
           const avatar_url = document.getElementById('profile-avatar').value.trim();
           const email = document.getElementById('profile-email').value.trim().toLowerCase();
           const password = document.getElementById('profile-password').value.trim();
-          const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url, email, password } });
+          const notify_enabled = document.getElementById('profile-notify').checked;
+          const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url, email, password, notify_enabled } });
           state.user = d.user;
           await loadDashboard();
         } catch (err) {

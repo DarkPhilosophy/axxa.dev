@@ -24,8 +24,13 @@ export async function ensureBootstrapAdmin() {
 export function ensureUserColumns() {
   const cols = many('PRAGMA table_info(users)');
   const hasMax = cols.some((c) => String(c.name) === 'max_coffees');
+  const hasNotify = cols.some((c) => String(c.name) === 'notify_enabled');
   if (!hasMax) {
     run('ALTER TABLE users ADD COLUMN max_coffees INTEGER');
     console.log('[cafea] Added users.max_coffees');
+  }
+  if (!hasNotify) {
+    run('ALTER TABLE users ADD COLUMN notify_enabled INTEGER NOT NULL DEFAULT 1');
+    console.log('[cafea] Added users.notify_enabled');
   }
 }

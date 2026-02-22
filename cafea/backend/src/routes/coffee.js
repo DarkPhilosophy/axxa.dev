@@ -45,12 +45,14 @@ coffeeRouter.post('/consume', (req, res) => {
   if (!next || next.current_stock >= stock.current_stock) return res.status(409).json({ error: 'Stock epuizat' });
   run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', req.user.id);
 
-  const recipients = many('SELECT email, name FROM users WHERE active = 1');
+  const recipients = many('SELECT email, name, notify_enabled FROM users WHERE active = 1');
   notifyCoffeeConsumed({
     actorName: req.user.name,
     actorEmail: req.user.email,
     recipients,
     stockCurrent: next.current_stock,
+    stockInitial: next.initial_stock,
+    stockMin: next.min_stock,
     consumedAt: next.updated_at
   }).catch((err) => {
     console.error('[mail] consume notification failed:', err?.message || err);

@@ -7,7 +7,7 @@ export function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Missing token' });
   try {
     const payload = verifyToken(token);
-    const user = one('SELECT id, email, name, role, avatar_url, active FROM users WHERE id = ?', payload.sub);
+    const user = one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', payload.sub);
     if (!user || !user.active) return res.status(401).json({ error: 'Invalid user' });
     req.user = user;
     return next();

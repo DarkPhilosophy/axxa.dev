@@ -26,7 +26,7 @@ adminRouter.post('/stock/init', (req, res) => {
 });
 
 adminRouter.get('/users', (_req, res) => {
-  const users = many('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users ORDER BY created_at DESC');
+  const users = many('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users ORDER BY created_at DESC');
   res.json({ users });
 });
 
@@ -54,7 +54,7 @@ adminRouter.post('/users', async (req, res) => {
 
 adminRouter.put('/users/:id', (req, res) => {
   const id = Number(req.params.id);
-  const { name, role, avatar_url, active, email, password, max_coffees } = req.body || {};
+  const { name, role, avatar_url, active, email, password, max_coffees, notify_enabled } = req.body || {};
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
   if (role && ![ROLES.ADMIN, ROLES.USER].includes(role)) return res.status(400).json({ error: 'Invalid role' });
 
@@ -66,6 +66,7 @@ adminRouter.put('/users/:id', (req, res) => {
   if (duplicate) return res.status(409).json({ error: 'Email already exists' });
 
   const nextActive = active == null ? existing.active : Number(Boolean(active));
+  const nextNotify = notify_enabled == null ? Number(existing.notify_enabled ?? 1) : Number(Boolean(notify_enabled));
   const nextName = name == null ? existing.name : String(name).trim();
   const nextMax = max_coffees == null || max_coffees === '' ? null : Number(max_coffees);
   if (nextMax != null && (!Number.isInteger(nextMax) || nextMax < 0)) {
@@ -76,7 +77,7 @@ adminRouter.put('/users/:id', (req, res) => {
   if (password != null && String(password).trim()) {
     hashPassword(String(password)).then((passwordHash) => {
       run(
-        'UPDATE users SET email = ?, password_hash = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ? WHERE id = ?',
+        'UPDATE users SET email = ?, password_hash = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ?, notify_enabled = ? WHERE id = ?',
         normalizedEmail,
         passwordHash,
         nextName,
@@ -84,9 +85,10 @@ adminRouter.put('/users/:id', (req, res) => {
         avatar_url ?? existing.avatar_url,
         nextActive,
         nextMax,
+        nextNotify,
         id
       );
-      const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
+      const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users WHERE id = ?', id);
       res.json({ ok: true, user: updated });
     }).catch((err) => {
       res.status(500).json({ error: err.message || 'Failed to update password' });
@@ -95,16 +97,17 @@ adminRouter.put('/users/:id', (req, res) => {
   }
 
   run(
-    'UPDATE users SET email = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ? WHERE id = ?',
+    'UPDATE users SET email = ?, name = ?, role = ?, avatar_url = ?, active = ?, max_coffees = ?, notify_enabled = ? WHERE id = ?',
     normalizedEmail,
     nextName,
     role ?? existing.role,
     avatar_url ?? existing.avatar_url,
     nextActive,
     nextMax,
+    nextNotify,
     id
   );
-  const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
+  const updated = one('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users WHERE id = ?', id);
   res.json({ ok: true, user: updated });
 });
 
@@ -200,7 +203,7 @@ adminRouter.get('/users/:id/stats', (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
 
-  const user = one('SELECT id, email, name, role, avatar_url, active, max_coffees, created_at FROM users WHERE id = ?', id);
+  const user = one('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users WHERE id = ?', id);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const agg = one(
