@@ -287,6 +287,7 @@
         <input class="cafea-input md:col-span-2" name="password" type="password" placeholder="parolă nouă (opțional)" />
         <select class="cafea-input" name="role"><option value="user" ${selectedUser.role === 'user' ? 'selected' : ''}>user</option><option value="admin" ${selectedUser.role === 'admin' ? 'selected' : ''}>admin</option></select>
         <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="active" ${selectedUser.active ? 'checked' : ''}/> active</label>
+        <label class="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" name="notify_enabled" ${Number(selectedUser.notify_enabled ?? 1) ? 'checked' : ''}/> notificări email (opt-in)</label>
         <button class="cafea-btn cafea-btn-primary" type="submit">Save ${esc(selectedUser.name)}</button>
         <button class="cafea-btn" id="btn-delete-user" type="button" style="background:#7f1d1d;color:#fff;border-color:#ef4444;">Delete ${esc(selectedUser.name)}</button>
       </form>
@@ -633,7 +634,8 @@
                 avatar_url: String(fd.get('avatar_url') || '').trim(),
                 password: String(fd.get('password') || '').trim(),
                 role: String(fd.get('role') || 'user'),
-                active: fd.get('active') === 'on'
+                active: fd.get('active') === 'on',
+                notify_enabled: fd.get('notify_enabled') === 'on'
               }
             });
             await loadDashboard();

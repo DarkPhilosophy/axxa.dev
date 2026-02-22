@@ -11,7 +11,10 @@ function getTransport() {
     host: config.smtpHost,
     port: config.smtpPort,
     secure: config.smtpSecure,
-    auth: { user: config.smtpUser, pass: config.smtpPass }
+    auth: { user: config.smtpUser, pass: config.smtpPass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
   return transport;
 }

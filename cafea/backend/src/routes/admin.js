@@ -277,31 +277,35 @@ adminRouter.put('/history/:id', (req, res) => {
 });
 
 adminRouter.post('/mail/test', async (req, res) => {
-  const me = one('SELECT id, email, name, avatar_url, max_coffees FROM users WHERE id = ?', req.user.id);
-  if (!me) return res.status(404).json({ error: 'User not found' });
-  const stock = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
-  const consumedTotalRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
-  const consumedTotal = Number(consumedTotalRow?.consumed_total || 0);
-  const expectedCurrent = Number(stock.initial_stock || 0) - consumedTotal;
-  const manualDelta = Number(stock.current_stock || 0) - expectedCurrent;
-  const meConsumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', req.user.id);
-  const meConsumed = Number(meConsumedRow?.consumed_count || 0);
-  const meRemaining = me.max_coffees == null ? null : Math.max(0, Number(me.max_coffees) - meConsumed);
+  try {
+    const me = one('SELECT id, email, name, avatar_url, max_coffees FROM users WHERE id = ?', req.user.id);
+    if (!me) return res.status(404).json({ error: 'User not found' });
+    const stock = one('SELECT initial_stock, current_stock, min_stock, updated_at FROM stock_settings WHERE id = 1');
+    const consumedTotalRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
+    const consumedTotal = Number(consumedTotalRow?.consumed_total || 0);
+    const expectedCurrent = Number(stock.initial_stock || 0) - consumedTotal;
+    const manualDelta = Number(stock.current_stock || 0) - expectedCurrent;
+    const meConsumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', req.user.id);
+    const meConsumed = Number(meConsumedRow?.consumed_count || 0);
+    const meRemaining = me.max_coffees == null ? null : Math.max(0, Number(me.max_coffees) - meConsumed);
 
-  await sendCoffeeTestEmail({
-    to: me.email,
-    actorName: me.name,
-    actorEmail: me.email,
-    actorAvatarUrl: me.avatar_url,
-    consumedAt: stock.updated_at,
-    stockInitial: stock.initial_stock,
-    stockCurrent: stock.current_stock,
-    stockMin: stock.min_stock,
-    stockExpectedCurrent: expectedCurrent,
-    stockManualDelta: manualDelta,
-    actorConsumedCount: meConsumed,
-    actorRemaining: meRemaining
-  });
+    await sendCoffeeTestEmail({
+      to: me.email,
+      actorName: me.name,
+      actorEmail: me.email,
+      actorAvatarUrl: me.avatar_url,
+      consumedAt: stock.updated_at,
+      stockInitial: stock.initial_stock,
+      stockCurrent: stock.current_stock,
+      stockMin: stock.min_stock,
+      stockExpectedCurrent: expectedCurrent,
+      stockManualDelta: manualDelta,
+      actorConsumedCount: meConsumed,
+      actorRemaining: meRemaining
+    });
 
-  return res.json({ ok: true });
+    return res.json({ ok: true });
+  } catch (err) {
+    return res.status(502).json({ error: `Mail test failed: ${err?.message || err}` });
+  }
 });
