@@ -53,25 +53,6 @@ function useSession() {
   return { token, user, login, logout };
 }
 
-function TopNav({ user, onLogout }) {
-  return html`
-    <nav className="fixed w-full top-0 z-50 backdrop-blur-md bg-white/95 dark:bg-black border-b border-slate-200/50 dark:border-white/5">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
-        <a href="/" className="relative group brand-neo">
-          <span className="brand-neo-text text-2xl font-bold tracking-tighter text-slate-800 dark:text-white group-hover:text-primary transition-colors">
-            A<span className="brand-overlap-xx text-slate-800 dark:text-white group-hover:text-primary transition-colors">XX</span>A<span className="text-primary">.DEV</span>
-          </span>
-        </a>
-        <div className="flex items-center gap-3">
-          <a href="/projects/" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary">Projects</a>
-          <a href="/sql-status.html" className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary">SQL Status</a>
-          ${user ? html`<button className="cafea-btn cafea-btn-muted text-sm" onClick=${onLogout}>Logout</button>` : null}
-        </div>
-      </div>
-    </nav>
-  `;
-}
-
 function Login({ onLogin, error }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,7 +64,7 @@ function Login({ onLogin, error }) {
           Cafea Namespace
         </p>
         <h1 className="text-3xl md:text-5xl font-bold mt-4">Cafea Office Dashboard</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">Login cu cont existent. Nu există register public, utilizatorii sunt creați de admin.</p>
+        <p className="mt-2 text-slate-600 dark:text-slate-300">Login cu cont existent. Utilizatorii sunt creați doar de admin.</p>
         <form className="grid md:grid-cols-2 gap-3 mt-6" onSubmit=${(e) => { e.preventDefault(); onLogin(email, password); }}>
           <input className="cafea-input" type="email" placeholder="email" value=${email} onChange=${(e) => setEmail(e.target.value)} required />
           <input className="cafea-input" type="password" placeholder="parolă" value=${password} onChange=${(e) => setPassword(e.target.value)} required />
@@ -96,12 +77,7 @@ function Login({ onLogin, error }) {
 }
 
 function StockCard({ stock, onConsume }) {
-  const badge = stock.current_stock <= 0
-    ? ['cafea-badge-empty', 'Epuizat']
-    : stock.low
-      ? ['cafea-badge-low', 'Stoc minim']
-      : ['cafea-badge-ok', 'OK'];
-
+  const badge = stock.current_stock <= 0 ? ['cafea-badge-empty', 'Epuizat'] : stock.low ? ['cafea-badge-low', 'Stoc minim'] : ['cafea-badge-ok', 'OK'];
   return html`
     <div className="cafea-glass p-5">
       <div className="flex items-center justify-between mb-4">
@@ -124,21 +100,9 @@ function HistoryTable({ rows, title }) {
       <h3 className="font-bold text-lg mb-3">${title}</h3>
       <div className="overflow-auto">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-300/20 dark:border-white/10 text-slate-500">
-              <th className="text-left py-2">Cine</th>
-              <th className="text-left py-2">Când</th>
-              <th className="text-left py-2">Delta</th>
-            </tr>
-          </thead>
+          <thead><tr className="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th className="text-left py-2">Cine</th><th className="text-left py-2">Când</th><th className="text-left py-2">Delta</th></tr></thead>
           <tbody>
-            ${rows.map((r) => html`
-              <tr key=${r.id} className="border-b border-slate-300/10 dark:border-white/5">
-                <td className="py-2">${r.name || r.email}</td>
-                <td className="py-2">${new Date(r.consumed_at + 'Z').toLocaleString('ro-RO')}</td>
-                <td className="py-2">-${r.delta}</td>
-              </tr>
-            `)}
+            ${rows.map((r) => html`<tr key=${r.id} className="border-b border-slate-300/10 dark:border-white/5"><td className="py-2">${r.name || r.email}</td><td className="py-2">${new Date(r.consumed_at + 'Z').toLocaleString('ro-RO')}</td><td className="py-2">-${r.delta}</td></tr>`)}
           </tbody>
         </table>
       </div>
@@ -151,67 +115,33 @@ function AdminPanel({ token, users, onRefresh }) {
   const [userForm, setUserForm] = useState({ email: '', password: '', name: '', role: 'user', avatar_url: '' });
   const [msg, setMsg] = useState('');
 
-  const submitStock = async (e) => {
-    e.preventDefault();
-    await api('/api/admin/stock/init', { method: 'POST', token, body: stockForm });
-    setMsg('Stoc actualizat.');
-    onRefresh();
-  };
-
-  const submitUser = async (e) => {
-    e.preventDefault();
-    await api('/api/admin/users', { method: 'POST', token, body: userForm });
-    setMsg('Utilizator creat.');
-    setUserForm({ email: '', password: '', name: '', role: 'user', avatar_url: '' });
-    onRefresh();
-  };
-
-  const exportCsv = () => {
-    window.open(`${API_BASE}/api/admin/export.csv`, '_blank');
-  };
+  const submitStock = async (e) => { e.preventDefault(); await api('/api/admin/stock/init', { method: 'POST', token, body: stockForm }); setMsg('Stoc actualizat.'); onRefresh(); };
+  const submitUser = async (e) => { e.preventDefault(); await api('/api/admin/users', { method: 'POST', token, body: userForm }); setMsg('Utilizator creat.'); setUserForm({ email: '', password: '', name: '', role: 'user', avatar_url: '' }); onRefresh(); };
 
   return html`
     <div className="cafea-glass p-5 space-y-5">
       <h3 className="font-bold text-lg">Admin Controls</h3>
-
       <form className="grid md:grid-cols-4 gap-3" onSubmit=${submitStock}>
         <input className="cafea-input" type="number" min="0" placeholder="stoc inițial" value=${stockForm.initial_stock} onChange=${(e) => setStockForm({ ...stockForm, initial_stock: Number(e.target.value) })} />
         <input className="cafea-input" type="number" min="0" placeholder="stoc curent" value=${stockForm.current_stock} onChange=${(e) => setStockForm({ ...stockForm, current_stock: Number(e.target.value) })} />
         <input className="cafea-input" type="number" min="0" placeholder="stoc minim" value=${stockForm.min_stock} onChange=${(e) => setStockForm({ ...stockForm, min_stock: Number(e.target.value) })} />
         <button className="cafea-btn cafea-btn-primary" type="submit">Setează stoc</button>
       </form>
-
       <form className="grid md:grid-cols-6 gap-3" onSubmit=${submitUser}>
         <input className="cafea-input" placeholder="nume" value=${userForm.name} onChange=${(e) => setUserForm({ ...userForm, name: e.target.value })} required />
         <input className="cafea-input" type="email" placeholder="email" value=${userForm.email} onChange=${(e) => setUserForm({ ...userForm, email: e.target.value })} required />
         <input className="cafea-input" type="password" placeholder="parolă" value=${userForm.password} onChange=${(e) => setUserForm({ ...userForm, password: e.target.value })} required />
         <input className="cafea-input" placeholder="avatar url" value=${userForm.avatar_url} onChange=${(e) => setUserForm({ ...userForm, avatar_url: e.target.value })} />
-        <select className="cafea-input" value=${userForm.role} onChange=${(e) => setUserForm({ ...userForm, role: e.target.value })}>
-          <option value="user">user</option>
-          <option value="admin">admin</option>
-        </select>
+        <select className="cafea-input" value=${userForm.role} onChange=${(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="user">user</option><option value="admin">admin</option></select>
         <button className="cafea-btn cafea-btn-primary" type="submit">Adaugă user</button>
       </form>
-
       <div className="flex gap-3 items-center flex-wrap">
-        <button className="cafea-btn cafea-btn-muted" onClick=${exportCsv}>Export CSV</button>
+        <button className="cafea-btn cafea-btn-muted" onClick=${() => window.open(`${API_BASE}/api/admin/export.csv`, '_blank')}>Export CSV</button>
         <button className="cafea-btn cafea-btn-muted" onClick=${onRefresh}>Refresh</button>
         ${msg ? html`<span className="text-green-500 text-sm">${msg}</span>` : null}
       </div>
-
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        ${users.map((u) => html`
-          <div className="border border-slate-300/25 dark:border-white/10 rounded-xl p-3" key=${u.id}>
-            <div className="flex items-center gap-3">
-              <img src=${u.avatar_url || 'https://placehold.co/64x64?text=U'} className="w-10 h-10 rounded-full object-cover" />
-              <div>
-                <p className="font-bold">${u.name}</p>
-                <p className="text-xs text-slate-500">${u.email}</p>
-              </div>
-            </div>
-            <p className="text-xs mt-2">rol: ${u.role} • activ: ${u.active ? 'da' : 'nu'}</p>
-          </div>
-        `)}
+        ${users.map((u) => html`<div className="border border-slate-300/25 dark:border-white/10 rounded-xl p-3" key=${u.id}><div className="flex items-center gap-3"><img src=${u.avatar_url || 'https://placehold.co/64x64?text=U'} className="w-10 h-10 rounded-full object-cover" /><div><p className="font-bold">${u.name}</p><p className="text-xs text-slate-500">${u.email}</p></div></div><p className="text-xs mt-2">rol: ${u.role} • activ: ${u.active ? 'da' : 'nu'}</p></div>`)}
       </div>
     </div>
   `;
@@ -223,7 +153,6 @@ function App() {
   const [stock, setStock] = useState({ initial_stock: 0, current_stock: 0, min_stock: 0, low: false });
   const [rows, setRows] = useState([]);
   const [users, setUsers] = useState([]);
-
   const isAdmin = user?.role === ROLE_ADMIN;
 
   const refresh = async () => {
@@ -233,66 +162,23 @@ function App() {
         api('/api/coffee/status', { token }),
         api(`/api/coffee/history?mine=${isAdmin ? '0' : '1'}&limit=100`, { token })
       ]);
-      setStock(s.stock);
-      setRows(h.rows || []);
-      if (isAdmin) {
-        const u = await api('/api/admin/users', { token });
-        setUsers(u.users || []);
-      }
-    } catch (e) {
-      setError(e.message);
-    }
+      setStock(s.stock); setRows(h.rows || []);
+      if (isAdmin) { const u = await api('/api/admin/users', { token }); setUsers(u.users || []); }
+    } catch (e) { setError(e.message); }
   };
 
-  useEffect(() => {
-    refresh();
-  }, [token, user?.role]);
+  useEffect(() => { refresh(); }, [token, user?.role]);
 
-  const consume = async () => {
-    try {
-      setError('');
-      await api('/api/coffee/consume', { method: 'POST', token });
-      await refresh();
-    } catch (e) {
-      setError(e.message);
-    }
-  };
-
-  if (!user) {
-    return html`
-      <${TopNav} user=${null} onLogout=${() => {}} />
-      <${Login} onLogin=${async (email, pass) => {
-        try {
-          setError('');
-          await login(email, pass);
-        } catch (e) {
-          setError(e.message);
-        }
-      }} error=${error} />
-    `;
-  }
+  if (!user) return html`<${Login} onLogin=${async (email, pass) => { try { setError(''); await login(email, pass); } catch (e) { setError(e.message); } }} error=${error} />`;
 
   return html`
-    <${TopNav} user=${user} onLogout=${logout} />
     <main className="cafea-shell space-y-4">
       <header className="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <img src=${user.avatar_url || 'https://placehold.co/72x72?text=U'} className="w-12 h-12 rounded-full object-cover" />
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
-            <p className="text-slate-600 dark:text-slate-300">${user.name} • ${user.role}</p>
-          </div>
-        </div>
-        <button className="cafea-btn cafea-btn-muted" onClick=${refresh}>Refresh</button>
+        <div className="flex items-center gap-3"><img src=${user.avatar_url || 'https://placehold.co/72x72?text=U'} className="w-12 h-12 rounded-full object-cover" /><div><h1 className="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1><p className="text-slate-600 dark:text-slate-300">${user.name} • ${user.role}</p></div></div>
+        <div className="flex gap-2"><button className="cafea-btn cafea-btn-muted" onClick=${refresh}>Refresh</button><button className="cafea-btn cafea-btn-muted" onClick=${logout}>Logout</button></div>
       </header>
-
       ${error ? html`<div className="cafea-glass p-3 text-red-500">${error}</div>` : null}
-
-      <section className="grid md:grid-cols-2 gap-4">
-        <${StockCard} stock=${stock} onConsume=${consume} />
-        <${HistoryTable} rows=${rows} title=${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'} />
-      </section>
-
+      <section className="grid md:grid-cols-2 gap-4"><${StockCard} stock=${stock} onConsume=${async()=>{ try { setError(''); await api('/api/coffee/consume', { method: 'POST', token }); await refresh(); } catch (e) { setError(e.message); } }} /><${HistoryTable} rows=${rows} title=${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'} /></section>
       ${isAdmin ? html`<${AdminPanel} token=${token} users=${users} onRefresh=${refresh} />` : null}
     </main>
   `;
