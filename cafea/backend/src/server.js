@@ -5,7 +5,7 @@ import { adminRouter } from './routes/admin.js';
 import { coffeeRouter } from './routes/coffee.js';
 import { config, resolvedDbUrl } from './config.js';
 import { ensureSchema } from './db.js';
-import { ensureBootstrapAdmin } from './services/init.js';
+import { ensureBootstrapAdmin, ensureUserColumns } from './services/init.js';
 
 const app = express();
 app.use(cors({ origin: config.corsOrigin }));
@@ -20,6 +20,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/coffee', coffeeRouter);
 
 ensureSchema();
+ensureUserColumns();
 await ensureBootstrapAdmin();
 
 app.listen(config.port, () => {
