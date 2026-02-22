@@ -55,7 +55,7 @@
         <p id="a_country"></p><p id="a_mode"></p><p id="a_sqld"></p><p id="a_agent"></p><p id="a_port"></p><p id="a_ns"></p><p id="a_uptime"></p>
       </article>
       <article class="card">
-        <h2>CloudVPS</h2>
+        <h2>GoogleVPS</h2>
         <p id="c_country"></p><p id="c_reach"></p><p id="c_mode"></p><p id="c_sqld"></p><p id="c_agent"></p><p id="c_port"></p><p id="c_ns"></p><p id="c_uptime"></p>
       </article>
     </section>
@@ -109,7 +109,7 @@
     async function loadStatus(){
       try{
         const j=await fetchJsonWithCache(STATUS_URL, KEY_STATUS);
-        const a=j.nodes.ATVPS,c=j.nodes.CloudVPS;
+        const a=j.nodes.ATVPS, c=j.nodes.GoogleVPS || j.nodes.CloudVPS;
         const b=document.getElementById('overall');
         b.textContent=String(j.overall).toUpperCase();b.className='badge '+j.overall;
         document.getElementById('primary').textContent='Primary: '+j.primary_node;
