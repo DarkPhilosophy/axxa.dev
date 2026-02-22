@@ -116,6 +116,9 @@
       </div>
     `).join('');
 
+    const profileName = esc(state.user?.name || '');
+    const profileAvatar = esc(state.user?.avatar_url || '');
+
     root.innerHTML = `
       <main class="cafea-shell space-y-4">
         <header class="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
@@ -151,10 +154,28 @@
           </div>
         </section>
 
+        <section class="cafea-glass p-5">
+          <h3 class="font-bold text-lg mb-3">Profilul meu</h3>
+          <form id="form-profile" class="grid md:grid-cols-3 gap-3">
+            <input id="profile-name" class="cafea-input" value="${profileName}" placeholder="nume" required />
+            <input id="profile-avatar" class="cafea-input md:col-span-2" value="${profileAvatar}" placeholder="avatar url" />
+            <button class="cafea-btn cafea-btn-primary md:col-span-3" type="submit">Salvează profil</button>
+          </form>
+        </section>
+
         ${isAdmin ? `
           <section class="cafea-glass p-5 space-y-5">
             <h3 class="font-bold text-lg">Admin Controls</h3>
             ${pending.length ? `<div><h4 class="font-semibold mb-2">Cereri pending (${pending.length})</h4><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${pendingHtml}</div></div>` : ''}
+            <div>
+              <h4 class="font-semibold mb-2">Setează stoc</h4>
+              <form id="form-stock" class="grid md:grid-cols-4 gap-3">
+                <input id="stock-initial" class="cafea-input" type="number" min="0" value="${esc(state.stock?.initial_stock ?? 0)}" placeholder="stoc inițial" required />
+                <input id="stock-current" class="cafea-input" type="number" min="0" value="${esc(state.stock?.current_stock ?? 0)}" placeholder="stoc curent" required />
+                <input id="stock-min" class="cafea-input" type="number" min="0" value="${esc(state.stock?.min_stock ?? 20)}" placeholder="stoc minim" required />
+                <button class="cafea-btn cafea-btn-primary" type="submit">Salvează stoc</button>
+              </form>
+            </div>
             <div class="flex gap-2 flex-wrap">
               <button id="btn-export" class="cafea-btn cafea-btn-muted">Export CSV</button>
             </div>
@@ -188,9 +209,49 @@
       renderApp();
     };
 
+    const profileForm = document.getElementById('form-profile');
+    if (profileForm) {
+      profileForm.onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+          state.error = '';
+          const name = document.getElementById('profile-name').value.trim();
+          const avatar_url = document.getElementById('profile-avatar').value.trim();
+          const d = await api('/api/auth/profile', { method: 'PUT', body: { name, avatar_url } });
+          state.user = d.user;
+          await loadDashboard();
+        } catch (err) {
+          state.error = err.message;
+        }
+        renderApp();
+      };
+    }
+
     if (isAdmin) {
+      const stockForm = document.getElementById('form-stock');
+      if (stockForm) {
+        stockForm.onsubmit = async (e) => {
+          e.preventDefault();
+          try {
+            state.error = '';
+            await api('/api/admin/stock/init', {
+              method: 'POST',
+              body: {
+                initial_stock: Number(document.getElementById('stock-initial').value),
+                current_stock: Number(document.getElementById('stock-current').value),
+                min_stock: Number(document.getElementById('stock-min').value)
+              }
+            });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      }
+
       const exportBtn = document.getElementById('btn-export');
-      if (exportBtn) exportBtn.onclick = () => window.open(`${API_BASE}/api/admin/export.csv`, '_blank');
+      if (exportBtn) exportBtn.onclick = () => window.open('/api/admin/export.csv', '_blank');
 
       document.querySelectorAll('.btn-approve').forEach((btn) => {
         btn.onclick = async () => {

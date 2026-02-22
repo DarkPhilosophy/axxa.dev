@@ -53,3 +53,14 @@ authRouter.post('/register', async (req, res) => {
 authRouter.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
+
+authRouter.put('/profile', requireAuth, (req, res) => {
+  const { name, avatar_url } = req.body || {};
+  const nextName = String(name || '').trim();
+  const nextAvatar = String(avatar_url || '').trim();
+  if (!nextName) return res.status(400).json({ error: 'name required' });
+
+  run('UPDATE users SET name = ?, avatar_url = ? WHERE id = ?', nextName, nextAvatar, req.user.id);
+  const updated = one('SELECT id, email, name, role, avatar_url FROM users WHERE id = ?', req.user.id);
+  res.json({ ok: true, user: updated });
+});
