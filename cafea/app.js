@@ -1,284 +1,250 @@
-import React, { useEffect, useState } from 'https://esm.sh/react@18.3.1';
-import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
-import htm from 'https://esm.sh/htm@3.1.1';
+(() => {
+  const API_BASE = window.CAFEA_API_BASE || 'https://cafea-api.axxa.dev';
+  const ROLE_ADMIN = 'admin';
+  const root = document.getElementById('root');
 
-const html = htm.bind(React.createElement);
-const API_BASE = window.CAFEA_API_BASE;
-const ROLE_ADMIN = 'admin';
-
-async function api(path, { method = 'GET', token, body, raw = false } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body == null ? undefined : JSON.stringify(body)
-  });
-  if (raw) return res;
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  return data;
-}
-
-function useSession() {
-  const [token, setToken] = useState(localStorage.getItem('cafea_token') || '');
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    if (!token) {
-      setUser(null);
-      return;
-    }
-    api('/api/auth/me', { token })
-      .then((d) => setUser(d.user))
-      .catch(() => {
-        setToken('');
-        localStorage.removeItem('cafea_token');
-      });
-  }, [token]);
-
-  const login = async (email, password) => {
-    const d = await api('/api/auth/login', { method: 'POST', body: { email, password } });
-    localStorage.setItem('cafea_token', d.token);
-    setToken(d.token);
-    setUser(d.user);
+  const state = {
+    token: localStorage.getItem('cafea_token') || '',
+    user: null,
+    stock: null,
+    rows: [],
+    users: [],
+    info: '',
+    error: ''
   };
 
-  const logout = () => {
-    localStorage.removeItem('cafea_token');
-    setToken('');
-    setUser(null);
-  };
-
-  return { token, user, login, logout };
-}
-
-function AuthCard({ onLogin, onRegister, error, info }) {
-  const [mode, setMode] = useState('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-
-  const submit = (e) => {
-    e.preventDefault();
-    if (mode === 'login') {
-      onLogin(email, password);
-      return;
-    }
-    onRegister({ email, password, name, avatar_url: avatarUrl });
-  };
-
-  return html`
-    <div className="cafea-shell">
-      <div className="max-w-3xl mx-auto cafea-glass p-6 md:p-8">
-        <div className="flex gap-2 mb-5">
-          <button className="cafea-btn ${mode === 'login' ? 'cafea-btn-primary' : 'cafea-btn-muted'}" onClick=${() => setMode('login')}>Login</button>
-          <button className="cafea-btn ${mode === 'register' ? 'cafea-btn-primary' : 'cafea-btn-muted'}" onClick=${() => setMode('register')}>Register</button>
-        </div>
-        <h1 className="text-3xl md:text-5xl font-bold">Cafea Office Dashboard</h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
-          ${mode === 'login'
-            ? 'Login cu cont existent.'
-            : 'Creezi cont nou (status pending) și apoi admin-ul îl aprobă.'}
-        </p>
-
-        <form className="grid md:grid-cols-2 gap-3 mt-6" onSubmit=${submit}>
-          ${mode === 'register' ? html`<input className="cafea-input md:col-span-2" placeholder="nume" value=${name} onChange=${(e) => setName(e.target.value)} required />` : null}
-          <input className="cafea-input" type="email" placeholder="email" value=${email} onChange=${(e) => setEmail(e.target.value)} required />
-          <input className="cafea-input" type="password" placeholder="parolă" value=${password} onChange=${(e) => setPassword(e.target.value)} required />
-          ${mode === 'register' ? html`<input className="cafea-input md:col-span-2" placeholder="avatar url (opțional)" value=${avatarUrl} onChange=${(e) => setAvatarUrl(e.target.value)} />` : null}
-          <button className="cafea-btn cafea-btn-primary md:col-span-2" type="submit">
-            ${mode === 'login' ? 'Intră în aplicație' : 'Trimite cerere cont'}
-          </button>
-        </form>
-
-        <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-          Admin bootstrap login: email `alex@axxa.dev` + parola din `ADMIN_PASSWORD` pe backend.
-        </div>
-
-        ${info ? html`<p className="text-green-500 mt-3">${info}</p>` : null}
-        ${error ? html`<p className="text-red-500 mt-3">${error}</p>` : null}
-      </div>
-    </div>
-  `;
-}
-
-function StockCard({ stock, onConsume }) {
-  const badge = stock.current_stock <= 0 ? ['cafea-badge-empty', 'Epuizat'] : stock.low ? ['cafea-badge-low', 'Stoc minim'] : ['cafea-badge-ok', 'OK'];
-  return html`
-    <div className="cafea-glass p-5">
-      <div className="flex items-center justify-between mb-4"><h2 className="font-bold text-xl">Stoc Cafea</h2><span className=${`cafea-badge ${badge[0]}`}>${badge[1]}</span></div>
-      <div className="grid grid-cols-3 gap-3 text-center mb-5">
-        <div><p className="text-xs uppercase tracking-wider text-slate-500">Inițial</p><p className="text-2xl font-bold">${stock.initial_stock}</p></div>
-        <div><p className="text-xs uppercase tracking-wider text-slate-500">Curent</p><p className="text-2xl font-bold">${stock.current_stock}</p></div>
-        <div><p className="text-xs uppercase tracking-wider text-slate-500">Minim</p><p className="text-2xl font-bold">${stock.min_stock}</p></div>
-      </div>
-      <button className="cafea-btn cafea-btn-primary w-full" disabled=${stock.current_stock <= 0} onClick=${onConsume}>Consumă 1 cafea</button>
-    </div>
-  `;
-}
-
-function HistoryTable({ rows, title }) {
-  return html`
-    <div className="cafea-glass p-5">
-      <h3 className="font-bold text-lg mb-3">${title}</h3>
-      <div className="overflow-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th className="text-left py-2">Cine</th><th className="text-left py-2">Când</th><th className="text-left py-2">Delta</th></tr></thead>
-          <tbody>
-            ${rows.map((r) => html`<tr key=${r.id} className="border-b border-slate-300/10 dark:border-white/5"><td className="py-2">${r.name || r.email}</td><td className="py-2">${new Date(r.consumed_at + 'Z').toLocaleString('ro-RO')}</td><td className="py-2">-${r.delta}</td></tr>`)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function AdminPanel({ token, users, onRefresh }) {
-  const [stockForm, setStockForm] = useState({ initial_stock: 200, current_stock: 200, min_stock: 20 });
-  const [userForm, setUserForm] = useState({ email: '', password: '', name: '', role: 'user', avatar_url: '' });
-  const [msg, setMsg] = useState('');
-
-  const pendingUsers = users.filter((u) => !u.active);
-
-  const submitStock = async (e) => { e.preventDefault(); await api('/api/admin/stock/init', { method: 'POST', token, body: stockForm }); setMsg('Stoc actualizat.'); onRefresh(); };
-  const submitUser = async (e) => { e.preventDefault(); await api('/api/admin/users', { method: 'POST', token, body: userForm }); setMsg('Utilizator creat.'); setUserForm({ email: '', password: '', name: '', role: 'user', avatar_url: '' }); onRefresh(); };
-  const approveUser = async (id) => { await api(`/api/admin/users/${id}/approve`, { method: 'POST', token }); setMsg('Cont aprobat.'); onRefresh(); };
-
-  return html`
-    <div className="cafea-glass p-5 space-y-5">
-      <h3 className="font-bold text-lg">Admin Controls</h3>
-
-      ${pendingUsers.length ? html`
-        <div>
-          <h4 className="font-semibold mb-2">Cereri pending (${pendingUsers.length})</h4>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            ${pendingUsers.map((u) => html`
-              <div className="border border-amber-400/40 rounded-xl p-3" key=${u.id}>
-                <p className="font-bold">${u.name}</p>
-                <p className="text-xs text-slate-500 mb-2">${u.email}</p>
-                <button className="cafea-btn cafea-btn-primary w-full" onClick=${() => approveUser(u.id)}>Aprobă</button>
-              </div>
-            `)}
-          </div>
-        </div>
-      ` : null}
-
-      <form className="grid md:grid-cols-4 gap-3" onSubmit=${submitStock}>
-        <input className="cafea-input" type="number" min="0" placeholder="stoc inițial" value=${stockForm.initial_stock} onChange=${(e) => setStockForm({ ...stockForm, initial_stock: Number(e.target.value) })} />
-        <input className="cafea-input" type="number" min="0" placeholder="stoc curent" value=${stockForm.current_stock} onChange=${(e) => setStockForm({ ...stockForm, current_stock: Number(e.target.value) })} />
-        <input className="cafea-input" type="number" min="0" placeholder="stoc minim" value=${stockForm.min_stock} onChange=${(e) => setStockForm({ ...stockForm, min_stock: Number(e.target.value) })} />
-        <button className="cafea-btn cafea-btn-primary" type="submit">Setează stoc</button>
-      </form>
-
-      <form className="grid md:grid-cols-6 gap-3" onSubmit=${submitUser}>
-        <input className="cafea-input" placeholder="nume" value=${userForm.name} onChange=${(e) => setUserForm({ ...userForm, name: e.target.value })} required />
-        <input className="cafea-input" type="email" placeholder="email" value=${userForm.email} onChange=${(e) => setUserForm({ ...userForm, email: e.target.value })} required />
-        <input className="cafea-input" type="password" placeholder="parolă" value=${userForm.password} onChange=${(e) => setUserForm({ ...userForm, password: e.target.value })} required />
-        <input className="cafea-input" placeholder="avatar url" value=${userForm.avatar_url} onChange=${(e) => setUserForm({ ...userForm, avatar_url: e.target.value })} />
-        <select className="cafea-input" value=${userForm.role} onChange=${(e) => setUserForm({ ...userForm, role: e.target.value })}><option value="user">user</option><option value="admin">admin</option></select>
-        <button className="cafea-btn cafea-btn-primary" type="submit">Adaugă user</button>
-      </form>
-
-      <div className="flex gap-3 items-center flex-wrap">
-        <button className="cafea-btn cafea-btn-muted" onClick=${() => window.open(`${API_BASE}/api/admin/export.csv`, '_blank')}>Export CSV</button>
-        <button className="cafea-btn cafea-btn-muted" onClick=${onRefresh}>Refresh</button>
-        ${msg ? html`<span className="text-green-500 text-sm">${msg}</span>` : null}
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        ${users.map((u) => html`
-          <div className="border border-slate-300/25 dark:border-white/10 rounded-xl p-3" key=${u.id}>
-            <div className="flex items-center gap-3"><img src=${u.avatar_url || 'https://placehold.co/64x64?text=U'} className="w-10 h-10 rounded-full object-cover" /><div><p className="font-bold">${u.name}</p><p className="text-xs text-slate-500">${u.email}</p></div></div>
-            <p className="text-xs mt-2">rol: ${u.role} • activ: ${u.active ? 'da' : 'pending'}</p>
-          </div>
-        `)}
-      </div>
-    </div>
-  `;
-}
-
-function App() {
-  const { token, user, login, logout } = useSession();
-  const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
-  const [stock, setStock] = useState({ initial_stock: 0, current_stock: 0, min_stock: 0, low: false });
-  const [rows, setRows] = useState([]);
-  const [users, setUsers] = useState([]);
-  const isAdmin = user?.role === ROLE_ADMIN;
-
-  const refresh = async () => {
-    if (!token) return;
-    try {
-      const [s, h] = await Promise.all([
-        api('/api/coffee/status', { token }),
-        api(`/api/coffee/history?mine=${isAdmin ? '0' : '1'}&limit=100`, { token })
-      ]);
-      setStock(s.stock);
-      setRows(h.rows || []);
-      if (isAdmin) {
-        const u = await api('/api/admin/users', { token });
-        setUsers(u.users || []);
-      }
-    } catch (e) {
-      setError(e.message);
-    }
-  };
-
-  useEffect(() => { refresh(); }, [token, user?.role]);
-
-  if (!user) {
-    return html`<${AuthCard}
-      error=${error}
-      info=${info}
-      onLogin=${async (email, pass) => {
-        try {
-          setError('');
-          setInfo('');
-          await login(email, pass);
-        } catch (e) {
-          setError(e.message);
-        }
-      }}
-      onRegister=${async (payload) => {
-        try {
-          setError('');
-          setInfo('');
-          await api('/api/auth/register', { method: 'POST', body: payload });
-          setInfo('Cont creat. Așteaptă aprobarea admin înainte de login.');
-        } catch (e) {
-          setError(e.message);
-        }
-      }}
-    />`;
+  async function api(path, opts = {}) {
+    const method = opts.method || 'GET';
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.token) headers.Authorization = `Bearer ${state.token}`;
+    const res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
   }
 
-  return html`
-    <main className="cafea-shell space-y-4">
-      <header className="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-3"><img src=${user.avatar_url || 'https://placehold.co/72x72?text=U'} className="w-12 h-12 rounded-full object-cover" /><div><h1 className="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1><p className="text-slate-600 dark:text-slate-300">${user.name} • ${user.role}</p></div></div>
-        <div className="flex gap-2"><button className="cafea-btn cafea-btn-muted" onClick=${refresh}>Refresh</button><button className="cafea-btn cafea-btn-muted" onClick=${logout}>Logout</button></div>
-      </header>
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
-      ${error ? html`<div className="cafea-glass p-3 text-red-500">${error}</div>` : null}
+  function renderAuth(mode = 'login') {
+    root.innerHTML = `
+      <div class="cafea-shell">
+        <div class="max-w-3xl mx-auto cafea-glass p-6 md:p-8">
+          <div class="flex gap-2 mb-5">
+            <button id="tab-login" class="cafea-btn ${mode === 'login' ? 'cafea-btn-primary' : 'cafea-btn-muted'}">Login</button>
+            <button id="tab-register" class="cafea-btn ${mode === 'register' ? 'cafea-btn-primary' : 'cafea-btn-muted'}">Register</button>
+          </div>
+          <h1 class="text-3xl md:text-5xl font-bold">Cafea Office Dashboard</h1>
+          <p class="mt-2 text-slate-600 dark:text-slate-300">${mode === 'login' ? 'Login cu cont existent.' : 'Creezi cont nou (pending), apoi admin aprobă.'}</p>
+          <form id="auth-form" class="grid md:grid-cols-2 gap-3 mt-6">
+            ${mode === 'register' ? '<input id="name" class="cafea-input md:col-span-2" placeholder="nume" required />' : ''}
+            <input id="email" type="email" class="cafea-input" placeholder="email" required />
+            <input id="password" type="password" class="cafea-input" placeholder="parolă" required />
+            ${mode === 'register' ? '<input id="avatar_url" class="cafea-input md:col-span-2" placeholder="avatar url (opțional)" />' : ''}
+            <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">${mode === 'login' ? 'Intră în aplicație' : 'Trimite cerere cont'}</button>
+          </form>
+          <div class="mt-4 text-sm text-slate-500 dark:text-slate-400">Admin email: alexa@axxa.dev. Parola este cea configurată pe backend.</div>
+          ${state.info ? `<p class="text-green-500 mt-3">${esc(state.info)}</p>` : ''}
+          ${state.error ? `<p class="text-red-500 mt-3">${esc(state.error)}</p>` : ''}
+        </div>
+      </div>
+    `;
 
-      <section className="grid md:grid-cols-2 gap-4">
-        <${StockCard} stock=${stock} onConsume=${async () => {
+    document.getElementById('tab-login').onclick = () => {
+      state.error = '';
+      state.info = '';
+      renderAuth('login');
+    };
+    document.getElementById('tab-register').onclick = () => {
+      state.error = '';
+      state.info = '';
+      renderAuth('register');
+    };
+
+    document.getElementById('auth-form').onsubmit = async (e) => {
+      e.preventDefault();
+      state.error = '';
+      state.info = '';
+      try {
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const password = document.getElementById('password').value;
+        if (mode === 'login') {
+          const d = await api('/api/auth/login', { method: 'POST', body: { email, password } });
+          state.token = d.token;
+          localStorage.setItem('cafea_token', d.token);
+          await loadMe();
+          await loadDashboard();
+          renderApp();
+          return;
+        }
+        const name = document.getElementById('name').value.trim();
+        const avatar = (document.getElementById('avatar_url')?.value || '').trim();
+        await api('/api/auth/register', { method: 'POST', body: { email, password, name, avatar_url: avatar } });
+        state.info = 'Cont creat. Așteaptă aprobarea admin înainte de login.';
+        renderAuth('login');
+      } catch (err) {
+        state.error = err.message;
+        renderAuth(mode);
+      }
+    };
+  }
+
+  function stockBadge() {
+    if (!state.stock) return '<span class="cafea-badge cafea-badge-low">N/A</span>';
+    if (state.stock.current_stock <= 0) return '<span class="cafea-badge cafea-badge-empty">Epuizat</span>';
+    if (state.stock.low) return '<span class="cafea-badge cafea-badge-low">Stoc minim</span>';
+    return '<span class="cafea-badge cafea-badge-ok">OK</span>';
+  }
+
+  function renderApp() {
+    const isAdmin = state.user?.role === ROLE_ADMIN;
+    const rows = state.rows
+      .map((r) => `<tr class="border-b border-slate-300/10 dark:border-white/5"><td class="py-2">${esc(r.name || r.email)}</td><td class="py-2">${esc(new Date(r.consumed_at + 'Z').toLocaleString('ro-RO'))}</td><td class="py-2">-${esc(r.delta)}</td></tr>`)
+      .join('');
+
+    const pending = (state.users || []).filter((u) => !u.active);
+    const pendingHtml = pending.map((u) => `
+      <div class="border border-amber-400/40 rounded-xl p-3">
+        <p class="font-bold">${esc(u.name)}</p>
+        <p class="text-xs text-slate-500 mb-2">${esc(u.email)}</p>
+        <button class="cafea-btn cafea-btn-primary w-full btn-approve" data-id="${u.id}">Aprobă</button>
+      </div>
+    `).join('');
+
+    root.innerHTML = `
+      <main class="cafea-shell space-y-4">
+        <header class="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-3">
+            <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-12 h-12 rounded-full object-cover" />
+            <div>
+              <h1 class="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
+              <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
+            <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+          </div>
+        </header>
+
+        ${state.error ? `<div class="cafea-glass p-3 text-red-500">${esc(state.error)}</div>` : ''}
+
+        <section class="grid md:grid-cols-2 gap-4">
+          <div class="cafea-glass p-5">
+            <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-xl">Stoc Cafea</h2>${stockBadge()}</div>
+            <div class="grid grid-cols-3 gap-3 text-center mb-5">
+              <div><p class="text-xs uppercase tracking-wider text-slate-500">Inițial</p><p class="text-2xl font-bold">${esc(state.stock?.initial_stock ?? 0)}</p></div>
+              <div><p class="text-xs uppercase tracking-wider text-slate-500">Curent</p><p class="text-2xl font-bold">${esc(state.stock?.current_stock ?? 0)}</p></div>
+              <div><p class="text-xs uppercase tracking-wider text-slate-500">Minim</p><p class="text-2xl font-bold">${esc(state.stock?.min_stock ?? 0)}</p></div>
+            </div>
+            <button id="btn-consume" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea</button>
+          </div>
+
+          <div class="cafea-glass p-5">
+            <h3 class="font-bold text-lg mb-3">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
+            <div class="overflow-auto"><table class="w-full text-sm"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th></tr></thead><tbody>${rows}</tbody></table></div>
+          </div>
+        </section>
+
+        ${isAdmin ? `
+          <section class="cafea-glass p-5 space-y-5">
+            <h3 class="font-bold text-lg">Admin Controls</h3>
+            ${pending.length ? `<div><h4 class="font-semibold mb-2">Cereri pending (${pending.length})</h4><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${pendingHtml}</div></div>` : ''}
+            <div class="flex gap-2 flex-wrap">
+              <button id="btn-export" class="cafea-btn cafea-btn-muted">Export CSV</button>
+            </div>
+          </section>
+        ` : ''}
+      </main>
+    `;
+
+    document.getElementById('btn-logout').onclick = () => {
+      localStorage.removeItem('cafea_token');
+      state.token = '';
+      state.user = null;
+      state.error = '';
+      state.info = '';
+      renderAuth('login');
+    };
+
+    document.getElementById('btn-refresh').onclick = async () => {
+      await loadDashboard();
+      renderApp();
+    };
+
+    document.getElementById('btn-consume').onclick = async () => {
+      try {
+        state.error = '';
+        await api('/api/coffee/consume', { method: 'POST' });
+        await loadDashboard();
+      } catch (err) {
+        state.error = err.message;
+      }
+      renderApp();
+    };
+
+    if (isAdmin) {
+      const exportBtn = document.getElementById('btn-export');
+      if (exportBtn) exportBtn.onclick = () => window.open(`${API_BASE}/api/admin/export.csv`, '_blank');
+
+      document.querySelectorAll('.btn-approve').forEach((btn) => {
+        btn.onclick = async () => {
           try {
-            setError('');
-            await api('/api/coffee/consume', { method: 'POST', token });
-            await refresh();
-          } catch (e) {
-            setError(e.message);
+            await api(`/api/admin/users/${btn.dataset.id}/approve`, { method: 'POST' });
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
           }
-        }} />
-        <${HistoryTable} rows=${rows} title=${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'} />
-      </section>
+          renderApp();
+        };
+      });
+    }
+  }
 
-      ${isAdmin ? html`<${AdminPanel} token=${token} users=${users} onRefresh=${refresh} />` : null}
-    </main>
-  `;
-}
+  async function loadMe() {
+    const d = await api('/api/auth/me');
+    state.user = d.user;
+  }
 
-createRoot(document.getElementById('root')).render(html`<${App} />`);
+  async function loadDashboard() {
+    if (!state.user) return;
+    const isAdmin = state.user.role === ROLE_ADMIN;
+    const [s, h] = await Promise.all([
+      api('/api/coffee/status'),
+      api(`/api/coffee/history?mine=${isAdmin ? '0' : '1'}&limit=100`)
+    ]);
+    state.stock = s.stock;
+    state.rows = h.rows || [];
+    if (isAdmin) {
+      const u = await api('/api/admin/users');
+      state.users = u.users || [];
+    }
+  }
+
+  async function boot() {
+    if (!root) return;
+    if (!state.token) {
+      renderAuth('login');
+      return;
+    }
+
+    try {
+      await loadMe();
+      await loadDashboard();
+      renderApp();
+    } catch (err) {
+      localStorage.removeItem('cafea_token');
+      state.token = '';
+      state.user = null;
+      state.error = err.message;
+      renderAuth('login');
+    }
+  }
+
+  boot();
+})();
