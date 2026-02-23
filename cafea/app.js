@@ -216,6 +216,28 @@
       const key = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
       dayCount[key] = (dayCount[key] || 0) + 1;
     }
+    const perRowStats = {};
+    if (isAdmin) {
+      const maxByUser = {};
+      for (const u of state.users || []) {
+        maxByUser[String(u.id)] = u.max_coffees == null ? null : Number(u.max_coffees);
+      }
+      const asc = [...(state.rows || [])].sort((a, b) => {
+        const ta = new Date(`${a.consumed_at}Z`).getTime();
+        const tb = new Date(`${b.consumed_at}Z`).getTime();
+        if (ta !== tb) return ta - tb;
+        return Number(a.id) - Number(b.id);
+      });
+      const consumedMap = {};
+      for (const r of asc) {
+        const uid = String(r.user_id);
+        consumedMap[uid] = (consumedMap[uid] || 0) + Number(r.delta || 0);
+        const consumed = consumedMap[uid];
+        const max = maxByUser[uid];
+        const remaining = max == null ? null : Math.max(0, Number(max) - consumed);
+        perRowStats[String(r.id)] = { consumed, remaining };
+      }
+    }
     return state.rows.map((r) => {
       const dt = new Date(`${r.consumed_at}Z`);
       const dateKey = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
@@ -249,8 +271,8 @@
             ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}">Delete</button>` : ''}
           </div>
         </td>
-        ${isAdmin ? `<td class="py-2">${esc(state.userConsumption?.[String(r.user_id)]?.consumed_count ?? '-')}</td>` : ''}
-        ${isAdmin ? `<td class="py-2">${esc(state.userConsumption?.[String(r.user_id)]?.remaining == null ? 'nelimitat' : state.userConsumption[String(r.user_id)].remaining)}</td>` : ''}
+        ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.consumed ?? '-')}</td>` : ''}
+        ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.remaining == null ? 'nelimitat' : perRowStats[String(r.id)].remaining)}</td>` : ''}
       </tr>
     `;
     }).join('');

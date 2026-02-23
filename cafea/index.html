@@ -389,10 +389,10 @@
     </style>
     <script>
       window.CAFEA_API_BASE = window.CAFEA_API_BASE || "/api";
-      if (window.location.hostname === "cafe.axxa.dev" || window.location.hostname === "cafea.axxa.dev") {
+      if (["cafe.axxa.dev", "cafea.axxa.dev", "zeul.go.ro"].includes(window.location.hostname)) {
         document.body.classList.add("cafe-app-only");
       }
     </script>
-    <script src="/cafea/app.js?v=28"></script>
+    <script src="/cafea/app.js?v=29"></script>
 </body>
 </html>
