@@ -8,6 +8,24 @@ export const adminRouter = Router();
 
 adminRouter.use(requireAuth, requireAdmin);
 
+function adjustCurrentStock(delta, updatedBy) {
+  const n = Number(delta);
+  if (!Number.isFinite(n) || n === 0) return;
+  if (n > 0) {
+    run(
+      'UPDATE stock_settings SET current_stock = current_stock + ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+      n,
+      updatedBy
+    );
+    return;
+  }
+  run(
+    'UPDATE stock_settings SET current_stock = MAX(0, current_stock - ?), updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+    Math.abs(n),
+    updatedBy
+  );
+}
+
 adminRouter.post('/stock/init', (req, res) => {
   const { initial_stock, current_stock, min_stock } = req.body || {};
   const initial = Number(initial_stock);
@@ -148,18 +166,25 @@ adminRouter.delete('/history', (req, res) => {
   if (userId != null && !Number.isInteger(userId)) return res.status(400).json({ error: 'Invalid user_id' });
 
   if (userId == null) {
+    const agg = one('SELECT COALESCE(SUM(delta), 0) AS sum_delta FROM coffee_logs');
     run('DELETE FROM coffee_logs');
+    adjustCurrentStock(Number(agg?.sum_delta || 0), req.user.id);
     return res.json({ ok: true, deleted: 'all' });
   }
 
+  const agg = one('SELECT COALESCE(SUM(delta), 0) AS sum_delta FROM coffee_logs WHERE user_id = ?', userId);
   run('DELETE FROM coffee_logs WHERE user_id = ?', userId);
+  adjustCurrentStock(Number(agg?.sum_delta || 0), req.user.id);
   return res.json({ ok: true, deleted: `user:${userId}` });
 });
 
 adminRouter.delete('/history/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+  const existing = one('SELECT delta FROM coffee_logs WHERE id = ?', id);
+  if (!existing) return res.status(404).json({ error: 'Log not found' });
   run('DELETE FROM coffee_logs WHERE id = ?', id);
+  adjustCurrentStock(Number(existing.delta || 0), req.user.id);
   return res.json({ ok: true, deleted: `log:${id}` });
 });
 
@@ -185,7 +210,8 @@ adminRouter.post('/consume/:id', (req, res) => {
   if (!target.active) return res.status(400).json({ error: 'User pending approval' });
   const consumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', id);
   const consumedCount = Number(consumedRow?.consumed_count || 0);
-  if (target.max_coffees != null && consumedCount >= Number(target.max_coffees)) {
+  const maxAllowed = target.max_coffees == null ? null : Number(target.max_coffees);
+  if (Number.isInteger(maxAllowed) && maxAllowed >= 0 && consumedCount >= maxAllowed) {
     return res.status(409).json({ error: 'Limita maximă de cafele a fost atinsă pentru utilizator' });
   }
 
@@ -217,7 +243,7 @@ adminRouter.get('/users/:id/stats', (req, res) => {
   const consumedCount = Number(agg?.consumed_count || 0);
   const maxCoffees = user.max_coffees == null ? null : Number(user.max_coffees);
   const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
-  const rows = many('SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY consumed_at DESC LIMIT 200', id);
+  const rows = many('SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY datetime(consumed_at) DESC, id DESC LIMIT 200', id);
 
   res.json({
     user,
@@ -261,6 +287,7 @@ adminRouter.post('/users/:id/history', (req, res) => {
   } else {
     run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, ?)', id, nextDelta);
   }
+  adjustCurrentStock(-nextDelta, req.user.id);
   return res.json({ ok: true });
 });
 
@@ -274,8 +301,10 @@ adminRouter.put('/history/:id', (req, res) => {
   const nextDelta = delta == null ? existing.delta : Number(delta);
   if (!Number.isInteger(nextDelta) || nextDelta <= 0) return res.status(400).json({ error: 'Invalid delta' });
   const nextConsumedAt = consumed_at == null || consumed_at === '' ? existing.consumed_at : String(consumed_at);
+  const deltaDiff = Number(nextDelta) - Number(existing.delta || 0);
 
   run('UPDATE coffee_logs SET consumed_at = ?, delta = ? WHERE id = ?', nextConsumedAt, nextDelta, id);
+  adjustCurrentStock(-deltaDiff, req.user.id);
   return res.json({ ok: true });
 });
 

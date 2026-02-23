@@ -29,7 +29,8 @@ coffeeRouter.post('/consume', (req, res) => {
   const me = one('SELECT id, max_coffees FROM users WHERE id = ?', req.user.id);
   const consumedRow = one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', req.user.id);
   const consumedCount = Number(consumedRow?.consumed_count || 0);
-  if (me?.max_coffees != null && consumedCount >= Number(me.max_coffees)) {
+  const maxAllowed = me?.max_coffees == null ? null : Number(me.max_coffees);
+  if (Number.isInteger(maxAllowed) && maxAllowed >= 0 && consumedCount >= maxAllowed) {
     return res.status(409).json({ error: 'Ai atins limita maximă de cafele' });
   }
 
@@ -82,7 +83,7 @@ coffeeRouter.get('/history', (req, res) => {
     rows = many(
       `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
        FROM coffee_logs l JOIN users u ON u.id = l.user_id
-       WHERE l.user_id = ? ORDER BY l.consumed_at DESC LIMIT ?`,
+       WHERE l.user_id = ? ORDER BY datetime(l.consumed_at) DESC, l.id DESC LIMIT ?`,
       req.user.id,
       limit
     );
@@ -90,7 +91,7 @@ coffeeRouter.get('/history', (req, res) => {
     rows = many(
       `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
        FROM coffee_logs l JOIN users u ON u.id = l.user_id
-       ORDER BY l.consumed_at DESC LIMIT ?`,
+       ORDER BY datetime(l.consumed_at) DESC, l.id DESC LIMIT ?`,
       limit
     );
   }
@@ -115,14 +116,14 @@ coffeeRouter.get('/snapshot', (req, res) => {
     rows = many(
       `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
        FROM coffee_logs l JOIN users u ON u.id = l.user_id
-       ORDER BY l.consumed_at DESC LIMIT ?`,
+       ORDER BY datetime(l.consumed_at) DESC, l.id DESC LIMIT ?`,
       limit
     );
   } else {
     rows = many(
       `SELECT l.id, l.delta, l.consumed_at, u.id as user_id, u.name, u.email, u.avatar_url
        FROM coffee_logs l JOIN users u ON u.id = l.user_id
-       WHERE l.user_id = ? ORDER BY l.consumed_at DESC LIMIT ?`,
+       WHERE l.user_id = ? ORDER BY datetime(l.consumed_at) DESC, l.id DESC LIMIT ?`,
       req.user.id,
       limit
     );
@@ -132,9 +133,25 @@ coffeeRouter.get('/snapshot', (req, res) => {
   let selectedUserId = null;
   let selectedUserStats = null;
   let selectedUserHistory = [];
+  let userConsumption = {};
 
   if (isAdmin) {
     users = many('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users ORDER BY created_at DESC');
+    const aggregate = many(
+      `SELECT u.id AS user_id, COALESCE(SUM(l.delta),0) AS consumed_count
+       FROM users u
+       LEFT JOIN coffee_logs l ON l.user_id = u.id
+       GROUP BY u.id`
+    );
+    userConsumption = Object.fromEntries(
+      aggregate.map((a) => {
+        const user = users.find((u) => u.id === a.user_id);
+        const consumedCount = Number(a?.consumed_count || 0);
+        const maxCoffees = user?.max_coffees == null ? null : Number(user.max_coffees);
+        const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
+        return [String(a.user_id), { consumed_count: consumedCount, remaining }];
+      })
+    );
     const selectedExists = Number.isInteger(selectedRequested) && users.some((u) => u.id === selectedRequested);
     selectedUserId = selectedExists ? selectedRequested : (users[0]?.id || null);
 
@@ -155,7 +172,7 @@ coffeeRouter.get('/snapshot', (req, res) => {
           last_consumed_at: agg?.last_consumed_at || null
         };
         selectedUserHistory = many(
-          'SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY consumed_at DESC LIMIT 200',
+          'SELECT id, user_id, delta, consumed_at FROM coffee_logs WHERE user_id = ? ORDER BY datetime(consumed_at) DESC, id DESC LIMIT 200',
           selectedUserId
         );
       }
@@ -173,6 +190,7 @@ coffeeRouter.get('/snapshot', (req, res) => {
     user: req.user,
     rows,
     users,
+    user_consumption: userConsumption,
     selected_user_id: selectedUserId,
     selected_user_stats: selectedUserStats,
     selected_user_history: selectedUserHistory
