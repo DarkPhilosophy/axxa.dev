@@ -210,13 +210,22 @@
       `).join('');
     }
     let lastDateKey = '';
+    const dayCount = {};
+    for (const r of state.rows || []) {
+      const dt = new Date(`${r.consumed_at}Z`);
+      const key = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
+      dayCount[key] = (dayCount[key] || 0) + 1;
+    }
     return state.rows.map((r) => {
       const dt = new Date(`${r.consumed_at}Z`);
       const dateKey = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
       const dateHeader = dateKey !== lastDateKey
-        ? `<tr class="border-b border-slate-300/20 dark:border-white/10">
-             <td class="py-2 font-bold text-emerald-400" colspan="${isAdmin ? 5 : 3}">
-               ${esc(dateKey)}
+        ? `<tr class="border-b border-emerald-400/30 dark:border-emerald-400/40 bg-emerald-500/10">
+             <td class="py-2 px-2 font-bold text-emerald-300" colspan="${isAdmin ? 5 : 3}">
+               <div class="flex items-center justify-between gap-3">
+                 <span>${esc(dateKey)}</span>
+                 <span class="text-xs text-emerald-200/90">${esc(dayCount[dateKey] || 0)} înregistrări</span>
+               </div>
              </td>
            </tr>`
         : '';

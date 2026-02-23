@@ -76,6 +76,16 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #00ff88;
         }
+        /* app-only mode for cafe.axxa.dev */
+        body.cafe-app-only #main-nav,
+        body.cafe-app-only #nav-reveal-hint,
+        body.cafe-app-only #mobile-menu,
+        body.cafe-app-only footer {
+            display: none !important;
+        }
+        body.cafe-app-only #cafea {
+            padding-top: 1rem !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-slate-800 dark:bg-black dark:text-slate-200 transition-colors duration-300 overflow-x-hidden selection:bg-primary selection:text-black">
@@ -379,7 +389,10 @@
     </style>
     <script>
       window.CAFEA_API_BASE = window.CAFEA_API_BASE || "/api";
+      if (window.location.hostname === "cafe.axxa.dev") {
+        document.body.classList.add("cafe-app-only");
+      }
     </script>
-    <script src="/cafea/app.js?v=26"></script>
+    <script src="/cafea/app.js?v=27"></script>
 </body>
 </html>
