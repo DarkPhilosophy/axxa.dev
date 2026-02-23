@@ -209,7 +209,20 @@
         </tr>
       `).join('');
     }
-    return state.rows.map((r) => `
+    let lastDateKey = '';
+    return state.rows.map((r) => {
+      const dt = new Date(`${r.consumed_at}Z`);
+      const dateKey = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
+      const dateHeader = dateKey !== lastDateKey
+        ? `<tr class="border-b border-slate-300/20 dark:border-white/10">
+             <td class="py-2 font-bold text-emerald-400" colspan="${isAdmin ? 5 : 3}">
+               ${esc(dateKey)}
+             </td>
+           </tr>`
+        : '';
+      lastDateKey = dateKey;
+      return `
+      ${dateHeader}
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-2">
           <div class="flex items-center gap-2">
@@ -230,7 +243,8 @@
         ${isAdmin ? `<td class="py-2">${esc(state.userConsumption?.[String(r.user_id)]?.consumed_count ?? '-')}</td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(state.userConsumption?.[String(r.user_id)]?.remaining == null ? 'nelimitat' : state.userConsumption[String(r.user_id)].remaining)}</td>` : ''}
       </tr>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderUserTab(isAdmin) {
