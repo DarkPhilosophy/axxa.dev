@@ -50,14 +50,7 @@
         <p id="updated">Updated: -</p>
         <p id="reason" class="reason">Reason: -</p>
       </article>
-      <article class="card">
-        <h2>ATVPS</h2>
-        <p id="a_country"></p><p id="a_mode"></p><p id="a_sqld"></p><p id="a_agent"></p><p id="a_port"></p><p id="a_ns"></p><p id="a_uptime"></p>
-      </article>
-      <article class="card">
-        <h2>GoogleVPS</h2>
-        <p id="c_country"></p><p id="c_reach"></p><p id="c_mode"></p><p id="c_sqld"></p><p id="c_agent"></p><p id="c_port"></p><p id="c_ns"></p><p id="c_uptime"></p>
-      </article>
+      <div id="nodesGrid" class="grid" style="grid-column: 1 / -1;"></div>
     </section>
 
     <section class="card chart-wrap">
@@ -106,30 +99,47 @@
       }
     }
 
+    function renderNodes(nodes){
+      const host = document.getElementById('nodesGrid');
+      if(!host) return;
+      host.innerHTML='';
+      const entries = Object.entries(nodes || {});
+      if(!entries.length){
+        const empty=document.createElement('article');
+        empty.className='card';
+        empty.innerHTML='<h2>Nodes</h2><p>No node data available.</p>';
+        host.appendChild(empty);
+        return;
+      }
+      for(const [name, n] of entries){
+        const card=document.createElement('article');
+        card.className='card';
+        const reach = (typeof n.reachable === 'boolean') ? String(n.reachable) : 'n/a';
+        card.innerHTML = `
+          <h2>${name}</h2>
+          <p>Country: ${n.country || 'Unknown'}</p>
+          <p>Reachable: ${reach}</p>
+          <p>Mode: ${n.mode || 'unknown'}</p>
+          <p>sqld: ${n.sqld_active || 'unknown'}</p>
+          <p>agent: ${n.agent_active || 'unknown'}</p>
+          <p>19001: ${n.primary_port_19001 ? 'open (primary)' : 'closed'}</p>
+          <p>Namespaces: ${Number(n.namespaces || 0)}</p>
+          <p>Uptime: ${fmt(n.sqld_uptime_sec || 0)}</p>
+        `;
+        host.appendChild(card);
+      }
+    }
+
     async function loadStatus(){
       try{
         const j=await fetchJsonWithCache(STATUS_URL, KEY_STATUS);
-        const a=j.nodes.ATVPS, c=j.nodes.GoogleVPS || j.nodes.CloudVPS;
+        const nodes = j.nodes || {};
         const b=document.getElementById('overall');
         b.textContent=String(j.overall).toUpperCase();b.className='badge '+j.overall;
         document.getElementById('primary').textContent='Primary: '+j.primary_node;
         document.getElementById('updated').textContent='Updated: '+j.updated_at_utc;
         document.getElementById('reason').textContent='Reason: '+(j.health_reason||'n/a');
-        document.getElementById('a_country').textContent='Country: '+(a.country||'Unknown');
-        document.getElementById('a_mode').textContent='Mode: '+a.mode;
-        document.getElementById('a_sqld').textContent='sqld: '+a.sqld_active;
-        document.getElementById('a_agent').textContent='agent: '+a.agent_active;
-        document.getElementById('a_port').textContent='19001: '+(a.primary_port_19001?'open (primary)':'closed');
-        document.getElementById('a_ns').textContent='Namespaces: '+a.namespaces;
-        document.getElementById('a_uptime').textContent='Uptime: '+fmt(a.sqld_uptime_sec);
-        document.getElementById('c_country').textContent='Country: '+(c.country||'Unknown');
-        document.getElementById('c_reach').textContent='Reachable: '+c.reachable;
-        document.getElementById('c_mode').textContent='Mode: '+c.mode;
-        document.getElementById('c_sqld').textContent='sqld: '+c.sqld_active;
-        document.getElementById('c_agent').textContent='agent: '+c.agent_active;
-        document.getElementById('c_port').textContent='19001: '+(c.primary_port_19001?'open (primary)':'closed');
-        document.getElementById('c_ns').textContent='Namespaces: '+c.namespaces;
-        document.getElementById('c_uptime').textContent='Uptime: '+fmt(c.sqld_uptime_sec);
+        renderNodes(nodes);
       }catch(e){const b=document.getElementById('overall');b.textContent='UNAVAILABLE';b.className='badge danger';document.getElementById('reason').textContent='Reason: status feed unavailable';}
     }
 
