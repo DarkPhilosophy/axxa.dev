@@ -11,6 +11,8 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1rem 1rem 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
@@ -24,6 +26,10 @@ body {
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .dark .cafea-glass {
@@ -59,11 +65,14 @@ body {
 
 .cafea-input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border-radius: 0.75rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.9);
   color: #0f172a;
   padding: 0.6rem 0.8rem;
+  box-sizing: border-box;
 }
 
 .dark .cafea-input {
@@ -91,6 +100,27 @@ body {
 .cafea-badge-empty {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+/* Prevent mixed-width sections caused by overflowing children */
+#root .grid > *,
+#root .flex > * {
+  min-width: 0;
+}
+
+#root .overflow-auto {
+  width: 100%;
+  max-width: 100%;
+}
+
+#root table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#root th,
+#root td {
+  word-break: break-word;
 }
 
 #root.is-busy {
