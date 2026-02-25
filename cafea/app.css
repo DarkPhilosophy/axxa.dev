@@ -172,6 +172,18 @@ body {
 @media (max-width: 767px) {
   .cafea-shell {
     padding: 0.75rem;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cafea-shell > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .cafea-glass {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .cafea-inline-form {
