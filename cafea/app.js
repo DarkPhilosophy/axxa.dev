@@ -208,7 +208,7 @@
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
           <p id="stock-value-${field}" class="text-2xl font-bold flex justify-center">${shownValue}</p>
           ${busy ? `<p class="text-xs mt-1 text-slate-500 flex justify-center">${skeleton('180px', '12px')}</p>` : extraHtml}
-          <input id="stock-input-${field}" class="cafea-input hidden text-center" style="width:160px;max-width:160px;margin:8px auto 0 auto;" type="number" min="0" value="${esc(value)}" />
+          <input id="stock-input-${field}" class="cafea-input cafea-w-md cafea-edit-input hidden" type="number" min="0" value="${esc(value)}" />
         </div>
         ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
       </div>
@@ -303,8 +303,8 @@
     const selectedHistoryRows = (state.selectedUserHistory || []).map((r) => `
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-1">${esc(r.id)}</td>
-        <td class="py-1"><input class="cafea-input input-log-datetime" style="max-width:220px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
-        <td class="py-1"><input class="cafea-input input-log-delta" style="max-width:90px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
+        <td class="py-1"><input class="cafea-input cafea-w-lg input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
+        <td class="py-1"><input class="cafea-input cafea-w-sm input-log-delta" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
         <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
       </tr>
     `).join('');
@@ -344,16 +344,16 @@
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2 relative">
                   Maxim:
                   <span id="max-value-inline" class="font-semibold">${esc(maxLabel)}</span>
-                  <input id="max-input-inline" class="cafea-input hidden" type="number" min="0" placeholder="nelimitat" value="${esc(userStats?.max_coffees ?? '')}" style="max-width:140px;display:none;margin-top:6px;" />
+                  <input id="max-input-inline" class="cafea-input cafea-w-md hidden" type="number" min="0" placeholder="nelimitat" value="${esc(userStats?.max_coffees ?? '')}" style="display:none;margin-top:6px;" />
                   <button id="btn-edit-max-inline" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>
                 </div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Rămase: <span class="font-semibold">${esc(remainingLabel)}</span></div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Ultima: <span class="font-semibold">${esc(userStats?.last_consumed_at || '-')}</span></div>
               </div>
               <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
-              <form id="form-add-history-user" class="flex items-center gap-2 mt-3 flex-nowrap">
-                <input id="input-add-delta" class="cafea-input" type="number" min="1" value="1" style="max-width:95px;" />
-                <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="max-width:260px;" />
+              <form id="form-add-history-user" class="cafea-inline-form">
+                <input id="input-add-delta" class="cafea-input cafea-w-sm" type="number" min="1" value="1" />
+                <input id="input-add-datetime" class="cafea-input cafea-w-lg" type="datetime-local" />
                 <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
               </form>
               <div class="mt-3 overflow-auto">

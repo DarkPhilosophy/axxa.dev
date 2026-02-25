@@ -66,6 +66,25 @@ body {
   padding: 0.6rem 0.8rem;
 }
 
+/* Standard control widths */
+.cafea-w-sm { width: 96px; max-width: 96px; }
+.cafea-w-md { width: 160px; max-width: 160px; }
+.cafea-w-lg { width: 260px; max-width: 260px; }
+.cafea-edit-input { margin: 8px auto 0; text-align: center; }
+
+.cafea-inline-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: nowrap;
+}
+
+.cafea-inline-form .cafea-input,
+.cafea-inline-form .cafea-btn {
+  min-height: 40px;
+}
+
 .dark .cafea-input {
   background: rgba(15, 23, 42, 0.7);
   color: #e2e8f0;
@@ -148,4 +167,23 @@ body {
 @keyframes cafeaShimmer {
   0% { background-position: 100% 0; }
   100% { background-position: 0 0; }
+}
+
+@media (max-width: 767px) {
+  .cafea-shell {
+    padding: 0.75rem;
+  }
+
+  .cafea-inline-form {
+    flex-wrap: wrap;
+  }
+
+  .cafea-inline-form .cafea-input,
+  .cafea-inline-form .cafea-btn,
+  .cafea-w-sm,
+  .cafea-w-md,
+  .cafea-w-lg {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
