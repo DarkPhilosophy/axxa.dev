@@ -34,21 +34,6 @@
     --code-font: "Consolas";
 }
 
-html {
-    -webkit-text-size-adjust: 100%;
-}
-
-/* Mobile viewport consistency across Chrome/Firefox */
-.min-h-screen {
-    min-height: 100svh;
-}
-
-@supports (height: 100dvh) {
-    .min-h-screen {
-        min-height: 100dvh;
-    }
-}
-
 body {
     font-family: var(--font), sans-serif;
 }
@@ -179,16 +164,7 @@ samp {
         width: 100%;
     }
     body {
-        overflow-x: clip;
-    }
-    html {
-        overflow-x: clip;
-    }
-    #page-content {
-        overflow-x: clip;
-    }
-    #article-content {
-        height: min(90vh, 90dvh);
+        overflow-x: hidden;
     }
 }
 
