@@ -164,7 +164,7 @@ samp {
         width: 100%;
     }
     body {
-        overflow-x: hidden;
+        overflow-x: auto;
     }
 }
 
