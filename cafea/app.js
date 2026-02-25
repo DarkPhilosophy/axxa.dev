@@ -107,6 +107,23 @@
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function parseConsumedAt(value) {
+    if (!value) return null;
+    const raw = String(value).trim();
+    let d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) return d;
+    // PostgreSQL text-like fallback: "YYYY-MM-DD HH:mm:ss+00"
+    d = new Date(raw.replace(' ', 'T'));
+    if (!Number.isNaN(d.getTime())) return d;
+    return null;
+  }
+
+  function fmtConsumedAt(value) {
+    const d = parseConsumedAt(value);
+    if (!d) return 'Data invalidă';
+    return d.toLocaleString('ro-RO');
+  }
+
   function renderAuth(mode = 'login') {
     root.innerHTML = `
       <div class="cafea-shell">
@@ -212,8 +229,8 @@
     let lastDateKey = '';
     const dayCount = {};
     for (const r of state.rows || []) {
-      const dt = new Date(`${r.consumed_at}Z`);
-      const key = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
+      const dt = parseConsumedAt(r.consumed_at);
+      const key = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       dayCount[key] = (dayCount[key] || 0) + 1;
     }
     const perRowStats = {};
@@ -223,8 +240,8 @@
         maxByUser[String(u.id)] = u.max_coffees == null ? null : Number(u.max_coffees);
       }
       const asc = [...(state.rows || [])].sort((a, b) => {
-        const ta = new Date(`${a.consumed_at}Z`).getTime();
-        const tb = new Date(`${b.consumed_at}Z`).getTime();
+        const ta = parseConsumedAt(a.consumed_at)?.getTime() ?? 0;
+        const tb = parseConsumedAt(b.consumed_at)?.getTime() ?? 0;
         if (ta !== tb) return ta - tb;
         return Number(a.id) - Number(b.id);
       });
@@ -239,8 +256,8 @@
       }
     }
     return state.rows.map((r) => {
-      const dt = new Date(`${r.consumed_at}Z`);
-      const dateKey = Number.isNaN(dt.getTime()) ? String(r.consumed_at).slice(0, 10) : dt.toLocaleDateString('ro-RO');
+      const dt = parseConsumedAt(r.consumed_at);
+      const dateKey = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       const dateHeader = dateKey !== lastDateKey
         ? `<tr class="border-b border-emerald-400/30 dark:border-emerald-400/40 bg-emerald-500/10">
              <td class="py-2 px-2 font-bold text-emerald-300" colspan="${isAdmin ? 5 : 3}">
@@ -264,10 +281,10 @@
             </div>
           </div>
         </td>
-        <td class="py-2">${esc(new Date(r.consumed_at + 'Z').toLocaleString('ro-RO'))}</td>
+        <td class="py-2">${esc(fmtConsumedAt(r.consumed_at))}</td>
         <td class="py-2">
           <div class="flex items-center gap-2">
-            <span>-${esc(r.delta)}</span>
+            <span>+${esc(r.delta)}</span>
             ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}">Delete</button>` : ''}
           </div>
         </td>
