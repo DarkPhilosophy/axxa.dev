@@ -171,7 +171,7 @@ samp {
         width: 100%;
     }
     body {
-        overflow-x: hidden;
+        overflow-x: auto;
     }
 }
 
@@ -708,6 +708,11 @@ body:hover .mouse-spotlight {
     #page-content button[style*="max-width"] {
         width: 100% !important;
         max-width: 100% !important;
+    }
+
+    #page-content {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #page-content table {
