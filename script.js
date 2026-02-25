@@ -35,45 +35,12 @@ function isSectionAliasPath(pathname) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initMobileViewportStabilizer();
     if (normalizeHomeHashRouting()) return;
     await bootApp();
     handleSectionQueryRouting();
     initSoftNavigation();
     enforcePageContentForPath();
 });
-
-function initMobileViewportStabilizer() {
-    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
-    if (!isMobile) return;
-
-    const applyViewportVars = () => {
-        const vv = window.visualViewport;
-        const h = vv?.height || window.innerHeight || document.documentElement.clientHeight || 0;
-        const w = vv?.width || window.innerWidth || document.documentElement.clientWidth || 0;
-        if (h > 0) document.documentElement.style.setProperty('--app-vh', `${h * 0.01}px`);
-        if (w > 0) document.documentElement.style.setProperty('--app-vw', `${w * 0.01}px`);
-    };
-
-    const forceReflow = () => {
-        applyViewportVars();
-        const body = document.body;
-        if (!body) return;
-        body.style.transform = 'translateZ(0)';
-        void body.offsetHeight;
-        body.style.transform = '';
-        window.dispatchEvent(new Event('resize'));
-    };
-
-    applyViewportVars();
-    requestAnimationFrame(() => requestAnimationFrame(forceReflow));
-    window.addEventListener('pageshow', forceReflow, { passive: true });
-    window.addEventListener('orientationchange', () => setTimeout(forceReflow, 120), { passive: true });
-    window.addEventListener('resize', applyViewportVars, { passive: true });
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', applyViewportVars, { passive: true });
-    }
-}
 
 function enforcePageContentForPath() {
     const path = window.location.pathname.endsWith('/') ? window.location.pathname : `${window.location.pathname}/`;
