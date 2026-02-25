@@ -32,10 +32,17 @@
 :root {
     --font: "Quicksand";
     --code-font: "Consolas";
+    --app-vh: 1vh;
+    --app-vw: 1vw;
 }
 
 body {
     font-family: var(--font), sans-serif;
+}
+
+/* Stabilize full-height sections on mobile Chrome without manual zoom hacks */
+.min-h-screen {
+    min-height: calc(var(--app-vh, 1vh) * 100);
 }
 
 /* Tailwind utility can still force mono in markup; keep UI text Quicksand */
