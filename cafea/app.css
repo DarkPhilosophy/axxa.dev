@@ -113,14 +113,28 @@ body {
   max-width: 100%;
 }
 
-#root table {
+.cafea-table-wrap {
   width: 100%;
-  table-layout: fixed;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-#root th,
-#root td {
-  word-break: break-word;
+.cafea-history-table {
+  width: 100%;
+  min-width: 760px;
+  table-layout: auto;
+}
+
+.cafea-history-table th,
+.cafea-history-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.cafea-history-table td:first-child {
+  min-width: 190px;
+  white-space: normal;
 }
 
 #root.is-busy {

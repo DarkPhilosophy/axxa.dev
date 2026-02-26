@@ -356,8 +356,8 @@
                 <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
                 <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
               </form>
-              <div class="mt-3 overflow-auto">
-                <table class="w-full text-xs">
+              <div class="mt-3 overflow-auto cafea-table-wrap">
+                <table class="w-full text-xs cafea-history-table">
                   <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
                   <tbody>${selectedHistoryRows}</tbody>
                 </table>
@@ -384,7 +384,7 @@
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
           </div>
-          <div class="overflow-auto"><table class="w-full text-sm"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>
+          <div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>
         </div>
       </section>
       ${adminUserList}
