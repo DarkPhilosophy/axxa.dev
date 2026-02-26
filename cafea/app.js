@@ -21,7 +21,12 @@
     historyWindowStart: 0,
     historyWindowSize: 15,
     historyWindowStep: 10,
-    historyScrollHint: ''
+    historyScrollHint: '',
+    historyFilterFrom: '',
+    historyFilterTo: '',
+    historyQuickDays: 0,
+    historySortKey: 'consumed_at',
+    historySortDir: 'desc'
   };
   const inflight = new Map();
   let loadingEl = null;
@@ -220,7 +225,7 @@
   }
 
   function getVisibleHistoryRows() {
-    const allRows = state.rows || [];
+    const allRows = getProcessedHistoryRows();
     const windowSize = Math.max(10, Number(state.historyWindowSize) || 15);
     const maxStart = Math.max(0, allRows.length - windowSize);
     state.historyWindowStart = Math.min(Math.max(0, state.historyWindowStart), maxStart);
@@ -233,6 +238,82 @@
       total: allRows.length,
       maxStart
     };
+  }
+
+  function toggleHistorySort(key) {
+    if (!key) return;
+    if (state.historySortKey === key) {
+      state.historySortDir = state.historySortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.historySortKey = key;
+      state.historySortDir = (key === 'consumed_at') ? 'desc' : 'asc';
+    }
+    state.historyWindowStart = 0;
+    state.historyScrollHint = '';
+  }
+
+  function historySortMark(key) {
+    if (state.historySortKey !== key) return '';
+    return state.historySortDir === 'asc' ? ' ↑' : ' ↓';
+  }
+
+  function getProcessedHistoryRows() {
+    const rows = [...(state.rows || [])];
+    let out = rows;
+    const from = state.historyFilterFrom ? new Date(`${state.historyFilterFrom}T00:00:00`) : null;
+    const to = state.historyFilterTo ? new Date(`${state.historyFilterTo}T23:59:59`) : null;
+    const days = Number(state.historyQuickDays || 0);
+    if (days > 0) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (days - 1));
+      out = out.filter((r) => {
+        const t = parseConsumedAt(r.consumed_at);
+        return t && t >= d;
+      });
+    }
+    if (from || to) {
+      out = out.filter((r) => {
+        const t = parseConsumedAt(r.consumed_at);
+        if (!t) return false;
+        if (from && t < from) return false;
+        if (to && t > to) return false;
+        return true;
+      });
+    }
+
+    const sortKey = state.historySortKey;
+    const dir = state.historySortDir === 'asc' ? 1 : -1;
+    const stats = buildPerRowStats(state.user?.role === ROLE_ADMIN);
+    out.sort((a, b) => {
+      let av;
+      let bv;
+      if (sortKey === 'name') {
+        av = String(a.name || a.email || '').toLowerCase();
+        bv = String(b.name || b.email || '').toLowerCase();
+      } else if (sortKey === 'consumed_at') {
+        av = parseConsumedAt(a.consumed_at)?.getTime() ?? 0;
+        bv = parseConsumedAt(b.consumed_at)?.getTime() ?? 0;
+      } else if (sortKey === 'delta') {
+        av = Number(a.delta || 0);
+        bv = Number(b.delta || 0);
+      } else if (sortKey === 'consumed') {
+        av = Number(stats[String(a.id)]?.consumed ?? -1);
+        bv = Number(stats[String(b.id)]?.consumed ?? -1);
+      } else if (sortKey === 'remaining') {
+        av = stats[String(a.id)]?.remaining;
+        bv = stats[String(b.id)]?.remaining;
+        av = av == null ? Number.POSITIVE_INFINITY : Number(av);
+        bv = bv == null ? Number.POSITIVE_INFINITY : Number(bv);
+      } else {
+        av = Number(a.id || 0);
+        bv = Number(b.id || 0);
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return (Number(b.id) - Number(a.id)) * dir;
+    });
+    return out;
   }
 
   function renderHistoryRows() {
@@ -475,9 +556,20 @@
             <button id="btn-history-top" class="cafea-btn cafea-btn-muted cafea-btn-xs hidden">Top</button>
           </div>
         </div>
+        <div class="mb-3 flex items-center gap-2 flex-wrap">
+          <select id="history-quick-days" class="cafea-input" style="max-width:150px;">
+            <option value="0" ${Number(state.historyQuickDays) === 0 ? 'selected' : ''}>Toate zilele</option>
+            <option value="1" ${Number(state.historyQuickDays) === 1 ? 'selected' : ''}>Azi</option>
+            <option value="7" ${Number(state.historyQuickDays) === 7 ? 'selected' : ''}>Ultimele 7 zile</option>
+            <option value="30" ${Number(state.historyQuickDays) === 30 ? 'selected' : ''}>Ultimele 30 zile</option>
+          </select>
+          <input id="history-date-from" class="cafea-input" type="date" value="${esc(state.historyFilterFrom)}" style="max-width:170px;" />
+          <input id="history-date-to" class="cafea-input" type="date" value="${esc(state.historyFilterTo)}" style="max-width:170px;" />
+          <button id="history-filter-clear" class="cafea-btn cafea-btn-muted cafea-btn-xs" type="button">Reset filtre</button>
+        </div>
         ${isMobile
           ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
-          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="name">Cine${historySortMark('name')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="consumed_at">Când${historySortMark('consumed_at')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="delta">Delta${historySortMark('delta')}</button></th>${isAdmin ? '<th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"id\">Del</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"consumed\">Consumate' + historySortMark('consumed') + '</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"remaining\">Rămase' + historySortMark('remaining') + '</button></th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
       </section>
     `;
   }
@@ -1001,6 +1093,54 @@
           state.historyScrollHint = 'up';
           renderApp();
         }
+      };
+    }
+
+    document.querySelectorAll('.btn-history-sort').forEach((btn) => {
+      btn.onclick = () => {
+        toggleHistorySort(btn.dataset.sortKey);
+        renderApp();
+      };
+    });
+
+    const historyQuickDays = document.getElementById('history-quick-days');
+    if (historyQuickDays) {
+      historyQuickDays.onchange = () => {
+        state.historyQuickDays = Number(historyQuickDays.value || 0);
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
+        renderApp();
+      };
+    }
+    const historyDateFrom = document.getElementById('history-date-from');
+    if (historyDateFrom) {
+      historyDateFrom.onchange = () => {
+        state.historyFilterFrom = historyDateFrom.value || '';
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
+        renderApp();
+      };
+    }
+    const historyDateTo = document.getElementById('history-date-to');
+    if (historyDateTo) {
+      historyDateTo.onchange = () => {
+        state.historyFilterTo = historyDateTo.value || '';
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
+        renderApp();
+      };
+    }
+    const historyFilterClear = document.getElementById('history-filter-clear');
+    if (historyFilterClear) {
+      historyFilterClear.onclick = () => {
+        state.historyQuickDays = 0;
+        state.historyFilterFrom = '';
+        state.historyFilterTo = '';
+        state.historySortKey = 'consumed_at';
+        state.historySortDir = 'desc';
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
+        renderApp();
       };
     }
   }

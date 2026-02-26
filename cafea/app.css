@@ -158,6 +158,16 @@ body {
   vertical-align: middle;
 }
 
+.btn-history-sort {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .cafea-history-table td:first-child {
   min-width: 190px;
   white-space: normal;
