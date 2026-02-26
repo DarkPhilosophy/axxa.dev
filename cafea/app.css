@@ -53,6 +53,12 @@ body {
   transform: none;
 }
 
+.cafea-btn-xs {
+  padding: 0.38rem 0.5rem;
+  font-size: 12px;
+  min-height: 34px;
+}
+
 .cafea-btn-primary {
   background: var(--brand);
   color: var(--brand-dark);
@@ -141,41 +147,29 @@ body {
   overflow-x: hidden;
 }
 
-.cafea-local-history-table {
+.cafea-log-head,
+.cafea-log-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 56px 56px;
+  gap: 6px;
+  align-items: center;
+}
+
+.cafea-log-head {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.cafea-local-history-list {
   width: 100%;
-  min-width: 0;
-  table-layout: fixed;
 }
 
-.cafea-local-history-table th,
-.cafea-local-history-table td {
-  white-space: normal;
-  word-break: break-word;
-  padding-right: 6px;
-}
-
-.cafea-local-history-table .cafea-col-id {
-  width: 48px;
-}
-
-.cafea-local-history-table .cafea-col-date {
-  width: auto;
-}
-
-.cafea-local-history-table .cafea-col-delta {
-  width: 72px;
-}
-
-.cafea-local-history-table .cafea-col-act {
-  width: 74px;
-}
-
-.cafea-local-history-table .input-log-datetime {
-  max-width: none !important;
+.cafea-log-row .input-log-datetime {
   width: 100% !important;
+  max-width: none !important;
 }
 
-.cafea-local-history-table .input-log-delta {
+.cafea-log-row .input-log-delta {
   max-width: none !important;
   width: 100% !important;
   text-align: center;
@@ -240,7 +234,7 @@ body {
 
 @media (max-width: 767px) {
   .cafea-shell {
-    padding: 0.65rem;
+    padding: 0.45rem;
   }
 
   .cafea-btn {

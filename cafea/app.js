@@ -343,12 +343,12 @@
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
     const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
     const selectedHistoryRows = (state.selectedUserHistory || []).map((r) => `
-      <tr class="border-b border-slate-300/10 dark:border-white/5">
-        <td class="py-1">${esc(r.id)}</td>
-        <td class="py-1"><input class="cafea-input input-log-datetime" style="width:100%;max-width:220px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
-        <td class="py-1"><input class="cafea-input input-log-delta" style="width:100%;max-width:90px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
-        <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
-      </tr>
+      <div class="cafea-log-row border-b border-slate-300/10 dark:border-white/5 py-1">
+        <div class="text-xs text-slate-300 px-1">${esc(r.id)}</div>
+        <input class="cafea-input input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" />
+        <input class="cafea-input input-log-delta" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" />
+        <button class="cafea-btn cafea-btn-muted cafea-btn-xs btn-save-log" data-id="${r.id}">OK</button>
+      </div>
     `).join('');
     const manualDelta = Number(state.stock?.manual_delta || 0);
     const expectedCurrent = state.stock?.expected_current ?? 0;
@@ -398,17 +398,11 @@
                 <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
                 <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
               </form>
-              <div class="mt-3 overflow-auto cafea-local-history-wrap">
-                <table class="w-full text-xs cafea-local-history-table">
-                  <colgroup>
-                    <col class="cafea-col-id" />
-                    <col class="cafea-col-date" />
-                    <col class="cafea-col-delta" />
-                    <col class="cafea-col-act" />
-                  </colgroup>
-                  <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
-                  <tbody>${selectedHistoryRows}</tbody>
-                </table>
+              <div class="mt-3 cafea-local-history-wrap">
+                <div class="cafea-log-head text-xs border-b border-slate-300/20 dark:border-white/10 pb-1 mb-1">
+                  <div>ID</div><div>Data</div><div>Delta</div><div></div>
+                </div>
+                <div class="cafea-local-history-list">${selectedHistoryRows}</div>
               </div>
             ` : '<p class="text-slate-500">Selectează un user din listă.</p>'}
           </div>
