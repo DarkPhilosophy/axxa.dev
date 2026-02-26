@@ -561,6 +561,11 @@
               <div class="min-w-0">
                 <h1 class="text-lg md:text-2xl font-bold leading-tight whitespace-nowrap">Cafea Office Dashboard</h1>
                 <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+                <div class="mt-2 flex gap-2 md:hidden">
+                  ${loadingBadge()}
+                  <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
+                  <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+                </div>
               </div>
             </div>
 
@@ -569,8 +574,6 @@
                 ${renderTabButton('user', 'Acasă')}
                 ${renderTabButton('profile', 'Profile')}
                 ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
-                <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
-                <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
               </div>
             </div>
 
