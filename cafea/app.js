@@ -1210,8 +1210,9 @@
     if (isAdmin) {
       state.users = snap.users || [];
       const serverSelected = snap.selected_user_id == null ? null : Number(snap.selected_user_id);
-      state.selectedAdminUserId = serverSelected ?? prevSelectedId;
-      if (!state.selectedAdminUserId && state.users.length) {
+      const localStillExists = prevSelectedId != null && state.users.some((u) => Number(u.id) === Number(prevSelectedId));
+      state.selectedAdminUserId = localStillExists ? prevSelectedId : serverSelected;
+      if ((state.selectedAdminUserId == null) && state.users.length) {
         state.selectedAdminUserId = Number(state.users[0].id);
       }
       state.selectedUserStats = snap.selected_user_stats || null;
@@ -1219,8 +1220,9 @@
     } else {
       state.users = snap.users || state.users || [];
       const serverSelected = snap.selected_user_id == null ? null : Number(snap.selected_user_id);
-      state.selectedAdminUserId = prevSelectedId ?? serverSelected;
-      if (!state.selectedAdminUserId && state.users.length) {
+      const localStillExists = prevSelectedId != null && state.users.some((u) => Number(u.id) === Number(prevSelectedId));
+      state.selectedAdminUserId = localStillExists ? prevSelectedId : serverSelected;
+      if ((state.selectedAdminUserId == null) && state.users.length) {
         state.selectedAdminUserId = Number(state.users[0].id);
       }
       state.selectedUserStats = snap.selected_user_stats || null;
