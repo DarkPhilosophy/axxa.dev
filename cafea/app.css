@@ -137,6 +137,22 @@ body {
   white-space: normal;
 }
 
+.cafea-local-history-wrap {
+  overflow-x: hidden;
+}
+
+.cafea-local-history-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.cafea-local-history-table th,
+.cafea-local-history-table td {
+  white-space: normal;
+  word-break: break-word;
+}
+
 #root.is-busy {
   pointer-events: none;
   user-select: none;

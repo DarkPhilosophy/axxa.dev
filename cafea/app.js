@@ -203,16 +203,14 @@
     const busy = state.pendingRequests > 0;
     const shownValue = busy ? skeleton('72px', '30px') : esc(value);
     return `
-      <div class="rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
-        <div class="grid grid-cols-[1fr_auto] items-center gap-3">
-          <div class="text-center min-w-0">
+      <div class="relative rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
+        <div class="text-center pr-24 min-w-0">
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
           <p id="stock-value-${field}" class="text-2xl font-bold flex justify-center">${shownValue}</p>
           ${busy ? `<p class="text-xs mt-1 text-slate-500 flex justify-center">${skeleton('180px', '12px')}</p>` : extraHtml}
           <input id="stock-input-${field}" class="cafea-input hidden text-center" style="width:100%;max-width:160px;margin:8px auto 0 auto;" type="number" min="0" value="${esc(value)}" />
         </div>
-          ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted">Edit</button>` : ''}
-        </div>
+        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
       </div>
     `;
   }
@@ -400,8 +398,8 @@
                 <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
                 <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
               </form>
-              <div class="mt-3 overflow-auto cafea-table-wrap">
-                <table class="w-full text-xs cafea-history-table">
+              <div class="mt-3 overflow-auto cafea-local-history-wrap">
+                <table class="w-full text-xs cafea-local-history-table">
                   <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
                   <tbody>${selectedHistoryRows}</tbody>
                 </table>
