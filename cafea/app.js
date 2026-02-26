@@ -400,6 +400,12 @@
               </form>
               <div class="mt-3 overflow-auto cafea-local-history-wrap">
                 <table class="w-full text-xs cafea-local-history-table">
+                  <colgroup>
+                    <col class="cafea-col-id" />
+                    <col class="cafea-col-date" />
+                    <col class="cafea-col-delta" />
+                    <col class="cafea-col-act" />
+                  </colgroup>
                   <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
                   <tbody>${selectedHistoryRows}</tbody>
                 </table>

@@ -151,6 +151,34 @@ body {
 .cafea-local-history-table td {
   white-space: normal;
   word-break: break-word;
+  padding-right: 6px;
+}
+
+.cafea-local-history-table .cafea-col-id {
+  width: 48px;
+}
+
+.cafea-local-history-table .cafea-col-date {
+  width: auto;
+}
+
+.cafea-local-history-table .cafea-col-delta {
+  width: 72px;
+}
+
+.cafea-local-history-table .cafea-col-act {
+  width: 74px;
+}
+
+.cafea-local-history-table .input-log-datetime {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.cafea-local-history-table .input-log-delta {
+  max-width: none !important;
+  width: 100% !important;
+  text-align: center;
 }
 
 #root.is-busy {
