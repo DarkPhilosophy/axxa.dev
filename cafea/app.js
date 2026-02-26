@@ -203,14 +203,16 @@
     const busy = state.pendingRequests > 0;
     const shownValue = busy ? skeleton('72px', '30px') : esc(value);
     return `
-      <div class="relative rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
-        <div class="text-center pr-28">
+      <div class="rounded-xl border border-slate-300/20 dark:border-white/10 p-3">
+        <div class="grid grid-cols-[1fr_auto] items-center gap-3">
+          <div class="text-center min-w-0">
           <p class="text-xs uppercase tracking-wider text-slate-500">${esc(label)}</p>
           <p id="stock-value-${field}" class="text-2xl font-bold flex justify-center">${shownValue}</p>
           ${busy ? `<p class="text-xs mt-1 text-slate-500 flex justify-center">${skeleton('180px', '12px')}</p>` : extraHtml}
           <input id="stock-input-${field}" class="cafea-input hidden text-center" style="width:100%;max-width:160px;margin:8px auto 0 auto;" type="number" min="0" value="${esc(value)}" />
         </div>
-        ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>` : ''}
+          ${isAdmin ? `<button id="btn-edit-${field}" data-mode="idle" class="cafea-btn cafea-btn-muted">Edit</button>` : ''}
+        </div>
       </div>
     `;
   }
@@ -537,21 +539,19 @@
 
     root.innerHTML = `
       <main class="cafea-shell space-y-4">
-        <header class="cafea-glass p-4 md:p-5 flex items-center justify-between gap-3 flex-wrap">
-          <div class="flex items-center gap-3">
+        <header class="cafea-glass p-4 md:p-5 space-y-3">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
             <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-12 h-12 rounded-full object-cover" />
             <div>
               <h1 class="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
               <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
             </div>
+            ${loadingBadge()}
           </div>
-          <div class="flex gap-2 justify-center flex-wrap">
+          <div class="flex gap-2 flex-wrap">
             ${renderTabButton('user', 'Acasă')}
             ${renderTabButton('profile', 'Profile')}
             ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
-          </div>
-          <div class="flex gap-2">
-            ${loadingBadge()}
             <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
             <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
           </div>

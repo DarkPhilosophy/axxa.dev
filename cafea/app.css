@@ -8,7 +8,7 @@ body {
 }
 
 .cafea-shell {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 1rem 1rem 1rem;
   width: 100%;
@@ -192,4 +192,15 @@ body {
 @keyframes cafeaShimmer {
   0% { background-position: 100% 0; }
   100% { background-position: 0 0; }
+}
+
+@media (max-width: 767px) {
+  .cafea-shell {
+    padding: 0.65rem;
+  }
+
+  .cafea-btn {
+    padding: 0.5rem 0.72rem;
+    font-size: 13px;
+  }
 }
