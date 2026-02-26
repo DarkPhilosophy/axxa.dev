@@ -364,7 +364,7 @@
         </td>
         <td class="py-2">${esc(fmtConsumedAt(r.consumed_at))}</td>
         <td class="py-2">+${esc(r.delta)}</td>
-        ${isAdmin ? `<td class="py-2 text-right"><button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button></td>` : ''}
+        ${isAdmin ? `<td class="py-2 text-center"><button class="cafea-btn cafea-btn-muted btn-delete-log btn-delete-float" data-id="${r.id}" data-name="${esc(r.name || r.email || 'utilizator')}" data-delta="${esc(r.delta)}" data-at="${esc(fmtConsumedAt(r.consumed_at))}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button></td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.consumed ?? '-')}</td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.remaining == null ? 'nelimitat' : perRowStats[String(r.id)].remaining)}</td>` : ''}
       </tr>
@@ -424,7 +424,7 @@
               <p class="text-xs text-slate-500">${esc(r.email || '')}</p>
             </div>
           </div>
-            ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button>` : ''}
+            ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log btn-delete-float" data-id="${r.id}" data-name="${esc(r.name || r.email || 'utilizator')}" data-delta="${esc(r.delta)}" data-at="${esc(fmtConsumedAt(r.consumed_at))}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button>` : ''}
           </div>
           <div class="mt-2 text-xs text-slate-400">${esc(fmtConsumedAt(r.consumed_at))}</div>
           <div class="mt-1 text-sm">Delta: <span class="font-semibold">+${esc(r.delta)}</span></div>
@@ -569,7 +569,7 @@
         </div>
         ${isMobile
           ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
-          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="name">Cine${historySortMark('name')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="consumed_at">Când${historySortMark('consumed_at')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="delta">Delta${historySortMark('delta')}</button></th>${isAdmin ? '<th class="text-right py-2 text-amber-300">Ștergere (atenție)</th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"consumed\">Consumate' + historySortMark('consumed') + '</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"remaining\">Rămase' + historySortMark('remaining') + '</button></th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="name">Cine${historySortMark('name')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="consumed_at">Când${historySortMark('consumed_at')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="delta">Delta${historySortMark('delta')}</button></th>${isAdmin ? '<th class="text-center py-2 text-amber-300">Del ⚠</th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"consumed\">Consumate' + historySortMark('consumed') + '</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"remaining\">Rămase' + historySortMark('remaining') + '</button></th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
       </section>
     `;
   }
@@ -1045,7 +1045,11 @@
     if (isAdmin) {
       document.querySelectorAll('.btn-delete-log').forEach((btn) => {
         btn.onclick = async () => {
-          if (!window.confirm('Ștergi acest record din istoric?')) return;
+          const who = btn.dataset.name || 'utilizator';
+          const delta = btn.dataset.delta || '?';
+          const when = btn.dataset.at || '-';
+          const msg = `Atenție: vrei să ștergi înregistrarea pentru ${who} (delta +${delta}, ${when})?`;
+          if (!window.confirm(msg)) return;
           try {
             await api(`/api/admin/history/${btn.dataset.id}`, { method: 'DELETE' });
             await loadDashboard();

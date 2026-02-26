@@ -168,6 +168,16 @@ body {
   cursor: pointer;
 }
 
+.btn-delete-float {
+  animation: cafeaDeleteFloat 1.9s ease-in-out infinite;
+}
+
+@keyframes cafeaDeleteFloat {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
 .cafea-history-table td:first-child {
   min-width: 190px;
   white-space: normal;
