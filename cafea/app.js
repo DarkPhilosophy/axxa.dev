@@ -364,7 +364,7 @@
         </td>
         <td class="py-2">${esc(fmtConsumedAt(r.consumed_at))}</td>
         <td class="py-2">+${esc(r.delta)}</td>
-        ${isAdmin ? `<td class="py-2"><button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button></td>` : ''}
+        ${isAdmin ? `<td class="py-2 text-right"><button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button></td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.consumed ?? '-')}</td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.remaining == null ? 'nelimitat' : perRowStats[String(r.id)].remaining)}</td>` : ''}
       </tr>
@@ -569,7 +569,7 @@
         </div>
         ${isMobile
           ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
-          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="name">Cine${historySortMark('name')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="consumed_at">Când${historySortMark('consumed_at')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="delta">Delta${historySortMark('delta')}</button></th>${isAdmin ? '<th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"id\">Del</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"consumed\">Consumate' + historySortMark('consumed') + '</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"remaining\">Rămase' + historySortMark('remaining') + '</button></th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="name">Cine${historySortMark('name')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="consumed_at">Când${historySortMark('consumed_at')}</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key="delta">Delta${historySortMark('delta')}</button></th>${isAdmin ? '<th class="text-right py-2 text-amber-300">Ștergere (atenție)</th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"consumed\">Consumate' + historySortMark('consumed') + '</button></th><th class="text-left py-2"><button class="btn-history-sort" data-sort-key=\"remaining\">Rămase' + historySortMark('remaining') + '</button></th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
       </section>
     `;
   }
