@@ -563,12 +563,19 @@
                 <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
               </div>
             </div>
-            <div class="flex gap-2 flex-wrap md:justify-center">
+            <div class="flex gap-2 overflow-x-auto whitespace-nowrap pb-1 md:hidden">
+              ${renderTabButton('user', 'Acasă')}
+              ${renderTabButton('profile', 'Profile')}
+              ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
+              <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
+              <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+            </div>
+            <div class="hidden md:flex gap-2 flex-wrap md:justify-center">
             ${renderTabButton('user', 'Acasă')}
             ${renderTabButton('profile', 'Profile')}
             ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
             </div>
-            <div class="flex gap-2 md:justify-end">
+            <div class="hidden md:flex gap-2 md:justify-end">
               ${loadingBadge()}
             <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
             <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
