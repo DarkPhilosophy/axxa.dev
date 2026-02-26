@@ -18,8 +18,10 @@
     userConsumption: {},
     pendingRequests: 0,
     lastRequestMs: 0,
-    historyPage: 0,
-    historyPageSize: 60
+    historyWindowStart: 0,
+    historyWindowSize: 15,
+    historyWindowStep: 10,
+    historyScrollHint: ''
   };
   const inflight = new Map();
   let loadingEl = null;
@@ -219,17 +221,17 @@
 
   function getVisibleHistoryRows() {
     const allRows = state.rows || [];
-    const pageSize = Math.max(10, Number(state.historyPageSize) || 60);
-    const maxPage = Math.max(0, Math.ceil(allRows.length / pageSize) - 1);
-    state.historyPage = Math.min(Math.max(0, state.historyPage), maxPage);
-    const start = state.historyPage * pageSize;
-    const end = Math.min(allRows.length, start + pageSize);
+    const windowSize = Math.max(10, Number(state.historyWindowSize) || 15);
+    const maxStart = Math.max(0, allRows.length - windowSize);
+    state.historyWindowStart = Math.min(Math.max(0, state.historyWindowStart), maxStart);
+    const start = state.historyWindowStart;
+    const end = Math.min(allRows.length, start + windowSize);
     return {
       rows: allRows.slice(start, end),
       start,
       end,
       total: allRows.length,
-      maxPage
+      maxStart
     };
   }
 
@@ -468,10 +470,8 @@
           <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
         </div>
         <div class="mb-2 flex items-center justify-between gap-2 flex-wrap text-xs text-slate-500">
-          <span>Rânduri ${historyFrom}-${historyTo} din ${historyWindow.total} • Pagina ${state.historyPage + 1}/${Math.max(1, historyWindow.maxPage + 1)}</span>
+          <span>Poziție ${historyFrom}/${historyWindow.total} • Afișate ${Math.max(0, historyTo - historyFrom + 1)} iteme</span>
           <div class="flex items-center gap-2">
-            <button id="btn-history-prev" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage <= 0 ? 'disabled' : ''}>Prev</button>
-            <button id="btn-history-next" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage >= historyWindow.maxPage ? 'disabled' : ''}>Next</button>
             <button id="btn-history-top" class="cafea-btn cafea-btn-muted cafea-btn-xs hidden">Top</button>
           </div>
         </div>
@@ -966,44 +966,39 @@
     }
 
     const historyScroll = document.getElementById('history-scroll');
-    const historyPrevBtn = document.getElementById('btn-history-prev');
-    const historyNextBtn = document.getElementById('btn-history-next');
     const historyTopBtn = document.getElementById('btn-history-top');
-    const totalPages = Math.max(1, Math.ceil((state.rows || []).length / Math.max(10, Number(state.historyPageSize) || 60)));
-    const maxPage = totalPages - 1;
-
-    if (historyPrevBtn) {
-      historyPrevBtn.onclick = () => {
-        if (state.historyPage <= 0) return;
-        state.historyPage -= 1;
-        renderApp();
-      };
-    }
-    if (historyNextBtn) {
-      historyNextBtn.onclick = () => {
-        if (state.historyPage >= maxPage) return;
-        state.historyPage += 1;
-        renderApp();
-      };
-    }
+    const totalRows = (state.rows || []).length;
+    const windowSize = Math.max(10, Number(state.historyWindowSize) || 15);
+    const step = Math.max(1, Number(state.historyWindowStep) || 10);
+    const maxStart = Math.max(0, totalRows - windowSize);
     if (historyTopBtn) {
       historyTopBtn.onclick = () => {
-        state.historyPage = 0;
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
         renderApp();
       };
     }
     if (historyScroll) {
+      if (state.historyScrollHint === 'down') {
+        historyScroll.scrollTop = Math.max(140, Math.floor(historyScroll.scrollHeight * 0.58));
+        state.historyScrollHint = '';
+      } else if (state.historyScrollHint === 'up') {
+        historyScroll.scrollTop = Math.max(0, historyScroll.scrollHeight - historyScroll.clientHeight - 140);
+        state.historyScrollHint = '';
+      }
       historyScroll.onscroll = () => {
         if (historyTopBtn) historyTopBtn.classList.toggle('hidden', historyScroll.scrollTop < 220);
         const nearBottom = historyScroll.scrollTop + historyScroll.clientHeight >= historyScroll.scrollHeight - 24;
         const nearTop = historyScroll.scrollTop <= 4;
-        if (nearBottom && state.historyPage < maxPage) {
-          state.historyPage += 1;
+        if (nearBottom && state.historyWindowStart < maxStart) {
+          state.historyWindowStart = Math.min(maxStart, state.historyWindowStart + step);
+          state.historyScrollHint = 'down';
           renderApp();
           return;
         }
-        if (nearTop && state.historyPage > 0) {
-          state.historyPage -= 1;
+        if (nearTop && state.historyWindowStart > 0) {
+          state.historyWindowStart = Math.max(0, state.historyWindowStart - step);
+          state.historyScrollHint = 'up';
           renderApp();
         }
       };
@@ -1022,7 +1017,8 @@
     state.stock = snap.stock;
     state.user = snap.user || state.user;
     state.rows = snap.rows || [];
-    state.historyPage = 0;
+    state.historyWindowStart = 0;
+    state.historyScrollHint = '';
     state.userConsumption = snap.user_consumption || {};
     const isAdmin = state.user.role === ROLE_ADMIN;
     if (isAdmin) {

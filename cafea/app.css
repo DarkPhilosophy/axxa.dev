@@ -185,7 +185,7 @@ body {
 }
 
 .cafea-history-scroll {
-  max-height: 62vh;
+  max-height: 84vh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
