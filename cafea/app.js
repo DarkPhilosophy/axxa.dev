@@ -317,12 +317,15 @@
       const stats = perRowStats[String(r.id)] || {};
       out.push(`
         <article class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 mb-2">
-          <div class="flex items-center gap-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
             <img src="${esc(r.avatar_url || 'https://placehold.co/40x40?text=U')}" class="rounded-full object-cover" style="width:28px;height:28px;min-width:28px;max-width:28px;" />
             <div>
               <p class="font-semibold leading-tight">${esc(r.name || r.email)}</p>
               <p class="text-xs text-slate-500">${esc(r.email || '')}</p>
             </div>
+          </div>
+            ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button>` : ''}
           </div>
           <div class="mt-2 text-xs text-slate-400">${esc(fmtConsumedAt(r.consumed_at))}</div>
           <div class="mt-1 text-sm">Delta: <span class="font-semibold">+${esc(r.delta)}</span></div>
