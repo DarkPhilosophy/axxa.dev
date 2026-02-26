@@ -359,7 +359,11 @@ function renderVirtualIncidents(){
 
 async function refresh(){
   try{
-    const [s,h,o]=await Promise.all([getJson(STATUS,CACHE.s),getJson(HISTORY,CACHE.h),getJson(OUTAGES,CACHE.o)]);
+    const s=await getJson(STATUS,CACHE.s);
+    let h={points:[]};
+    let o={events:[],open:null};
+    try{ h=await getJson(HISTORY,CACHE.h); }catch(_){}
+    try{ o=await getJson(OUTAGES,CACHE.o); }catch(_){}
     setBadge(s.overall);
     el('primary').textContent=String(s.primary_node||'-');
     el('mode').textContent=String(s.cluster_mode||'-');
