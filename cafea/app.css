@@ -67,6 +67,7 @@ body {
   margin-right: -4px;
   padding-left: 4px;
   padding-right: 4px;
+  text-align: center;
 }
 
 .cafea-mobile-actions-inner {
@@ -75,6 +76,7 @@ body {
   min-width: 560px;
   white-space: nowrap;
   padding-bottom: 2px;
+  margin: 0 auto;
 }
 
 .cafea-btn-primary {
@@ -266,6 +268,10 @@ body {
 
   .cafea-mobile-actions .cafea-btn {
     flex: 0 0 auto;
+  }
+
+  .cafea-mobile-meta-row .cafea-global-loading {
+    display: none !important;
   }
 }
 

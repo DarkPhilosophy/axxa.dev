@@ -560,13 +560,15 @@
               <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
               <div class="min-w-0">
                 <h1 class="text-lg md:text-2xl font-bold leading-tight whitespace-nowrap">Cafea Office Dashboard</h1>
-                <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
-                <div class="mt-2 flex items-center gap-2 md:hidden whitespace-nowrap">
-                  ${loadingBadge()}
-                  <button id="btn-refresh" class="cafea-btn cafea-btn-muted" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
-                    <i class="fas fa-rotate-right"></i>
-                  </button>
-                  <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+                <div class="mt-1 flex items-center justify-between gap-2 md:hidden cafea-mobile-meta-row">
+                  <p class="text-slate-600 dark:text-slate-300 whitespace-nowrap">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+                  <div class="flex items-center gap-2 whitespace-nowrap">
+                    ${loadingBadge()}
+                    <button id="btn-refresh" class="cafea-btn cafea-btn-muted" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
+                      <i class="fas fa-rotate-right"></i>
+                    </button>
+                    <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+                  </div>
                 </div>
               </div>
             </div>
