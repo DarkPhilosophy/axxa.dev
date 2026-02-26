@@ -342,7 +342,15 @@
     const userStats = state.selectedUserStats;
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
     const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
-    const selectedHistoryRows = (state.selectedUserHistory || []).map((r) => `
+    const selectedHistoryRowsDesktop = (state.selectedUserHistory || []).map((r) => `
+      <tr class="border-b border-slate-300/10 dark:border-white/5">
+        <td class="py-1">${esc(r.id)}</td>
+        <td class="py-1"><input class="cafea-input input-log-datetime" style="width:100%;max-width:260px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
+        <td class="py-1"><input class="cafea-input input-log-delta" style="width:100%;max-width:70px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
+        <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
+      </tr>
+    `).join('');
+    const selectedHistoryRowsMobile = (state.selectedUserHistory || []).map((r) => `
       <div class="cafea-log-row border-b border-slate-300/10 dark:border-white/5 py-1">
         <div class="text-xs text-slate-300 px-1">${esc(r.id)}</div>
         <input class="cafea-input input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" />
@@ -398,12 +406,21 @@
                 <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
                 <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
               </form>
-              <div class="mt-3 cafea-local-history-wrap">
-                <div class="cafea-log-head text-xs border-b border-slate-300/20 dark:border-white/10 pb-1 mb-1">
-                  <div>ID</div><div>Data</div><div>Delta</div><div></div>
+              ${isMobile ? `
+                <div class="mt-3 cafea-local-history-wrap">
+                  <div class="cafea-log-head text-xs border-b border-slate-300/20 dark:border-white/10 pb-1 mb-1">
+                    <div>ID</div><div>Data</div><div>Delta</div><div></div>
+                  </div>
+                  <div class="cafea-local-history-list">${selectedHistoryRowsMobile}</div>
                 </div>
-                <div class="cafea-local-history-list">${selectedHistoryRows}</div>
-              </div>
+              ` : `
+                <div class="mt-3 overflow-auto">
+                  <table class="w-full text-xs">
+                    <thead><tr class="border-b border-slate-300/20 dark:border-white/10"><th class="text-left py-1">ID</th><th class="text-left py-1">Data</th><th class="text-left py-1">Delta</th><th></th></tr></thead>
+                    <tbody>${selectedHistoryRowsDesktop}</tbody>
+                  </table>
+                </div>
+              `}
             ` : '<p class="text-slate-500">Selectează un user din listă.</p>'}
           </div>
         </div>
@@ -537,21 +554,25 @@
 
     root.innerHTML = `
       <main class="cafea-shell space-y-4">
-        <header class="cafea-glass p-4 md:p-5 space-y-3">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-12 h-12 rounded-full object-cover" />
-            <div>
-              <h1 class="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
-              <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+        <header class="cafea-glass p-4 md:p-5">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center gap-3">
+              <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-12 h-12 rounded-full object-cover" />
+              <div>
+                <h1 class="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
+                <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+              </div>
             </div>
-            ${loadingBadge()}
-          </div>
-          <div class="flex gap-2 flex-wrap">
+            <div class="flex gap-2 flex-wrap md:justify-center">
             ${renderTabButton('user', 'Acasă')}
             ${renderTabButton('profile', 'Profile')}
             ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
+            </div>
+            <div class="flex gap-2 md:justify-end">
+              ${loadingBadge()}
             <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
             <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+            </div>
           </div>
         </header>
 

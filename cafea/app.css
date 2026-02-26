@@ -242,3 +242,10 @@ body {
     font-size: 13px;
   }
 }
+
+@media (min-width: 768px) {
+  .cafea-log-head,
+  .cafea-log-row {
+    display: none;
+  }
+}
