@@ -239,7 +239,7 @@
       const dateKey = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       const dateHeader = dateKey !== lastDateKey
         ? `<tr class="border-b border-emerald-400/30 dark:border-emerald-400/40 bg-emerald-500/10">
-             <td class="py-2 px-2 font-bold text-emerald-300" colspan="${isAdmin ? 5 : 3}">
+             <td class="py-2 px-2 font-bold text-emerald-300" colspan="${isAdmin ? 6 : 3}">
                <div class="flex items-center justify-between gap-3">
                  <span>${esc(dateKey)}</span>
                  <span class="text-xs text-emerald-200/90">${esc(dayCount[dateKey] || 0)} înregistrări</span>
@@ -261,12 +261,8 @@
           </div>
         </td>
         <td class="py-2">${esc(fmtConsumedAt(r.consumed_at))}</td>
-        <td class="py-2">
-          <div class="flex items-center gap-2">
-            <span>+${esc(r.delta)}</span>
-            ${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}">Delete</button>` : ''}
-          </div>
-        </td>
+        <td class="py-2">+${esc(r.delta)}</td>
+        ${isAdmin ? `<td class="py-2"><button class="cafea-btn cafea-btn-muted btn-delete-log" data-id="${r.id}" style="padding:0.35rem 0.6rem;font-size:12px;">Delete</button></td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.consumed ?? '-')}</td>` : ''}
         ${isAdmin ? `<td class="py-2">${esc(perRowStats[String(r.id)]?.remaining == null ? 'nelimitat' : perRowStats[String(r.id)].remaining)}</td>` : ''}
       </tr>
@@ -428,7 +424,7 @@
     ` : '';
 
     return `
-      <section class="grid md:grid-cols-2 gap-4">
+      <section class="grid gap-4 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)]">
         <div class="cafea-glass p-5">
           <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-xl">Stoc Cafea</h2>${stockBadge()}</div>
           <div class="space-y-3 mb-5">
@@ -445,7 +441,7 @@
           </div>
           ${isMobile
             ? `<div>${renderHistoryCards(isAdmin)}</div>`
-            : `<div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+            : `<div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
         </div>
       </section>
       ${adminUserList}
