@@ -354,7 +354,7 @@
 
   function renderUserTab(isAdmin) {
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    const selectedUser = isAdmin ? (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null : null;
+    const selectedUser = (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null;
     const userStats = state.selectedUserStats;
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
     const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
@@ -388,9 +388,9 @@
     const historyFrom = historyWindow.total ? historyWindow.start + 1 : 0;
     const historyTo = historyWindow.end;
 
-    const adminUserList = isAdmin ? `
+    const adminUserList = `
       <div class="cafea-glass p-5">
-        <h3 class="font-bold text-lg mb-3">Consum în numele userului</h3>
+        <h3 class="font-bold text-lg mb-3">${isAdmin ? 'Consum în numele userului' : 'Vizualizare coleg'}</h3>
         <div class="grid md:grid-cols-[280px_1fr] gap-3">
           <div class="space-y-2">
             ${(state.users || []).filter((u) => u.active).map((u) => `
@@ -413,18 +413,22 @@
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2 relative">
                   Maxim:
                   <span id="max-value-inline" class="font-semibold">${esc(maxLabel)}</span>
-                  <input id="max-input-inline" class="cafea-input hidden" type="number" min="0" placeholder="nelimitat" value="${esc(userStats?.max_coffees ?? '')}" style="width:100%;max-width:140px;display:none;margin-top:6px;" />
-                  <button id="btn-edit-max-inline" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>
+                  ${isAdmin ? `
+                    <input id="max-input-inline" class="cafea-input hidden" type="number" min="0" placeholder="nelimitat" value="${esc(userStats?.max_coffees ?? '')}" style="width:100%;max-width:140px;display:none;margin-top:6px;" />
+                    <button id="btn-edit-max-inline" data-mode="idle" class="cafea-btn cafea-btn-muted" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:2;">Edit</button>
+                  ` : ''}
                 </div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Rămase: <span class="font-semibold">${esc(remainingLabel)}</span></div>
                 <div class="border border-slate-300/20 dark:border-white/10 rounded-lg p-2">Ultima: <span class="font-semibold">${esc(userStats?.last_consumed_at || '-')}</span></div>
               </div>
-              <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
-              <form id="form-add-history-user" class="flex items-center gap-2 mt-3 flex-wrap">
-                <input id="input-add-delta" class="cafea-input" type="number" min="1" value="1" style="width:100%;max-width:95px;" />
-                <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
-                <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
-              </form>
+              ${isAdmin ? `
+                <button id="btn-consume-selected-user" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea pentru ${esc(selectedUser.name)}</button>
+                <form id="form-add-history-user" class="flex items-center gap-2 mt-3 flex-wrap">
+                  <input id="input-add-delta" class="cafea-input" type="number" min="1" value="1" style="width:100%;max-width:95px;" />
+                  <input id="input-add-datetime" class="cafea-input" type="datetime-local" style="width:100%;max-width:260px;" />
+                  <button class="cafea-btn cafea-btn-muted" type="submit">Adaugă istoric</button>
+                </form>
+              ` : ''}
               ${isMobile ? `
                 <div class="mt-3 cafea-local-history-wrap">
                   <div class="cafea-log-head text-xs border-b border-slate-300/20 dark:border-white/10 pb-1 mb-1">
@@ -444,7 +448,7 @@
           </div>
         </div>
       </div>
-    ` : '';
+    `;
 
     return `
       <section class="grid gap-4 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)]">
@@ -668,6 +672,20 @@
       };
     }
 
+    if (state.activeTab === 'user') {
+      document.querySelectorAll('.btn-pick-consume-user').forEach((btn) => {
+        btn.onclick = async () => {
+          state.selectedAdminUserId = Number(btn.dataset.id);
+          try {
+            await loadDashboard();
+          } catch (err) {
+            state.error = err.message;
+          }
+          renderApp();
+        };
+      });
+    }
+
     if (isAdmin && state.activeTab === 'user') {
       const fields = ['initial_stock', 'current_stock', 'min_stock'];
       for (const field of fields) {
@@ -700,14 +718,6 @@
           renderApp();
         };
       }
-
-      document.querySelectorAll('.btn-pick-consume-user').forEach((btn) => {
-        btn.onclick = async () => {
-          state.selectedAdminUserId = Number(btn.dataset.id);
-          await loadDashboard();
-          renderApp();
-        };
-      });
 
       const consumeSelectedBtn = document.getElementById('btn-consume-selected-user');
       if (consumeSelectedBtn) {
@@ -1011,13 +1021,19 @@
     if (isAdmin) {
       state.users = snap.users || [];
       state.selectedAdminUserId = snap.selected_user_id || null;
+      if (!state.selectedAdminUserId && state.users.length) {
+        state.selectedAdminUserId = state.users[0].id;
+      }
       state.selectedUserStats = snap.selected_user_stats || null;
       state.selectedUserHistory = snap.selected_user_history || [];
     } else {
-      state.users = [];
-      state.selectedAdminUserId = null;
-      state.selectedUserStats = null;
-      state.selectedUserHistory = [];
+      state.users = snap.users || state.users || [];
+      state.selectedAdminUserId = snap.selected_user_id || state.selectedAdminUserId || null;
+      if (!state.selectedAdminUserId && state.users.length) {
+        state.selectedAdminUserId = state.users[0].id;
+      }
+      state.selectedUserStats = snap.selected_user_stats || null;
+      state.selectedUserHistory = snap.selected_user_history || [];
       state.userConsumption = {};
     }
   }
