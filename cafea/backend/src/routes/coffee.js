@@ -145,15 +145,15 @@ coffeeRouter.get('/snapshot', (req, res) => {
     );
     userConsumption = Object.fromEntries(
       aggregate.map((a) => {
-        const user = users.find((u) => u.id === a.user_id);
+        const user = users.find((u) => Number(u.id) === Number(a.user_id));
         const consumedCount = Number(a?.consumed_count || 0);
         const maxCoffees = user?.max_coffees == null ? null : Number(user.max_coffees);
         const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
         return [String(a.user_id), { consumed_count: consumedCount, remaining }];
       })
     );
-    const selectedExists = Number.isInteger(selectedRequested) && users.some((u) => u.id === selectedRequested);
-    selectedUserId = selectedExists ? selectedRequested : (users[0]?.id || null);
+    const selectedExists = Number.isInteger(selectedRequested) && users.some((u) => Number(u.id) === Number(selectedRequested));
+    selectedUserId = selectedExists ? Number(selectedRequested) : (users[0] ? Number(users[0].id) : null);
 
     if (selectedUserId != null) {
       const user = one('SELECT id, email, name, role, avatar_url, active, max_coffees, notify_enabled, created_at FROM users WHERE id = ?', selectedUserId);
