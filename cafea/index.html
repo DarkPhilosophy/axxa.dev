@@ -87,6 +87,14 @@
             padding-top: 1rem !important;
         }
     </style>
+    <script>
+        (function() {
+            var h = window.location.hostname;
+            if (h === "cafe.axxa.dev" || h === "cafea.axxa.dev" || h === "zeul.go.ro") {
+                document.documentElement.setAttribute("data-splash", "off");
+            }
+        })();
+    </script>
 </head>
 <body class="bg-gray-50 text-slate-800 dark:bg-black dark:text-slate-200 transition-colors duration-300 selection:bg-primary selection:text-black">
 
