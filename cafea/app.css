@@ -73,10 +73,12 @@ body {
 .cafea-mobile-actions-inner {
   display: inline-flex;
   gap: 8px;
-  min-width: 560px;
+  min-width: 0;
+  width: max-content;
   white-space: nowrap;
   padding-bottom: 2px;
   margin: 0 auto;
+  justify-content: center;
 }
 
 .cafea-btn-primary {
