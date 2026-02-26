@@ -554,12 +554,12 @@
 
     root.innerHTML = `
       <main class="cafea-shell space-y-4">
-        <header class="cafea-glass p-4 md:p-5">
+        <header class="cafea-glass p-3 md:p-5">
           <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div class="flex items-center gap-3">
-              <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-12 h-12 rounded-full object-cover" />
-              <div>
-                <h1 class="text-xl md:text-2xl font-bold">Cafea Office Dashboard</h1>
+              <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
+              <div class="min-w-0">
+                <h1 class="text-lg md:text-2xl font-bold leading-tight whitespace-nowrap">Cafea Office Dashboard</h1>
                 <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
               </div>
             </div>

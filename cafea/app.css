@@ -63,6 +63,10 @@ body {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .cafea-mobile-actions-inner {
@@ -248,12 +252,16 @@ body {
 
 @media (max-width: 767px) {
   .cafea-shell {
-    padding: 0.45rem;
+    padding: 0.2rem;
   }
 
   .cafea-btn {
-    padding: 0.5rem 0.72rem;
+    padding: 0.44rem 0.64rem;
     font-size: 13px;
+  }
+
+  .cafea-glass {
+    border-radius: 0.85rem;
   }
 
   .cafea-mobile-actions .cafea-btn {
