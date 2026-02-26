@@ -17,7 +17,9 @@
     selectedUserHistory: [],
     userConsumption: {},
     pendingRequests: 0,
-    lastRequestMs: 0
+    lastRequestMs: 0,
+    historyPage: 0,
+    historyPageSize: 60
   };
   const inflight = new Map();
   let loadingEl = null;
@@ -215,9 +217,26 @@
     `;
   }
 
+  function getVisibleHistoryRows() {
+    const allRows = state.rows || [];
+    const pageSize = Math.max(10, Number(state.historyPageSize) || 60);
+    const maxPage = Math.max(0, Math.ceil(allRows.length / pageSize) - 1);
+    state.historyPage = Math.min(Math.max(0, state.historyPage), maxPage);
+    const start = state.historyPage * pageSize;
+    const end = Math.min(allRows.length, start + pageSize);
+    return {
+      rows: allRows.slice(start, end),
+      start,
+      end,
+      total: allRows.length,
+      maxPage
+    };
+  }
+
   function renderHistoryRows() {
     const isAdmin = state.user?.role === ROLE_ADMIN;
-    if (state.pendingRequests > 0 && (!state.rows || !state.rows.length)) {
+    const visible = getVisibleHistoryRows();
+    if (state.pendingRequests > 0 && (!visible.rows || !visible.rows.length)) {
       return Array.from({ length: 5 }).map(() => `
         <tr class="border-b border-slate-300/10 dark:border-white/5">
           <td class="py-2">${skeleton('180px', '14px')}</td>
@@ -228,13 +247,13 @@
     }
     let lastDateKey = '';
     const dayCount = {};
-    for (const r of state.rows || []) {
+    for (const r of visible.rows || []) {
       const dt = parseConsumedAt(r.consumed_at);
       const key = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       dayCount[key] = (dayCount[key] || 0) + 1;
     }
     const perRowStats = buildPerRowStats(isAdmin);
-    return state.rows.map((r) => {
+    return visible.rows.map((r) => {
       const dt = parseConsumedAt(r.consumed_at);
       const dateKey = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       const dateHeader = dateKey !== lastDateKey
@@ -296,7 +315,8 @@
   }
 
   function renderHistoryCards(isAdmin) {
-    const rows = state.rows || [];
+    const visible = getVisibleHistoryRows();
+    const rows = visible.rows || [];
     if (state.pendingRequests > 0 && !rows.length) {
       return `<div class="text-xs text-slate-500">Se încarcă istoricul...</div>`;
     }
@@ -364,6 +384,9 @@
         <span style="color:${deltaColor};font-weight:700;">${esc(deltaPrefix + manualDelta)}</span>
       </p>
     `;
+    const historyWindow = getVisibleHistoryRows();
+    const historyFrom = historyWindow.total ? historyWindow.start + 1 : 0;
+    const historyTo = historyWindow.end;
 
     const adminUserList = isAdmin ? `
       <div class="cafea-glass p-5">
@@ -439,9 +462,17 @@
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
           </div>
+          <div class="mb-2 flex items-center justify-between gap-2 flex-wrap text-xs text-slate-500">
+            <span>Rânduri ${historyFrom}-${historyTo} din ${historyWindow.total} • Pagina ${state.historyPage + 1}/${Math.max(1, historyWindow.maxPage + 1)}</span>
+            <div class="flex items-center gap-2">
+              <button id="btn-history-prev" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage <= 0 ? 'disabled' : ''}>Prev</button>
+              <button id="btn-history-next" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage >= historyWindow.maxPage ? 'disabled' : ''}>Next</button>
+              <button id="btn-history-top" class="cafea-btn cafea-btn-muted cafea-btn-xs hidden">Top</button>
+            </div>
+          </div>
           ${isMobile
-            ? `<div>${renderHistoryCards(isAdmin)}</div>`
-            : `<div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+            ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
+            : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
         </div>
       </section>
       ${adminUserList}
@@ -916,6 +947,50 @@
         };
       });
     }
+
+    const historyScroll = document.getElementById('history-scroll');
+    const historyPrevBtn = document.getElementById('btn-history-prev');
+    const historyNextBtn = document.getElementById('btn-history-next');
+    const historyTopBtn = document.getElementById('btn-history-top');
+    const totalPages = Math.max(1, Math.ceil((state.rows || []).length / Math.max(10, Number(state.historyPageSize) || 60)));
+    const maxPage = totalPages - 1;
+
+    if (historyPrevBtn) {
+      historyPrevBtn.onclick = () => {
+        if (state.historyPage <= 0) return;
+        state.historyPage -= 1;
+        renderApp();
+      };
+    }
+    if (historyNextBtn) {
+      historyNextBtn.onclick = () => {
+        if (state.historyPage >= maxPage) return;
+        state.historyPage += 1;
+        renderApp();
+      };
+    }
+    if (historyTopBtn) {
+      historyTopBtn.onclick = () => {
+        state.historyPage = 0;
+        renderApp();
+      };
+    }
+    if (historyScroll) {
+      historyScroll.onscroll = () => {
+        if (historyTopBtn) historyTopBtn.classList.toggle('hidden', historyScroll.scrollTop < 220);
+        const nearBottom = historyScroll.scrollTop + historyScroll.clientHeight >= historyScroll.scrollHeight - 24;
+        const nearTop = historyScroll.scrollTop <= 4;
+        if (nearBottom && state.historyPage < maxPage) {
+          state.historyPage += 1;
+          renderApp();
+          return;
+        }
+        if (nearTop && state.historyPage > 0) {
+          state.historyPage -= 1;
+          renderApp();
+        }
+      };
+    }
   }
 
   async function loadMe() {
@@ -926,10 +1001,11 @@
   async function loadDashboard() {
     if (!state.user) return;
     const selected = state.selectedAdminUserId != null ? `&selected_user_id=${encodeURIComponent(state.selectedAdminUserId)}` : '';
-    const snap = await api(`/api/coffee/snapshot?limit=100${selected}`);
+    const snap = await api(`/api/coffee/snapshot?limit=1000${selected}`);
     state.stock = snap.stock;
     state.user = snap.user || state.user;
     state.rows = snap.rows || [];
+    state.historyPage = 0;
     state.userConsumption = snap.user_consumption || {};
     const isAdmin = state.user.role === ROLE_ADMIN;
     if (isAdmin) {

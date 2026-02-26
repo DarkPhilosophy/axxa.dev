@@ -184,6 +184,12 @@ body {
   width: 100%;
 }
 
+.cafea-history-scroll {
+  max-height: 62vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .cafea-log-row .input-log-datetime {
   width: 100% !important;
   max-width: none !important;
