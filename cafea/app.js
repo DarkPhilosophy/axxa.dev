@@ -30,6 +30,39 @@
   };
   const inflight = new Map();
   let loadingEl = null;
+  const numericPrevValues = new Map();
+
+  function animateNumericValue(id, nextRaw) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const next = Number(nextRaw);
+    if (!Number.isFinite(next)) return;
+    const prev = numericPrevValues.get(id);
+    numericPrevValues.set(id, next);
+    if (prev == null || prev === next) {
+      el.textContent = String(next);
+      return;
+    }
+    const started = performance.now();
+    const duration = 480;
+    const delta = next - prev;
+    el.classList.remove('cafea-num-down', 'cafea-num-up');
+    el.classList.add(delta < 0 ? 'cafea-num-down' : 'cafea-num-up');
+    const tick = (ts) => {
+      const p = Math.min(1, (ts - started) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const cur = prev + (delta * eased);
+      el.textContent = String(Math.round(cur));
+      if (p < 1) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      setTimeout(() => {
+        el.classList.remove('cafea-num-down', 'cafea-num-up');
+      }, 320);
+    };
+    requestAnimationFrame(tick);
+  }
 
   function ensureLoadingEl() {
     if (loadingEl) return loadingEl;
@@ -724,6 +757,14 @@
         ${state.activeTab === 'admin' && isAdmin ? renderAdminTab() : ''}
       </main>
     `;
+
+    if (state.stock && state.pendingRequests === 0) {
+      requestAnimationFrame(() => {
+        animateNumericValue('stock-value-initial_stock', state.stock.initial_stock ?? 0);
+        animateNumericValue('stock-value-current_stock', state.stock.current_stock ?? 0);
+        animateNumericValue('stock-value-min_stock', state.stock.min_stock ?? 0);
+      });
+    }
 
     document.querySelectorAll('.btn-logout').forEach((el) => {
       el.onclick = () => {

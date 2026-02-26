@@ -178,6 +178,16 @@ body {
   100% { transform: translateY(0); }
 }
 
+.cafea-num-down {
+  color: #ef4444;
+  transition: color 0.25s ease;
+}
+
+.cafea-num-up {
+  color: #22c55e;
+  transition: color 0.25s ease;
+}
+
 .cafea-history-table td:first-child {
   min-width: 190px;
   white-space: normal;
