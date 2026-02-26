@@ -59,6 +59,20 @@ body {
   min-height: 34px;
 }
 
+.cafea-mobile-actions {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cafea-mobile-actions-inner {
+  display: inline-flex;
+  gap: 8px;
+  min-width: 560px;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
 .cafea-btn-primary {
   background: var(--brand);
   color: var(--brand-dark);
@@ -240,6 +254,10 @@ body {
   .cafea-btn {
     padding: 0.5rem 0.72rem;
     font-size: 13px;
+  }
+
+  .cafea-mobile-actions .cafea-btn {
+    flex: 0 0 auto;
   }
 }
 
