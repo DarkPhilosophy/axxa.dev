@@ -470,7 +470,7 @@
 
   function renderUserTab(isAdmin) {
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
-    const selectedUser = (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null;
+    const selectedUser = (state.users || []).find((u) => Number(u.id) === Number(state.selectedAdminUserId)) || null;
     const userStats = state.selectedUserStats;
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
     const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
@@ -510,7 +510,7 @@
         <div class="grid md:grid-cols-[280px_1fr] gap-3">
           <div class="space-y-2">
             ${(state.users || []).filter((u) => u.active).map((u) => `
-              <button class="w-full text-left border rounded-xl p-2 btn-pick-consume-user ${state.selectedAdminUserId === u.id ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
+              <button class="w-full text-left border rounded-xl p-2 btn-pick-consume-user ${Number(state.selectedAdminUserId) === Number(u.id) ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
                 <div class="flex items-center gap-2">
                   <img src="${esc(u.avatar_url || 'https://placehold.co/40x40?text=U')}" style="width:32px;height:32px;min-width:32px;max-width:32px;" class="rounded-full object-cover" />
                   <div>
@@ -632,7 +632,7 @@
   function renderAdminTab() {
     const pending = (state.users || []).filter((u) => !u.active);
     const list = (state.users || []).map((u) => `
-      <button class="w-full text-left border rounded-xl p-2 btn-pick-user ${state.selectedAdminUserId === u.id ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
+      <button class="w-full text-left border rounded-xl p-2 btn-pick-user ${Number(state.selectedAdminUserId) === Number(u.id) ? 'border-emerald-400' : 'border-slate-300/20 dark:border-white/10'}" data-id="${u.id}">
         <div class="flex items-center gap-2">
           <img src="${esc(u.avatar_url || 'https://placehold.co/40x40?text=U')}" style="width:32px;height:32px;min-width:32px;max-width:32px;" class="rounded-full object-cover" />
           <div>
@@ -642,7 +642,7 @@
         </div>
       </button>
     `).join('');
-    const selectedUser = (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null;
+    const selectedUser = (state.users || []).find((u) => Number(u.id) === Number(state.selectedAdminUserId)) || null;
     const editor = selectedUser ? `
       <form id="form-user-edit-selected" data-id="${selectedUser.id}" class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 grid md:grid-cols-2 gap-2">
         <input class="cafea-input" name="name" value="${esc(selectedUser.name)}" placeholder="nume" required />
@@ -1197,6 +1197,7 @@
 
   async function loadDashboard() {
     if (!state.user) return;
+    const prevSelectedId = state.selectedAdminUserId == null ? null : Number(state.selectedAdminUserId);
     const selected = state.selectedAdminUserId != null ? `&selected_user_id=${encodeURIComponent(state.selectedAdminUserId)}` : '';
     const snap = await api(`/api/coffee/snapshot?limit=1000${selected}`);
     state.stock = snap.stock;
@@ -1208,17 +1209,19 @@
     const isAdmin = state.user.role === ROLE_ADMIN;
     if (isAdmin) {
       state.users = snap.users || [];
-      state.selectedAdminUserId = snap.selected_user_id || null;
+      const serverSelected = snap.selected_user_id == null ? null : Number(snap.selected_user_id);
+      state.selectedAdminUserId = serverSelected ?? prevSelectedId;
       if (!state.selectedAdminUserId && state.users.length) {
-        state.selectedAdminUserId = state.users[0].id;
+        state.selectedAdminUserId = Number(state.users[0].id);
       }
       state.selectedUserStats = snap.selected_user_stats || null;
       state.selectedUserHistory = snap.selected_user_history || [];
     } else {
       state.users = snap.users || state.users || [];
-      state.selectedAdminUserId = snap.selected_user_id || state.selectedAdminUserId || null;
+      const serverSelected = snap.selected_user_id == null ? null : Number(snap.selected_user_id);
+      state.selectedAdminUserId = prevSelectedId ?? serverSelected;
       if (!state.selectedAdminUserId && state.users.length) {
-        state.selectedAdminUserId = state.users[0].id;
+        state.selectedAdminUserId = Number(state.users[0].id);
       }
       state.selectedUserStats = snap.selected_user_stats || null;
       state.selectedUserHistory = snap.selected_user_history || [];
