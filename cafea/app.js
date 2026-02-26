@@ -233,28 +233,7 @@
       const key = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
       dayCount[key] = (dayCount[key] || 0) + 1;
     }
-    const perRowStats = {};
-    if (isAdmin) {
-      const maxByUser = {};
-      for (const u of state.users || []) {
-        maxByUser[String(u.id)] = u.max_coffees == null ? null : Number(u.max_coffees);
-      }
-      const asc = [...(state.rows || [])].sort((a, b) => {
-        const ta = parseConsumedAt(a.consumed_at)?.getTime() ?? 0;
-        const tb = parseConsumedAt(b.consumed_at)?.getTime() ?? 0;
-        if (ta !== tb) return ta - tb;
-        return Number(a.id) - Number(b.id);
-      });
-      const consumedMap = {};
-      for (const r of asc) {
-        const uid = String(r.user_id);
-        consumedMap[uid] = (consumedMap[uid] || 0) + Number(r.delta || 0);
-        const consumed = consumedMap[uid];
-        const max = maxByUser[uid];
-        const remaining = max == null ? null : Math.max(0, Number(max) - consumed);
-        perRowStats[String(r.id)] = { consumed, remaining };
-      }
-    }
+    const perRowStats = buildPerRowStats(isAdmin);
     return state.rows.map((r) => {
       const dt = parseConsumedAt(r.consumed_at);
       const dateKey = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
@@ -295,7 +274,67 @@
     }).join('');
   }
 
+  function buildPerRowStats(isAdmin) {
+    const perRowStats = {};
+    if (!isAdmin) return perRowStats;
+    const maxByUser = {};
+    for (const u of state.users || []) {
+      maxByUser[String(u.id)] = u.max_coffees == null ? null : Number(u.max_coffees);
+    }
+    const asc = [...(state.rows || [])].sort((a, b) => {
+      const ta = parseConsumedAt(a.consumed_at)?.getTime() ?? 0;
+      const tb = parseConsumedAt(b.consumed_at)?.getTime() ?? 0;
+      if (ta !== tb) return ta - tb;
+      return Number(a.id) - Number(b.id);
+    });
+    const consumedMap = {};
+    for (const r of asc) {
+      const uid = String(r.user_id);
+      consumedMap[uid] = (consumedMap[uid] || 0) + Number(r.delta || 0);
+      const consumed = consumedMap[uid];
+      const max = maxByUser[uid];
+      const remaining = max == null ? null : Math.max(0, Number(max) - consumed);
+      perRowStats[String(r.id)] = { consumed, remaining };
+    }
+    return perRowStats;
+  }
+
+  function renderHistoryCards(isAdmin) {
+    const rows = state.rows || [];
+    if (state.pendingRequests > 0 && !rows.length) {
+      return `<div class="text-xs text-slate-500">Se încarcă istoricul...</div>`;
+    }
+    const perRowStats = buildPerRowStats(isAdmin);
+    let lastDateKey = '';
+    const out = [];
+    for (const r of rows) {
+      const dt = parseConsumedAt(r.consumed_at);
+      const dateKey = dt ? dt.toLocaleDateString('ro-RO') : String(r.consumed_at).slice(0, 10);
+      if (dateKey !== lastDateKey) {
+        out.push(`<div class="mt-3 mb-1 text-xs font-bold text-emerald-300">${esc(dateKey)}</div>`);
+        lastDateKey = dateKey;
+      }
+      const stats = perRowStats[String(r.id)] || {};
+      out.push(`
+        <article class="border border-slate-300/20 dark:border-white/10 rounded-xl p-3 mb-2">
+          <div class="flex items-center gap-2">
+            <img src="${esc(r.avatar_url || 'https://placehold.co/40x40?text=U')}" class="rounded-full object-cover" style="width:28px;height:28px;min-width:28px;max-width:28px;" />
+            <div>
+              <p class="font-semibold leading-tight">${esc(r.name || r.email)}</p>
+              <p class="text-xs text-slate-500">${esc(r.email || '')}</p>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-slate-400">${esc(fmtConsumedAt(r.consumed_at))}</div>
+          <div class="mt-1 text-sm">Delta: <span class="font-semibold">+${esc(r.delta)}</span></div>
+          ${isAdmin ? `<div class="mt-1 text-xs text-slate-400">Consumate: ${esc(stats.consumed ?? '-')} · Rămase: ${esc(stats.remaining == null ? 'nelimitat' : stats.remaining)}</div>` : ''}
+        </article>
+      `);
+    }
+    return out.join('');
+  }
+
   function renderUserTab(isAdmin) {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
     const selectedUser = isAdmin ? (state.users || []).find((u) => u.id === state.selectedAdminUserId) || null : null;
     const userStats = state.selectedUserStats;
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
@@ -384,7 +423,9 @@
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
           </div>
-          <div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>
+          ${isMobile
+            ? `<div>${renderHistoryCards(isAdmin)}</div>`
+            : `<div class="overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
         </div>
       </section>
       ${adminUserList}
