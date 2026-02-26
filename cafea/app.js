@@ -198,7 +198,7 @@
 
   function renderTabButton(id, label) {
     const active = state.activeTab === id;
-    return `<button id="tab-${id}" class="cafea-btn ${active ? 'cafea-btn-primary' : 'cafea-btn-muted'}">${esc(label)}</button>`;
+    return `<button class="cafea-btn btn-tab ${active ? 'cafea-btn-primary' : 'cafea-btn-muted'}" data-tab="${esc(id)}">${esc(label)}</button>`;
   }
 
   function renderStockRow(field, label, value, isAdmin, extraHtml = '') {
@@ -451,7 +451,7 @@
     `;
 
     return `
-      <section class="grid gap-4 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)]">
+      <section class="grid gap-4 md:grid-cols-2">
         <div class="cafea-glass p-5">
           <div class="flex items-center justify-between mb-4"><h2 class="font-bold text-xl">Stoc Cafea</h2>${stockBadge()}</div>
           <div class="space-y-3 mb-5">
@@ -461,25 +461,24 @@
           </div>
           <button id="btn-consume" class="cafea-btn cafea-btn-primary w-full" ${state.stock?.current_stock <= 0 ? 'disabled' : ''}>Consumă 1 cafea</button>
         </div>
-
-        <div class="cafea-glass p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
-          </div>
-          <div class="mb-2 flex items-center justify-between gap-2 flex-wrap text-xs text-slate-500">
-            <span>Rânduri ${historyFrom}-${historyTo} din ${historyWindow.total} • Pagina ${state.historyPage + 1}/${Math.max(1, historyWindow.maxPage + 1)}</span>
-            <div class="flex items-center gap-2">
-              <button id="btn-history-prev" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage <= 0 ? 'disabled' : ''}>Prev</button>
-              <button id="btn-history-next" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage >= historyWindow.maxPage ? 'disabled' : ''}>Next</button>
-              <button id="btn-history-top" class="cafea-btn cafea-btn-muted cafea-btn-xs hidden">Top</button>
-            </div>
-          </div>
-          ${isMobile
-            ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
-            : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
-        </div>
+        ${adminUserList}
       </section>
-      ${adminUserList}
+      <section class="cafea-glass p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
+        </div>
+        <div class="mb-2 flex items-center justify-between gap-2 flex-wrap text-xs text-slate-500">
+          <span>Rânduri ${historyFrom}-${historyTo} din ${historyWindow.total} • Pagina ${state.historyPage + 1}/${Math.max(1, historyWindow.maxPage + 1)}</span>
+          <div class="flex items-center gap-2">
+            <button id="btn-history-prev" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage <= 0 ? 'disabled' : ''}>Prev</button>
+            <button id="btn-history-next" class="cafea-btn cafea-btn-muted cafea-btn-xs" ${state.historyPage >= historyWindow.maxPage ? 'disabled' : ''}>Next</button>
+            <button id="btn-history-top" class="cafea-btn cafea-btn-muted cafea-btn-xs hidden">Top</button>
+          </div>
+        </div>
+        ${isMobile
+          ? `<div id="history-scroll" class="cafea-history-scroll">${renderHistoryCards(isAdmin)}</div>`
+          : `<div id="history-scroll" class="cafea-history-scroll overflow-auto cafea-table-wrap"><table class="w-full text-sm cafea-history-table"><thead><tr class="border-b border-slate-300/20 dark:border-white/10 text-slate-500"><th class="text-left py-2">Cine</th><th class="text-left py-2">Când</th><th class="text-left py-2">Delta</th>${isAdmin ? '<th class="text-left py-2">Del</th><th class="text-left py-2">Consumate</th><th class="text-left py-2">Rămase</th>' : ''}</tr></thead><tbody>${renderHistoryRows()}</tbody></table></div>`}
+      </section>
     `;
   }
 
@@ -595,10 +594,10 @@
                   <p class="text-slate-600 dark:text-slate-300 whitespace-nowrap">${esc(state.user.name)} • ${esc(state.user.role)}</p>
                   <div class="flex items-center gap-2 whitespace-nowrap">
                     ${loadingBadge()}
-                    <button id="btn-refresh" class="cafea-btn cafea-btn-muted" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
+                    <button class="cafea-btn cafea-btn-muted btn-refresh" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
                       <i class="fas fa-rotate-right"></i>
                     </button>
-                    <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+                    <button class="cafea-btn cafea-btn-muted btn-logout">Logout</button>
                   </div>
                 </div>
               </div>
@@ -619,8 +618,8 @@
             </div>
             <div class="hidden md:flex gap-2 md:justify-end">
               ${loadingBadge()}
-            <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
-            <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
+            <button class="cafea-btn cafea-btn-muted btn-refresh">Refresh</button>
+            <button class="cafea-btn cafea-btn-muted btn-logout">Logout</button>
             </div>
           </div>
         </header>
@@ -634,24 +633,32 @@
       </main>
     `;
 
-    document.getElementById('btn-logout').onclick = () => {
-      localStorage.removeItem('cafea_token');
-      state.token = '';
-      state.user = null;
-      state.error = '';
-      state.info = '';
-      renderAuth('login');
-    };
-
-    document.getElementById('btn-refresh').onclick = async () => {
-      await loadDashboard();
-      renderApp();
-    };
-
-    ['user', 'profile', 'admin'].forEach((tab) => {
-      const el = document.getElementById(`tab-${tab}`);
-      if (!el) return;
+    document.querySelectorAll('.btn-logout').forEach((el) => {
       el.onclick = () => {
+        localStorage.removeItem('cafea_token');
+        state.token = '';
+        state.user = null;
+        state.error = '';
+        state.info = '';
+        renderAuth('login');
+      };
+    });
+
+    document.querySelectorAll('.btn-refresh').forEach((el) => {
+      el.onclick = async () => {
+        try {
+          await loadDashboard();
+        } catch (err) {
+          state.error = err.message;
+        }
+        renderApp();
+      };
+    });
+
+    document.querySelectorAll('.btn-tab').forEach((el) => {
+      el.onclick = () => {
+        const tab = el.dataset.tab;
+        if (!tab) return;
         state.activeTab = tab;
         state.error = '';
         renderApp();
