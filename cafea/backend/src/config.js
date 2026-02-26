@@ -16,7 +16,7 @@ export const config = {
   port: Number(process.env.PORT || 8788),
   jwtSecret: process.env.JWT_SECRET || 'change-me',
   dbNamespace: process.env.DB_NAMESPACE || 'cafea',
-  dbUrlBase: process.env.DB_URL || 'https://sql.axxa.dev',
+  dbUrlBase: process.env.DB_URL || 'https://pg.axxa.dev',
   dbToken: process.env.DB_TOKEN || '',
   corsOrigin: process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
   appUrl: process.env.APP_URL || process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
