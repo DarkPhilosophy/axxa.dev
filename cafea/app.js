@@ -430,6 +430,35 @@
     return perRowStats;
   }
 
+  function buildSelectedUserView(selectedUserId) {
+    const selectedId = Number(selectedUserId);
+    if (!Number.isInteger(selectedId)) {
+      return { stats: null, history: [] };
+    }
+    const user = (state.users || []).find((u) => Number(u.id) === selectedId) || null;
+    const history = (state.rows || [])
+      .filter((r) => Number(r.user_id) === selectedId)
+      .map((r) => ({ id: r.id, user_id: r.user_id, delta: r.delta, consumed_at: r.consumed_at }))
+      .sort((a, b) => {
+        const ta = parseConsumedAt(a.consumed_at)?.getTime() ?? 0;
+        const tb = parseConsumedAt(b.consumed_at)?.getTime() ?? 0;
+        if (ta !== tb) return tb - ta;
+        return Number(b.id) - Number(a.id);
+      });
+    const consumedCount = history.reduce((sum, r) => sum + Number(r.delta || 0), 0);
+    const maxCoffees = user?.max_coffees == null ? null : Number(user.max_coffees);
+    const remaining = maxCoffees == null ? null : Math.max(0, maxCoffees - consumedCount);
+    return {
+      stats: {
+        consumed_count: consumedCount,
+        max_coffees: maxCoffees,
+        remaining,
+        last_consumed_at: history[0]?.consumed_at || null
+      },
+      history
+    };
+  }
+
   function renderHistoryCards(isAdmin) {
     const visible = getVisibleHistoryRows();
     const rows = visible.rows || [];
@@ -471,10 +500,12 @@
   function renderUserTab(isAdmin) {
     const isMobile = window.matchMedia('(max-width: 767px)').matches;
     const selectedUser = (state.users || []).find((u) => Number(u.id) === Number(state.selectedAdminUserId)) || null;
-    const userStats = state.selectedUserStats;
+    const derived = buildSelectedUserView(state.selectedAdminUserId);
+    const userStats = (isAdmin || selectedUser) ? (derived.stats || state.selectedUserStats) : state.selectedUserStats;
+    const selectedHistory = (isAdmin || selectedUser) ? (derived.history || state.selectedUserHistory || []) : (state.selectedUserHistory || []);
     const remainingLabel = userStats?.remaining == null ? 'nelimitat' : String(userStats.remaining);
     const maxLabel = userStats?.max_coffees == null ? 'nelimitat' : String(userStats.max_coffees);
-    const selectedHistoryRowsDesktop = (state.selectedUserHistory || []).map((r) => `
+    const selectedHistoryRowsDesktop = (selectedHistory || []).map((r) => `
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-1">${esc(r.id)}</td>
         <td class="py-1"><input class="cafea-input input-log-datetime" style="width:100%;max-width:260px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
@@ -482,7 +513,7 @@
         <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
       </tr>
     `).join('');
-    const selectedHistoryRowsMobile = (state.selectedUserHistory || []).map((r) => `
+    const selectedHistoryRowsMobile = (selectedHistory || []).map((r) => `
       <div class="cafea-log-row border-b border-slate-300/10 dark:border-white/5 py-1">
         <div class="text-xs text-slate-300 px-1">${esc(r.id)}</div>
         <input class="cafea-input input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" />
