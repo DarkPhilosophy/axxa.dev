@@ -561,9 +561,11 @@
               <div class="min-w-0">
                 <h1 class="text-lg md:text-2xl font-bold leading-tight whitespace-nowrap">Cafea Office Dashboard</h1>
                 <p class="text-slate-600 dark:text-slate-300">${esc(state.user.name)} • ${esc(state.user.role)}</p>
-                <div class="mt-2 flex gap-2 md:hidden">
+                <div class="mt-2 flex items-center gap-2 md:hidden whitespace-nowrap">
                   ${loadingBadge()}
-                  <button id="btn-refresh" class="cafea-btn cafea-btn-muted">Refresh</button>
+                  <button id="btn-refresh" class="cafea-btn cafea-btn-muted" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
+                    <i class="fas fa-rotate-right"></i>
+                  </button>
                   <button id="btn-logout" class="cafea-btn cafea-btn-muted">Logout</button>
                 </div>
               </div>
