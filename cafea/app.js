@@ -185,7 +185,7 @@
   }
 
   function userRoleLabel(role) {
-    return role === ROLE_ADMIN ? 'admin' : 'coleg';
+    return role === ROLE_ADMIN ? 'Șef' : 'coleg';
   }
 
   function parseConsumedAt(value) {
@@ -774,7 +774,7 @@
             Notificări email la consum cafea
           </label>
           <input class="cafea-input" value="${state.user?.active ? 'active' : 'pending'}" placeholder="status" disabled />
-          <input class="cafea-input" value="${esc(state.user?.role || 'user')}" placeholder="rol" disabled />
+          <input class="cafea-input" value="${esc(userRoleLabel(state.user?.role || 'user'))}" placeholder="rol" disabled />
           <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">Salvează profil</button>
           ${state.user?.role === ROLE_ADMIN ? '<button id="btn-test-mail" class="cafea-btn cafea-btn-muted md:col-span-2" type="button">Trimite email test (doar mie)</button>' : ''}
         </form>
@@ -802,7 +802,7 @@
         <input class="cafea-input" name="email" type="email" value="${esc(selectedUser.email)}" placeholder="email" required />
         <input class="cafea-input md:col-span-2" name="avatar_url" value="${esc(selectedUser.avatar_url || '')}" placeholder="avatar url" />
         <input class="cafea-input md:col-span-2" name="password" type="password" placeholder="parolă nouă (opțional)" />
-        <select class="cafea-input" name="role"><option value="user" ${selectedUser.role === 'user' ? 'selected' : ''}>user</option><option value="admin" ${selectedUser.role === 'admin' ? 'selected' : ''}>admin</option></select>
+        <select class="cafea-input" name="role"><option value="user" ${selectedUser.role === 'user' ? 'selected' : ''}>coleg</option><option value="admin" ${selectedUser.role === 'admin' ? 'selected' : ''}>Șef</option></select>
         <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="active" ${selectedUser.active ? 'checked' : ''}/> active</label>
         <label class="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" name="notify_enabled" ${Number(selectedUser.notify_enabled ?? 1) ? 'checked' : ''}/> notificări email (opt-in)</label>
         <button class="cafea-btn cafea-btn-primary" type="submit">Save ${esc(selectedUser.name)}</button>
@@ -836,7 +836,7 @@
             <input class="cafea-input" name="email" type="email" placeholder="email" required />
             <input class="cafea-input" name="password" type="password" placeholder="parolă" required />
             <input class="cafea-input" name="avatar_url" placeholder="avatar url" />
-            <select class="cafea-input" name="role"><option value="user">user</option><option value="admin">admin</option></select>
+            <select class="cafea-input" name="role"><option value="user">coleg</option><option value="admin">Șef</option></select>
             <button class="cafea-btn cafea-btn-primary" type="submit">Creează user</button>
           </form>
         </div>
