@@ -895,8 +895,11 @@
                 <div class="mt-1 flex items-center justify-between gap-2 md:hidden cafea-mobile-meta-row">
                   <div class="flex items-center gap-2 whitespace-nowrap">
                     ${loadingBadge()}
-                    <button class="cafea-btn cafea-btn-muted btn-refresh" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
-                      <i class="fas fa-rotate-right"></i>
+                    <button class="cafea-btn cafea-btn-muted btn-refresh" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px;display:inline-flex;align-items:center;justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                        <polyline points="21 3 21 9 15 9"></polyline>
+                      </svg>
                     </button>
                     <button class="cafea-btn cafea-btn-muted btn-logout">Logout</button>
                   </div>
