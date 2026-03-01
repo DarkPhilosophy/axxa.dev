@@ -653,10 +653,6 @@
         <span style="color:${deltaColor};font-weight:700;">${esc(deltaPrefix + manualDelta)}</span>
       </p>
     `;
-    const historyWindow = getVisibleHistoryRows();
-    const historyFrom = historyWindow.total ? historyWindow.start + 1 : 0;
-    const historyTo = historyWindow.end;
-
     const adminUserList = `
       <div class="cafea-glass p-5">
         <h3 class="font-bold text-lg mb-3">${isAdmin ? 'Consum în numele userului' : 'Vizualizare coleg'}</h3>
@@ -719,13 +715,6 @@
       </div>
     `;
 
-    const historyUsers = getHistoryUserOptions();
-    const historyUserOptions = historyUsers.map((u) => `
-      <option value="${u.id}" ${Number(state.historyFilterUserId || 0) === Number(u.id) ? 'selected' : ''}>
-        ${esc(u.name)}${u.email ? ` (${esc(u.email)})` : ''}
-      </option>
-    `).join('');
-
     return `
       <section class="grid gap-4 md:grid-cols-2">
         <div class="cafea-glass p-5">
@@ -739,6 +728,22 @@
         </div>
         ${adminUserList}
       </section>
+    `;
+  }
+
+  function renderHistoryTab(isAdmin) {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    const historyWindow = getVisibleHistoryRows();
+    const historyFrom = historyWindow.total ? historyWindow.start + 1 : 0;
+    const historyTo = historyWindow.end;
+    const historyUsers = getHistoryUserOptions();
+    const historyUserOptions = historyUsers.map((u) => `
+      <option value="${u.id}" ${Number(state.historyFilterUserId || 0) === Number(u.id) ? 'selected' : ''}>
+        ${esc(u.name)}${u.email ? ` (${esc(u.email)})` : ''}
+      </option>
+    `).join('');
+
+    return `
       <section class="cafea-glass p-5">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-bold text-lg">Istoric complet consum</h3>
@@ -903,6 +908,7 @@
               <div class="cafea-mobile-actions-inner">
                 ${renderTabButton('user', 'Acasă')}
                 ${renderTabButton('profile', 'Profile')}
+                ${renderTabButton('history', 'Istoric')}
                 ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
               </div>
             </div>
@@ -910,6 +916,7 @@
             <div class="hidden md:flex gap-2 flex-wrap md:justify-center">
             ${renderTabButton('user', 'Acasă')}
             ${renderTabButton('profile', 'Profile')}
+            ${renderTabButton('history', 'Istoric')}
             ${isAdmin ? renderTabButton('admin', 'Admin Panel') : ''}
             </div>
             <div class="hidden md:flex gap-2 md:justify-end">
@@ -925,6 +932,7 @@
 
         ${state.activeTab === 'user' ? renderUserTab(isAdmin) : ''}
         ${state.activeTab === 'profile' ? renderProfileTab() : ''}
+        ${state.activeTab === 'history' ? renderHistoryTab(isAdmin) : ''}
         ${state.activeTab === 'admin' && isAdmin ? renderAdminTab() : ''}
       </main>
     `;
