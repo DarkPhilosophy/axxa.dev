@@ -975,13 +975,11 @@
 
     if (state.activeTab === 'user') {
       document.querySelectorAll('.btn-pick-consume-user').forEach((btn) => {
-        btn.onclick = async () => {
+        btn.onclick = () => {
           state.selectedAdminUserId = Number(btn.dataset.id);
-          try {
-            await loadDashboard();
-          } catch (err) {
-            state.error = err.message;
-          }
+          const selected = buildSelectedUserView(state.selectedAdminUserId);
+          state.selectedUserStats = selected.stats;
+          state.selectedUserHistory = selected.history;
           renderApp();
         };
       });
