@@ -3,7 +3,8 @@ import { hashPassword, ROLES } from '../auth.js';
 import { many, one, run } from '../db.js';
 import { requireAdmin, requireAuth } from '../middleware.js';
 import { broadcastDashboardUpdate } from '../realtime.js';
-import { sendApprovalResultEmail, sendCoffeeTestEmail } from '../services/mailer.js';
+import { recordRuntimeError } from '../runtime-status.js';
+import { notifyCoffeeConsumed, sendApprovalResultEmail, sendCoffeeTestEmail } from '../services/mailer.js';
 
 export const adminRouter = Router();
 
@@ -142,6 +143,7 @@ adminRouter.post('/users/:id/approve', async (req, res) => {
 
   await run('UPDATE users SET active = TRUE WHERE id = ?', id);
   sendApprovalResultEmail({ to: existing.email, userName: existing.name, approved: true }).catch((err) => {
+    recordRuntimeError('mail.approval_notification', err, { user_id: id });
     console.error('[mail] approval notification failed:', err?.message || err);
   });
   res.json({ ok: true });
@@ -211,7 +213,7 @@ adminRouter.post('/consume/:id', async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
 
-  const target = await one('SELECT id, active, max_coffees FROM users WHERE id = ?', id);
+  const target = await one('SELECT id, active, max_coffees, name, email, avatar_url FROM users WHERE id = ?', id);
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (!target.active) return res.status(400).json({ error: 'User pending approval' });
   const consumedRow = await one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', id);
@@ -232,6 +234,33 @@ adminRouter.post('/consume/:id', async (req, res) => {
   if (!next || next.current_stock >= stock.current_stock) return res.status(409).json({ error: 'Stock epuizat' });
 
   await run('INSERT INTO coffee_logs(user_id, delta) VALUES(?, 1)', id);
+  const consumedAfterRow = await one('SELECT COALESCE(SUM(delta), 0) AS consumed_count FROM coffee_logs WHERE user_id = ?', id);
+  const consumedAfter = Number(consumedAfterRow?.consumed_count || 0);
+  const consumedTotalRow = await one('SELECT COALESCE(SUM(delta), 0) AS consumed_total FROM coffee_logs');
+  const consumedTotal = Number(consumedTotalRow?.consumed_total || 0);
+  const expectedCurrent = Number(next.initial_stock || 0) - consumedTotal;
+  const manualDelta = Number(next.current_stock || 0) - expectedCurrent;
+  const actorRemaining = target.max_coffees == null ? null : Math.max(0, Number(target.max_coffees) - consumedAfter);
+  const recipients = await many('SELECT email, name, notify_enabled FROM users WHERE active = TRUE');
+
+  notifyCoffeeConsumed({
+    actorName: target.name,
+    actorEmail: target.email,
+    actorAvatarUrl: target.avatar_url,
+    recipients,
+    stockCurrent: next.current_stock,
+    stockInitial: next.initial_stock,
+    stockMin: next.min_stock,
+    stockExpectedCurrent: expectedCurrent,
+    stockManualDelta: manualDelta,
+    actorConsumedCount: consumedAfter,
+    actorRemaining,
+    consumedAt: next.updated_at
+  }).catch((err) => {
+    recordRuntimeError('mail.admin_consume_notification', err, { target_user_id: id, actor_id: req.user.id });
+    console.error('[mail] admin consume notification failed:', err?.message || err);
+  });
+
   broadcastDashboardUpdate('admin.consume', { actor_id: req.user.id, user_id: id });
   return res.json({ ok: true, stock: { ...next, low: next.current_stock <= next.min_stock } });
 });
@@ -305,6 +334,7 @@ adminRouter.post('/users/:id/history', async (req, res) => {
     broadcastDashboardUpdate('history.add_user', { actor_id: req.user.id, user_id: id, delta: nextDelta });
     return res.json({ ok: true });
   } catch (err) {
+    recordRuntimeError('admin.users.history_add', err, { actor_id: req.user?.id, user_id: req.params?.id });
     console.error('[admin/users/:id/history]', err?.message || err);
     return res.status(500).json({ error: 'Failed to add history' });
   }
@@ -337,6 +367,7 @@ adminRouter.put('/history/:id', async (req, res) => {
     broadcastDashboardUpdate('history.update_log', { actor_id: req.user.id, log_id: id });
     return res.json({ ok: true });
   } catch (err) {
+    recordRuntimeError('admin.history.update', err, { actor_id: req.user?.id, log_id: req.params?.id });
     console.error('[admin/history/:id]', err?.message || err);
     return res.status(500).json({ error: 'Failed to update history' });
   }
@@ -372,6 +403,7 @@ adminRouter.post('/mail/test', async (req, res) => {
 
     return res.json({ ok: true });
   } catch (err) {
+    recordRuntimeError('admin.mail.test', err, { actor_id: req.user?.id });
     return res.status(502).json({ error: `Mail test failed: ${err?.message || err}` });
   }
 });

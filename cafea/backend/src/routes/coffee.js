@@ -3,6 +3,7 @@ import { verifyToken } from "../auth.js";
 import { many, one, run } from "../db.js";
 import { requireAuth } from "../middleware.js";
 import { attachDashboardStream, broadcastDashboardUpdate, detachDashboardStream } from "../realtime.js";
+import { recordRuntimeError } from "../runtime-status.js";
 import { notifyCoffeeConsumed } from "../services/mailer.js";
 
 export const coffeeRouter = Router();
@@ -51,6 +52,7 @@ coffeeRouter.get("/stream", async (req, res) => {
       detachDashboardStream(res);
     });
   } catch (err) {
+    recordRuntimeError("coffee.stream", err);
     return res.status(401).json({ error: "Unauthorized" });
   }
 });
@@ -75,6 +77,7 @@ coffeeRouter.get("/status", async (req, res) => {
       user: req.user,
     });
   } catch (err) {
+    recordRuntimeError("coffee.status", err);
     console.error("[coffee/status]", err?.message || err);
     return res.status(500).json({ error: "Failed to load status" });
   }
@@ -128,12 +131,14 @@ coffeeRouter.post("/consume", async (req, res) => {
       actorRemaining,
       consumedAt: next.updated_at,
     }).catch((err) => {
+      recordRuntimeError("mail.consume_notification", err);
       console.error("[mail] consume notification failed:", err?.message || err);
     });
     broadcastDashboardUpdate("coffee.consume", { actor_id: req.user.id });
 
     return res.json({ ok: true, stock: { ...next, low: Number(next.current_stock) <= Number(next.min_stock) } });
   } catch (err) {
+    recordRuntimeError("coffee.consume", err);
     console.error("[coffee/consume]", err?.message || err);
     return res.status(500).json({ error: "Failed to consume coffee" });
   }
@@ -164,6 +169,7 @@ coffeeRouter.get("/history", async (req, res) => {
 
     return res.json({ rows });
   } catch (err) {
+    recordRuntimeError("coffee.history", err);
     console.error("[coffee/history]", err?.message || err);
     return res.status(500).json({ error: "Failed to load history" });
   }
@@ -266,6 +272,7 @@ coffeeRouter.get("/snapshot", async (req, res) => {
       selected_user_history: selectedUserHistory,
     });
   } catch (err) {
+    recordRuntimeError("coffee.snapshot", err);
     console.error("[coffee/snapshot]", err?.message || err);
     return res.status(500).json({ error: "Failed to load snapshot" });
   }
