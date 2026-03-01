@@ -117,7 +117,6 @@
       const startedAt = performance.now();
       state.pendingRequests += 1;
       updateNetworkUi();
-      renderBusyTick();
       const headers = { 'Content-Type': 'application/json' };
       if (state.token) headers.Authorization = `Bearer ${state.token}`;
       const controller = new AbortController();
@@ -159,7 +158,6 @@
         clearTimeout(timeout);
         state.pendingRequests = Math.max(0, state.pendingRequests - 1);
         updateNetworkUi();
-        renderBusyTick();
       }
     })();
 
@@ -1479,11 +1477,6 @@
       stopLiveSync();
       renderAuth('login');
     }
-  }
-
-  function renderBusyTick() {
-    if (!state.user) return;
-    renderApp();
   }
 
   boot();
