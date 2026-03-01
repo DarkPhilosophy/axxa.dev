@@ -46,7 +46,20 @@
   let liveSyncRetryTimer = null;
   let liveSyncBackoffMs = 1000;
   let liveSyncBusy = false;
+  let mutationReconcileTimer = null;
   const numericPrevValues = new Map();
+
+  function scheduleMutationReconcile() {
+    if (mutationReconcileTimer) clearTimeout(mutationReconcileTimer);
+    mutationReconcileTimer = setTimeout(async () => {
+      mutationReconcileTimer = null;
+      if (!state.user || state.pendingRequests > 0 || liveSyncBusy) return;
+      try {
+        await loadDashboard({ preserveHistoryWindow: true });
+        renderApp();
+      } catch {}
+    }, 1200);
+  }
 
   function animateNumericValue(id, nextRaw) {
     const el = document.getElementById(id);
@@ -963,11 +976,11 @@
         try {
           state.error = '';
           await api('/api/coffee/consume', { method: 'POST' });
-          await loadDashboard();
+          scheduleMutationReconcile();
         } catch (err) {
           state.error = err.message;
+          renderApp();
         }
-        renderApp();
       };
     }
 
@@ -1008,11 +1021,11 @@
               min_stock: Number(field === 'min_stock' ? inputEl.value : state.stock.min_stock)
             };
             await api('/api/admin/stock/init', { method: 'POST', body: payload });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1023,11 +1036,11 @@
           try {
             state.error = '';
             await api(`/api/admin/consume/${state.selectedAdminUserId}`, { method: 'POST' });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1052,11 +1065,11 @@
               method: 'PUT',
               body: { max_coffees: raw === '' ? null : Number(raw) }
             });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1071,11 +1084,11 @@
               method: 'POST',
               body: { delta, consumed_at: consumed_at || null }
             });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1089,11 +1102,11 @@
               method: 'PUT',
               body: { consumed_at: consumedAt, delta }
             });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       });
 
@@ -1155,11 +1168,11 @@
                 role: String(fd.get('role') || 'user')
               }
             });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1167,11 +1180,11 @@
         btn.onclick = async () => {
           try {
             await api(`/api/admin/users/${btn.dataset.id}/approve`, { method: 'POST' });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       });
 
@@ -1180,11 +1193,11 @@
           if (!window.confirm('Respingi și ștergi userul pending?')) return;
           try {
             await api(`/api/admin/users/${btn.dataset.id}`, { method: 'DELETE' });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       });
 
@@ -1214,11 +1227,11 @@
                 notify_enabled: fd.get('notify_enabled') === 'on'
               }
             });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
 
@@ -1231,11 +1244,11 @@
           try {
             await api(`/api/admin/users/${id}`, { method: 'DELETE' });
             state.selectedAdminUserId = null;
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       }
     }
@@ -1250,11 +1263,11 @@
           if (!window.confirm(msg)) return;
           try {
             await api(`/api/admin/history/${btn.dataset.id}`, { method: 'DELETE' });
-            await loadDashboard();
+            scheduleMutationReconcile();
           } catch (err) {
             state.error = err.message;
+            renderApp();
           }
-          renderApp();
         };
       });
     }
@@ -1383,6 +1396,10 @@
         if (liveSyncBusy || state.pendingRequests > 0 || document.hidden) return;
         liveSyncBusy = true;
         try {
+          if (mutationReconcileTimer) {
+            clearTimeout(mutationReconcileTimer);
+            mutationReconcileTimer = null;
+          }
           await loadDashboard({ preserveHistoryWindow: true });
           renderApp();
         } catch (err) {
