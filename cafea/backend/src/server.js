@@ -4,7 +4,7 @@ import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { coffeeRouter } from './routes/coffee.js';
 import { config, getCorsAllowedOrigins } from './config.js';
-import { ensureSchema } from './db.js';
+import { ensureSchema, one } from './db.js';
 import { getRuntimeStatus, recordRuntimeError } from './runtime-status.js';
 import { ensureBootstrapAdmin, ensureUserColumns } from './services/init.js';
 
@@ -21,14 +21,30 @@ app.use(
 );
 app.use(express.json({ limit: '1mb' }));
 
-const healthHandler = (_req, res) => {
+const healthHandler = async (_req, res) => {
+  const pingStartedAt = process.hrtime.bigint();
   const runtime = getRuntimeStatus();
-  res.json({
-    ok: true,
-    service: 'cafea-backend',
-    database: 'postgresql',
-    runtime
-  });
+  try {
+    await one('SELECT 1 AS ok');
+    const dbPingMs = Number(process.hrtime.bigint() - pingStartedAt) / 1_000_000;
+    return res.json({
+      ok: true,
+      service: 'cafea-backend',
+      database: 'postgresql',
+      db_ping_ms: Number(dbPingMs.toFixed(2)),
+      runtime
+    });
+  } catch (err) {
+    recordRuntimeError('health.db_ping', err);
+    return res.status(503).json({
+      ok: false,
+      service: 'cafea-backend',
+      database: 'postgresql',
+      db_ping_ms: null,
+      error: 'database_unreachable',
+      runtime
+    });
+  }
 };
 
 app.get('/health', healthHandler);
