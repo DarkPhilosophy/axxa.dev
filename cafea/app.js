@@ -607,17 +607,29 @@
     const selectedHistoryRowsDesktop = (selectedHistory || []).map((r) => `
       <tr class="border-b border-slate-300/10 dark:border-white/5">
         <td class="py-1">${esc(r.id)}</td>
-        <td class="py-1"><input class="cafea-input input-log-datetime" style="width:100%;max-width:260px;" data-id="${r.id}" value="${esc(r.consumed_at)}" /></td>
-        <td class="py-1"><input class="cafea-input input-log-delta" style="width:100%;max-width:70px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" /></td>
-        <td class="py-1"><button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button></td>
+        <td class="py-1">
+          ${isAdmin
+            ? `<input class="cafea-input input-log-datetime" style="width:100%;max-width:260px;" data-id="${r.id}" value="${esc(r.consumed_at)}" />`
+            : `<span class="text-sm">${esc(fmtConsumedAt(r.consumed_at))}</span>`}
+        </td>
+        <td class="py-1">
+          ${isAdmin
+            ? `<input class="cafea-input input-log-delta" style="width:100%;max-width:70px;" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" />`
+            : `<span class="text-sm font-semibold">+${esc(r.delta)}</span>`}
+        </td>
+        <td class="py-1">${isAdmin ? `<button class="cafea-btn cafea-btn-muted btn-save-log" data-id="${r.id}">Save</button>` : ''}</td>
       </tr>
     `).join('');
     const selectedHistoryRowsMobile = (selectedHistory || []).map((r) => `
       <div class="cafea-log-row border-b border-slate-300/10 dark:border-white/5 py-1">
         <div class="text-xs text-slate-300 px-1">${esc(r.id)}</div>
-        <input class="cafea-input input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" />
-        <input class="cafea-input input-log-delta" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" />
-        <button class="cafea-btn cafea-btn-muted cafea-btn-xs btn-save-log" data-id="${r.id}">OK</button>
+        ${isAdmin
+          ? `<input class="cafea-input input-log-datetime" data-id="${r.id}" value="${esc(r.consumed_at)}" />`
+          : `<div class="text-xs text-slate-300">${esc(fmtConsumedAt(r.consumed_at))}</div>`}
+        ${isAdmin
+          ? `<input class="cafea-input input-log-delta" data-id="${r.id}" type="number" min="1" value="${esc(r.delta)}" />`
+          : `<div class="text-xs font-semibold">+${esc(r.delta)}</div>`}
+        ${isAdmin ? `<button class="cafea-btn cafea-btn-muted cafea-btn-xs btn-save-log" data-id="${r.id}">OK</button>` : '<div></div>'}
       </div>
     `).join('');
     const manualDelta = Number(state.stock?.manual_delta || 0);
