@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ro" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#00ff88">
+  <title>Cafea Office Dashboard</title>
+  <meta name="description" content="Cafea Office Dashboard - stoc, consum, utilizatori și istoric.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dist/tailwind.css?v=4">
+  <link rel="stylesheet" href="/cafea/app.css?v=22">
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #060606;
+      color: #e8eef7;
+      font-family: Outfit, Inter, sans-serif;
+    }
+    body {
+      padding: 12px;
+    }
+    #root {
+      min-height: calc(100vh - 24px);
+    }
+  </style>
+  <script>
+    window.CAFEA_API_BASE = 'https://cafea.axxa.dev/api';
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>Activează JavaScript pentru a folosi aplicația Cafea Office.</noscript>
+  <script src="/cafea/app.js?v=56"></script>
+
+<style id="android-app-shell">
+  body.cafe-app-only { background:#0b1020 !important; }
+  body.cafe-app-only #splash-screen,
+  body.cafe-app-only #preloader,
+  body.cafe-app-only .fixed.inset-0.pointer-events-none.z-\[-1\].overflow-hidden,
+  body.cafe-app-only #scrollToTopBtn,
+  body.cafe-app-only #project-modal,
+  body.cafe-app-only #article-modal,
+  body.cafe-app-only #admin-overlay { display:none !important; }
+  body.cafe-app-only #page-content { padding-top: 0 !important; }
+  body.cafe-app-only #cafea {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+    min-height: 100vh;
+  }
+  body.cafe-app-only #root {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 10px 12px 24px;
+  }
+  @supports (padding-top: constant(safe-area-inset-top)) {
+    body.cafe-app-only #cafea {
+      padding-top: calc(constant(safe-area-inset-top) + 8px) !important;
+    }
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.classList.add('cafe-app-only');
+  });
+</script>
+</body>
+</html>

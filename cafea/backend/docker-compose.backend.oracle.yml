@@ -1,0 +1,20 @@
+services:
+  cafea-backend:
+    networks:
+      - default
+      - netbird
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=alexa_netbird
+      - traefik.http.routers.cafea-api.rule=Host(`cafea.axxa.dev`) && PathPrefix(`/api`)
+      - traefik.http.routers.cafea-api.entrypoints=websecure
+      - traefik.http.routers.cafea-api.tls=true
+      - traefik.http.routers.cafea-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.cafea-api.priority=110
+      - traefik.http.routers.cafea-api.service=cafea-api
+      - traefik.http.services.cafea-api.loadbalancer.server.port=8788
+
+networks:
+  netbird:
+    external: true
+    name: alexa_netbird

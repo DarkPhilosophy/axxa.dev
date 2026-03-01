@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cafea AXXA</string>
+    <string name="title_activity_main">Cafea AXXA</string>
+    <string name="package_name">dev.axxa.cafea</string>
+    <string name="custom_url_scheme">dev.axxa.cafea</string>
+</resources>

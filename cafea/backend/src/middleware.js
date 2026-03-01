@@ -1,13 +1,13 @@
 import { verifyToken, ROLES } from './auth.js';
 import { one } from './db.js';
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   const raw = req.headers.authorization || '';
   const token = raw.startsWith('Bearer ') ? raw.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Missing token' });
   try {
     const payload = verifyToken(token);
-    const user = one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', payload.sub);
+    const user = await one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', payload.sub);
     if (!user || !user.active) return res.status(401).json({ error: 'Invalid user' });
     req.user = user;
     return next();

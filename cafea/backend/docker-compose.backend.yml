@@ -1,0 +1,23 @@
+services:
+  cafea-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cafea-backend
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env
+    ports:
+      - "8788:8788"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8788/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"

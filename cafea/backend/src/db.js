@@ -1,43 +1,43 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import Database from 'libsql';
-import { config, resolvedDbUrl } from './config.js';
+import pg from 'pg';
+import { config } from './config.js';
 
-let db = new Database(resolvedDbUrl, { authToken: config.dbToken });
+const { Pool } = pg;
 
-function reconnect() {
-  db = new Database(resolvedDbUrl, { authToken: config.dbToken });
+const pool = new Pool({
+  connectionString: config.postgresUrl,
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
+});
+
+function toPgPlaceholders(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
 }
 
-function withRetry(fn) {
-  try {
-    return fn();
-  } catch (err) {
-    const message = String(err?.message || '');
-    const isRetryable =
-      message.includes('STREAM_EXPIRED') ||
-      message.includes('invalid baton') ||
-      message.includes('Received an invalid baton');
-    if (!isRetryable) throw err;
-    reconnect();
-    return fn();
-  }
-}
-
-export function ensureSchema() {
-  const schemaPath = path.join(process.cwd(), 'src/sql/schema.sql');
+export async function ensureSchema() {
+  const schemaPath = path.join(process.cwd(), 'scripts/schema.postgres.sql');
   const sql = fs.readFileSync(schemaPath, 'utf8');
-  withRetry(() => db.exec(sql));
+  await pool.query(sql);
 }
 
-export function one(sql, ...args) {
-  return withRetry(() => db.prepare(sql).get(...args));
+export async function one(sql, ...args) {
+  const res = await pool.query(toPgPlaceholders(sql), args);
+  return res.rows[0] ?? null;
 }
 
-export function many(sql, ...args) {
-  return withRetry(() => db.prepare(sql).all(...args));
+export async function many(sql, ...args) {
+  const res = await pool.query(toPgPlaceholders(sql), args);
+  return res.rows;
 }
 
-export function run(sql, ...args) {
-  return withRetry(() => db.prepare(sql).run(...args));
+export async function run(sql, ...args) {
+  const res = await pool.query(toPgPlaceholders(sql), args);
+  return { changes: res.rowCount ?? 0 };
+}
+
+export async function closeDb() {
+  await pool.end();
 }

@@ -13,14 +13,14 @@ if (!password) {
   process.exit(1);
 }
 
-const exists = one('SELECT id FROM users WHERE email = ?', email);
+const exists = await one('SELECT id FROM users WHERE email = ?', email);
 if (exists) {
   console.log(`Admin ${email} already exists`);
   process.exit(0);
 }
 
 const passwordHash = await hashPassword(password);
-run(
+await run(
   'INSERT INTO users(email, password_hash, name, role, avatar_url, active) VALUES(?, ?, ?, ?, ?, 1)',
   email,
   passwordHash,

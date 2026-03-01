@@ -11,7 +11,7 @@ authRouter.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  const user = one('SELECT * FROM users WHERE email = ?', String(email).trim().toLowerCase());
+  const user = await one('SELECT * FROM users WHERE email = ?', String(email).trim().toLowerCase());
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   if (!user.active) return res.status(403).json({ error: 'Account pending approval' });
 
@@ -37,12 +37,12 @@ authRouter.post('/register', async (req, res) => {
   if (!email || !password || !name) return res.status(400).json({ error: 'email, password, name required' });
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const exists = one('SELECT id FROM users WHERE email = ?', normalizedEmail);
+  const exists = await one('SELECT id FROM users WHERE email = ?', normalizedEmail);
   if (exists) return res.status(409).json({ error: 'Email already exists' });
 
   const passwordHash = await hashPassword(password);
-  run(
-    'INSERT INTO users(email, password_hash, name, role, avatar_url, active) VALUES(?, ?, ?, ?, ?, 0)',
+  await run(
+    'INSERT INTO users(email, password_hash, name, role, avatar_url, active) VALUES(?, ?, ?, ?, ?, FALSE)',
     normalizedEmail,
     passwordHash,
     String(name).trim(),
@@ -50,13 +50,13 @@ authRouter.post('/register', async (req, res) => {
     avatar_url || ''
   );
 
-  const created = one('SELECT id, email, name, avatar_url, created_at FROM users WHERE email = ?', normalizedEmail);
+  const created = await one('SELECT id, email, name, avatar_url, created_at FROM users WHERE email = ?', normalizedEmail);
   if (created) {
     const token = signActionToken({ uid: created.id });
     const approveUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=approve&token=${encodeURIComponent(token)}`;
     const rejectUrl = `${config.appUrl.replace(/\/+$/, '')}/api/auth/registration-action?action=reject&token=${encodeURIComponent(token)}`;
     const sourceIp = String(req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-    const adminRows = many('SELECT email FROM users WHERE role = ? AND active = 1', 'admin');
+    const adminRows = await many('SELECT email FROM users WHERE role = ? AND active = TRUE', 'admin');
     const adminEmails = Array.from(new Set([
       ...adminRows.map((r) => String(r.email || '').trim().toLowerCase()),
       String(config.bootstrapAdminEmail || '').trim().toLowerCase()
@@ -92,7 +92,7 @@ authRouter.post('/register', async (req, res) => {
   return res.status(201).json({ ok: true, status: 'pending_approval' });
 });
 
-authRouter.get('/registration-action', (req, res) => {
+authRouter.get('/registration-action', async (req, res) => {
   try {
     const action = String(req.query.action || '').toLowerCase();
     const token = String(req.query.token || '');
@@ -103,11 +103,11 @@ authRouter.get('/registration-action', (req, res) => {
     const id = Number(payload.uid);
     if (!Number.isInteger(id)) return res.status(400).send('Invalid token payload');
 
-    const user = one('SELECT id, active, email, name FROM users WHERE id = ?', id);
+    const user = await one('SELECT id, active, email, name FROM users WHERE id = ?', id);
     if (!user) return res.status(404).send('User not found');
 
     if (action === 'approve') {
-      run('UPDATE users SET active = 1 WHERE id = ?', id);
+      await run('UPDATE users SET active = TRUE WHERE id = ?', id);
       sendApprovalResultEmail({ to: user.email, userName: user.name, approved: true }).catch((err) => {
         console.error('[mail] approval notification failed:', err?.message || err);
       });
@@ -116,8 +116,8 @@ authRouter.get('/registration-action', (req, res) => {
     sendApprovalResultEmail({ to: user.email, userName: user.name, approved: false }).catch((err) => {
       console.error('[mail] rejection notification failed:', err?.message || err);
     });
-    run('DELETE FROM coffee_logs WHERE user_id = ?', id);
-    run('DELETE FROM users WHERE id = ?', id);
+    await run('DELETE FROM coffee_logs WHERE user_id = ?', id);
+    await run('DELETE FROM users WHERE id = ?', id);
     return res.send('<h1>Cerere respinsa</h1><p>Utilizatorul a fost sters.</p>');
   } catch (err) {
     return res.status(400).send(`Invalid or expired token: ${err?.message || err}`);
@@ -135,14 +135,14 @@ authRouter.put('/profile', requireAuth, async (req, res) => {
   const nextEmail = String(email || '').trim().toLowerCase();
   if (!nextName) return res.status(400).json({ error: 'name required' });
   if (!nextEmail) return res.status(400).json({ error: 'email required' });
-  const duplicate = one('SELECT id FROM users WHERE email = ? AND id <> ?', nextEmail, req.user.id);
+  const duplicate = await one('SELECT id FROM users WHERE email = ? AND id <> ?', nextEmail, req.user.id);
   if (duplicate) return res.status(409).json({ error: 'Email already exists' });
 
   const nextNotify = notify_enabled == null ? Number(req.user.notify_enabled ?? 1) : Number(Boolean(notify_enabled));
   const nextPassword = String(password || '').trim();
   if (nextPassword) {
     const passwordHash = await hashPassword(nextPassword);
-    run(
+    await run(
       'UPDATE users SET name = ?, avatar_url = ?, email = ?, password_hash = ?, notify_enabled = ? WHERE id = ?',
       nextName,
       nextAvatar,
@@ -152,8 +152,8 @@ authRouter.put('/profile', requireAuth, async (req, res) => {
       req.user.id
     );
   } else {
-    run('UPDATE users SET name = ?, avatar_url = ?, email = ?, notify_enabled = ? WHERE id = ?', nextName, nextAvatar, nextEmail, nextNotify, req.user.id);
+    await run('UPDATE users SET name = ?, avatar_url = ?, email = ?, notify_enabled = ? WHERE id = ?', nextName, nextAvatar, nextEmail, nextNotify, req.user.id);
   }
-  const updated = one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', req.user.id);
+  const updated = await one('SELECT id, email, name, role, avatar_url, active, notify_enabled FROM users WHERE id = ?', req.user.id);
   res.json({ ok: true, user: updated });
 });

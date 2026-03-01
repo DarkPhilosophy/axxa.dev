@@ -1,14 +1,19 @@
-FROM node:22-alpine
-
+FROM node:22-alpine AS deps
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 
-COPY package*.json ./
-RUN npm install --omit=dev
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
 
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./package.json
 COPY src ./src
 COPY scripts ./scripts
 
-ENV NODE_ENV=production
-EXPOSE 8788
+RUN chown -R node:node /app
+USER node
 
-CMD ["npm", "start"]
+EXPOSE 8788
+CMD ["node", "src/server.js"]

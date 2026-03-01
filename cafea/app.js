@@ -3,6 +3,17 @@
   const ROLE_ADMIN = 'admin';
   const root = document.getElementById('root');
 
+  // UI Logger for Android debugging
+  const logs = [];
+  function log(msg, type = 'log') {
+    const s = `[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${msg}`;
+    console[type](s);
+    logs.unshift(s);
+    if (logs.length > 50) logs.pop();
+    const el = document.getElementById('debug-terminal');
+    if (el) el.innerHTML = logs.map(l => esc(l)).join('<br>');
+  }
+
   const state = {
     token: localStorage.getItem('cafea_token') || '',
     user: null,
@@ -24,12 +35,17 @@
     historyScrollHint: '',
     historyFilterFrom: '',
     historyFilterTo: '',
+    historyFilterUserId: '',
     historyQuickDays: 0,
     historySortKey: 'consumed_at',
     historySortDir: 'desc'
   };
   const inflight = new Map();
   let loadingEl = null;
+  let liveSyncSource = null;
+  let liveSyncRetryTimer = null;
+  let liveSyncBackoffMs = 1000;
+  let liveSyncBusy = false;
   const numericPrevValues = new Map();
 
   function animateNumericValue(id, nextRaw) {
@@ -107,17 +123,36 @@
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), opts.timeoutMs || 20000);
       try {
+        log(`REQ: ${method} ${API_BASE}${normalizedPath}...`);
         const res = await fetch(`${API_BASE}${normalizedPath}`, {
           method,
           headers,
           body: opts.body ? JSON.stringify(opts.body) : undefined,
           signal: controller.signal
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        const data = await res.json().catch((e) => {
+          log(`JSON PARSE FAIL: ${e.message}`, 'error');
+          return {};
+        });
+        log(`RES: ${res.status} ${JSON.stringify(data).slice(0, 100)}...`);
+        if (!res.ok) {
+          const errMsg = data.error || `HTTP ${res.status}`;
+          log(`FAILURE: ${errMsg}`, 'warn');
+          if (res.status === 401 && (errMsg.includes('Invalid token') || errMsg.includes('Missing token'))) {
+            log('Invaliding session due to auth error...', 'error');
+            localStorage.removeItem('cafea_token');
+            state.token = '';
+            state.user = null;
+            setTimeout(() => renderAuth('login'), 500);
+          }
+          throw new Error(errMsg);
+        }
         return data;
       } catch (err) {
         if (err?.name === 'AbortError') throw new Error('Cererea a expirat. Încearcă din nou.');
+        const debugInfo = ` [URL: ${API_BASE}${normalizedPath}]`;
+        err.message = (err.message || 'Eroare necunoscută') + debugInfo;
+        log(`API ERR: ${err.message}`, 'error');
         throw err;
       } finally {
         state.lastRequestMs = Math.max(0, performance.now() - startedAt);
@@ -176,16 +211,28 @@
             ${loadingBadge()}
           </div>
           <h1 class="text-3xl md:text-5xl font-bold">Cafea Office Dashboard</h1>
-          <p class="mt-2 text-slate-600 dark:text-slate-300">${mode === 'login' ? 'Login cu cont existent.' : 'Creezi cont nou (pending), apoi admin aprobă.'}</p>
+          <p class="mt-2 text-slate-600 dark:text-slate-300">API: ${esc(API_BASE)}</p>
+          <p class="mt-1 text-xs text-slate-500">${mode === 'login' ? 'Login cu cont existent.' : 'Creezi cont nou (pending), apoi admin aprobă.'}</p>
           <form id="auth-form" class="grid md:grid-cols-2 gap-3 mt-6">
             ${mode === 'register' ? '<input id="name" class="cafea-input md:col-span-2" placeholder="nume" required />' : ''}
             <input id="email" type="email" class="cafea-input" placeholder="email" required />
             <input id="password" type="password" class="cafea-input" placeholder="parolă" required />
             ${mode === 'register' ? '<input id="avatar_url" class="cafea-input md:col-span-2" placeholder="avatar url (opțional)" />' : ''}
-            <button class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">${mode === 'login' ? 'Intră în aplicație' : 'Trimite cerere cont'}</button>
+            <button id="auth-submit" class="cafea-btn cafea-btn-primary md:col-span-2" type="submit">
+              ${mode === 'login' ? 'Intră în aplicație' : 'Trimite cerere cont'}
+            </button>
           </form>
-          ${state.info ? `<p class="text-green-500 mt-3">${esc(state.info)}</p>` : ''}
-          ${state.error ? `<p class="text-red-500 mt-3">${esc(state.error)}</p>` : ''}
+          ${state.info ? `<p class="text-green-500 mt-3 font-bold">${esc(state.info)}</p>` : ''}
+          ${state.error ? `<div class="bg-red-500/10 border border-red-500/50 p-3 rounded-lg mt-4 text-red-500 font-bold whitespace-pre-wrap">${esc(state.error)}</div>` : ''}
+          
+          <div class="mt-8 border-t border-white/10 pt-4">
+            <details>
+              <summary class="text-xs text-slate-500 cursor-pointer uppercase tracking-widest">Debug Traffic Log</summary>
+              <div id="debug-terminal" class="mt-2 p-2 bg-black/50 rounded font-mono text-[10px] text-emerald-400 overflow-y-auto max-h-48 whitespace-pre-wrap">
+                --- logs will appear here ---
+              </div>
+            </details>
+          </div>
         </div>
       </div>
     `;
@@ -209,20 +256,35 @@
         const email = document.getElementById('email').value.trim().toLowerCase();
         const password = document.getElementById('password').value;
         if (mode === 'login') {
+          log('Logging in...');
+          const submitBtn = document.getElementById('auth-submit');
+          if (submitBtn) submitBtn.textContent = 'Autentificare...';
           const d = await api('/api/auth/login', { method: 'POST', body: { email, password } });
+          log('Login success, fetching user patterns...');
           state.token = d.token;
+          state.user = d.user; 
           localStorage.setItem('cafea_token', d.token);
-          await loadMe();
-          await loadDashboard();
+          try {
+            await loadMe();
+            await loadDashboard();
+          } catch (loadErr) {
+            log(`Post-login load failed: ${loadErr.message}`, 'warn');
+            if (!state.user) throw loadErr;
+          }
+          log('Transitioning to App...');
+          startLiveSync();
           renderApp();
           return;
         }
+        log('Registering...');
         const name = document.getElementById('name').value.trim();
         const avatar = (document.getElementById('avatar_url')?.value || '').trim();
         await api('/api/auth/register', { method: 'POST', body: { email, password, name, avatar_url: avatar } });
         state.info = 'Cont creat. Așteaptă aprobarea admin înainte de login.';
+        log('Registration success');
         renderAuth('login');
       } catch (err) {
+        log(`FORM ERR: ${err.message}`, 'error');
         state.error = err.message;
         renderAuth(mode);
       }
@@ -290,6 +352,35 @@
     return state.historySortDir === 'asc' ? ' ↑' : ' ↓';
   }
 
+  function getHistoryUserOptions() {
+    const byId = new Map();
+    for (const u of (state.users || [])) {
+      const id = Number(u?.id);
+      if (!Number.isInteger(id) || id <= 0) continue;
+      byId.set(id, {
+        id,
+        name: u?.name || u?.email || `User ${id}`,
+        email: u?.email || ''
+      });
+    }
+    for (const r of (state.rows || [])) {
+      const id = Number(r?.user_id);
+      if (!Number.isInteger(id) || id <= 0 || byId.has(id)) continue;
+      byId.set(id, {
+        id,
+        name: r?.name || r?.email || `User ${id}`,
+        email: r?.email || ''
+      });
+    }
+    return [...byId.values()].sort((a, b) => {
+      const an = String(a.name || '').toLowerCase();
+      const bn = String(b.name || '').toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return a.id - b.id;
+    });
+  }
+
   function getProcessedHistoryRows() {
     const rows = [...(state.rows || [])];
     let out = rows;
@@ -313,6 +404,10 @@
         if (to && t > to) return false;
         return true;
       });
+    }
+    const filteredUserId = Number(state.historyFilterUserId || 0);
+    if (Number.isInteger(filteredUserId) && filteredUserId > 0) {
+      out = out.filter((r) => Number(r.user_id) === filteredUserId);
     }
 
     const sortKey = state.historySortKey;
@@ -597,6 +692,13 @@
       </div>
     `;
 
+    const historyUsers = getHistoryUserOptions();
+    const historyUserOptions = historyUsers.map((u) => `
+      <option value="${u.id}" ${Number(state.historyFilterUserId || 0) === Number(u.id) ? 'selected' : ''}>
+        ${esc(u.name)}${u.email ? ` (${esc(u.email)})` : ''}
+      </option>
+    `).join('');
+
     return `
       <section class="grid gap-4 md:grid-cols-2">
         <div class="cafea-glass p-5">
@@ -612,7 +714,7 @@
       </section>
       <section class="cafea-glass p-5">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-bold text-lg">${isAdmin ? 'Istoric complet consum' : 'Istoricul tău'}</h3>
+          <h3 class="font-bold text-lg">Istoric complet consum</h3>
         </div>
         <div class="mb-2 flex items-center justify-between gap-2 flex-wrap text-xs text-slate-500">
           <span>Poziție ${historyFrom}/${historyWindow.total} • Afișate ${Math.max(0, historyTo - historyFrom + 1)} iteme</span>
@@ -626,6 +728,10 @@
             <option value="1" ${Number(state.historyQuickDays) === 1 ? 'selected' : ''}>Azi</option>
             <option value="7" ${Number(state.historyQuickDays) === 7 ? 'selected' : ''}>Ultimele 7 zile</option>
             <option value="30" ${Number(state.historyQuickDays) === 30 ? 'selected' : ''}>Ultimele 30 zile</option>
+          </select>
+          <select id="history-user-filter" class="cafea-input" style="min-width:220px;max-width:320px;">
+            <option value="">Toți utilizatorii</option>
+            ${historyUserOptions}
           </select>
           <input id="history-date-from" class="cafea-input" type="date" value="${esc(state.historyFilterFrom)}" style="max-width:170px;" />
           <input id="history-date-to" class="cafea-input" type="date" value="${esc(state.historyFilterTo)}" style="max-width:170px;" />
@@ -738,16 +844,24 @@
     const isAdmin = state.user?.role === ROLE_ADMIN;
     if (!isAdmin && state.activeTab === 'admin') state.activeTab = 'user';
 
+    if (!state.user) {
+      renderAuth('login');
+      return;
+    }
+
     root.innerHTML = `
       <main class="cafea-shell space-y-4">
         <header class="cafea-glass p-3 md:p-5">
           <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div class="flex items-center gap-3">
-              <img src="${esc(state.user.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
+              <img src="${esc(state.user?.avatar_url || 'https://placehold.co/72x72?text=U')}" class="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" />
               <div class="min-w-0">
                 <h1 class="text-lg md:text-2xl font-bold leading-tight whitespace-nowrap">Cafea Office Dashboard</h1>
+                <p class="mt-1 hidden md:block text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                  ${esc(state.user?.name || '')} • ${esc(state.user?.role || '')}
+                </p>
                 <div class="mt-1 flex items-center justify-between gap-2 md:hidden cafea-mobile-meta-row">
-                  <p class="text-slate-600 dark:text-slate-300 whitespace-nowrap">${esc(state.user.name)} • ${esc(state.user.role)}</p>
+                  <p class="text-slate-600 dark:text-slate-300 whitespace-nowrap">${esc(state.user?.name || '')} • ${esc(state.user?.role || '')}</p>
                   <div class="flex items-center gap-2 whitespace-nowrap">
                     ${loadingBadge()}
                     <button class="cafea-btn cafea-btn-muted btn-refresh" aria-label="Refresh" title="Refresh" style="padding:0.44rem 0.6rem;min-width:40px">
@@ -804,6 +918,7 @@
         state.user = null;
         state.error = '';
         state.info = '';
+        stopLiveSync();
         renderAuth('login');
       };
     });
@@ -811,7 +926,7 @@
     document.querySelectorAll('.btn-refresh').forEach((el) => {
       el.onclick = async () => {
         try {
-          await loadDashboard();
+          await loadDashboard({ preserveHistoryWindow: true });
         } catch (err) {
           state.error = err.message;
         }
@@ -1188,6 +1303,15 @@
         renderApp();
       };
     }
+    const historyUserFilter = document.getElementById('history-user-filter');
+    if (historyUserFilter) {
+      historyUserFilter.onchange = () => {
+        state.historyFilterUserId = historyUserFilter.value || '';
+        state.historyWindowStart = 0;
+        state.historyScrollHint = '';
+        renderApp();
+      };
+    }
     const historyDateFrom = document.getElementById('history-date-from');
     if (historyDateFrom) {
       historyDateFrom.onchange = () => {
@@ -1210,6 +1334,7 @@
     if (historyFilterClear) {
       historyFilterClear.onclick = () => {
         state.historyQuickDays = 0;
+        state.historyFilterUserId = '';
         state.historyFilterFrom = '';
         state.historyFilterTo = '';
         state.historySortKey = 'consumed_at';
@@ -1221,12 +1346,70 @@
     }
   }
 
+  function stopLiveSync() {
+    if (liveSyncRetryTimer) {
+      clearTimeout(liveSyncRetryTimer);
+      liveSyncRetryTimer = null;
+    }
+    if (liveSyncSource) {
+      liveSyncSource.close();
+      liveSyncSource = null;
+    }
+    liveSyncBusy = false;
+  }
+
+  function startLiveSync() {
+    if (!state.token || !state.user) return;
+    if (liveSyncSource) return;
+
+    const connect = () => {
+      if (!state.token || !state.user) return;
+      const streamUrl = `${API_BASE}/coffee/stream?token=${encodeURIComponent(state.token)}`;
+      const source = new EventSource(streamUrl);
+      liveSyncSource = source;
+
+      source.addEventListener('dashboard', async () => {
+        if (liveSyncBusy || state.pendingRequests > 0 || document.hidden) return;
+        liveSyncBusy = true;
+        try {
+          await loadDashboard({ preserveHistoryWindow: true });
+          renderApp();
+        } catch (err) {
+          console.warn('[cafea-live-sync]', err?.message || err);
+        } finally {
+          liveSyncBusy = false;
+        }
+      });
+
+      source.addEventListener('connected', () => {
+        liveSyncBackoffMs = 1000;
+      });
+
+      source.onerror = () => {
+        if (liveSyncSource) {
+          liveSyncSource.close();
+          liveSyncSource = null;
+        }
+        if (liveSyncRetryTimer || !state.user || !state.token) return;
+        const waitMs = liveSyncBackoffMs;
+        liveSyncBackoffMs = Math.min(30000, liveSyncBackoffMs * 2);
+        liveSyncRetryTimer = setTimeout(() => {
+          liveSyncRetryTimer = null;
+          connect();
+        }, waitMs);
+      };
+    };
+
+    connect();
+  }
+
   async function loadMe() {
     const d = await api('/api/auth/me');
     state.user = d.user;
   }
 
-  async function loadDashboard() {
+  async function loadDashboard(opts = {}) {
+    const preserveHistoryWindow = Boolean(opts.preserveHistoryWindow);
     if (!state.user) return;
     const prevSelectedId = state.selectedAdminUserId == null ? null : Number(state.selectedAdminUserId);
     const selected = state.selectedAdminUserId != null ? `&selected_user_id=${encodeURIComponent(state.selectedAdminUserId)}` : '';
@@ -1234,8 +1417,10 @@
     state.stock = snap.stock;
     state.user = snap.user || state.user;
     state.rows = snap.rows || [];
-    state.historyWindowStart = 0;
-    state.historyScrollHint = '';
+    if (!preserveHistoryWindow) {
+      state.historyWindowStart = 0;
+      state.historyScrollHint = '';
+    }
     state.userConsumption = snap.user_consumption || {};
     const isAdmin = state.user.role === ROLE_ADMIN;
     if (isAdmin) {
@@ -1272,11 +1457,13 @@
       await loadMe();
       await loadDashboard();
       renderApp();
+      startLiveSync();
     } catch (err) {
       localStorage.removeItem('cafea_token');
       state.token = '';
       state.user = null;
       state.error = err.message;
+      stopLiveSync();
       renderAuth('login');
     }
   }

@@ -2,22 +2,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-function namespaceUrl(base, namespace) {
-  if (!base) return null;
-  const u = new URL(base);
-  const ns = String(namespace || '').replace(/\.db$/, '');
-  const path = (u.pathname || '').replace(/\/+$/, '');
-  if (path.startsWith('/db/')) return u.toString();
-  u.pathname = `/db/${ns}`;
-  return u.toString();
-}
-
 export const config = {
   port: Number(process.env.PORT || 8788),
   jwtSecret: process.env.JWT_SECRET || 'change-me',
-  dbNamespace: process.env.DB_NAMESPACE || 'cafea',
-  dbUrlBase: process.env.DB_URL || 'https://pg.axxa.dev',
-  dbToken: process.env.DB_TOKEN || '',
+  postgresUrl: process.env.POSTGRES_URL || '',
   corsOrigin: process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
   appUrl: process.env.APP_URL || process.env.CORS_ORIGIN || 'https://cafea.axxa.dev',
   bootstrapAdminEmail: process.env.ADMIN_EMAIL || 'alexa@axxa.dev',
@@ -34,8 +22,18 @@ export const config = {
   resendApiKey: process.env.RESEND_API_KEY || ''
 };
 
-export const resolvedDbUrl = namespaceUrl(config.dbUrlBase, config.dbNamespace);
+if (!config.postgresUrl) {
+  throw new Error('POSTGRES_URL is required');
+}
 
-if (!resolvedDbUrl) {
-  throw new Error('DB_URL is required');
+
+export function getCorsAllowedOrigins() {
+  const raw = String(config.corsOrigin || '').trim();
+  const defaults = ['https://cafea.axxa.dev', 'https://zeul.go.ro', 'https://localhost', 'capacitor://localhost'];
+  const parsed = raw
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const merged = parsed.length ? [...parsed, ...defaults] : defaults;
+  return [...new Set(merged)];
 }
