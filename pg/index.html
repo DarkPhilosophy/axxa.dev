@@ -33,7 +33,8 @@
     .pill{display:inline-flex;align-items:center;padding:4px 8px;border:1px solid #3a5788;border-radius:999px;background:#0d1a30;color:#d6e4ff;font-size:12px}
     .node-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:10px}
     .node-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .node-title{font-size:20px;font-weight:700}
+    .node-title{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .ping-inline{display:inline-flex;align-items:center;border:1px solid #395a8f;border-radius:999px;padding:2px 8px;font-size:12px;color:#cfe1ff;background:#0f213b}
     .node-meta{font-size:12px;color:var(--muted)}
     .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
     .metric{padding:9px;border:1px solid #2a4066;border-radius:10px;background:#0d1a2e}
@@ -42,6 +43,9 @@
     .mono-box{margin-top:10px;background:#0a1426;border:1px solid #263a60;border-radius:10px;padding:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
     .mismatch-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:10px}
     .mismatch-item{border:1px solid #2a4066;border-radius:10px;padding:10px;background:#0d1a2e}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .toggle-btn{background:#14233d;border:1px solid #355483;color:#d6e5ff;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer}
+    .collapsed .section-body{display:none}
     canvas{width:100%;height:230px;border:1px solid var(--line);border-radius:12px;background:#0b1424;display:block}
     .legend{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:8px}
     .chip{display:inline-flex;align-items:center;gap:6px}.chip i{display:inline-block;width:10px;height:10px;border-radius:999px}
@@ -91,9 +95,14 @@
         <div id="nsMismatch" class="mismatch-list"></div>
       </article>
 
-      <article class="card span-12">
-        <div class="k">Content Mismatch (cafea)</div>
-        <div id="contentMismatch" class="mismatch-list"></div>
+      <article id="contentMismatchCard" class="card span-12 collapsed">
+        <div class="section-head">
+          <div class="k">Content Mismatch (cafea)</div>
+          <button id="toggleContentMismatch" class="toggle-btn mono">Expand</button>
+        </div>
+        <div class="section-body">
+          <div id="contentMismatch" class="mismatch-list"></div>
+        </div>
       </article>
 
       <article class="card span-8">
@@ -231,12 +240,15 @@ function renderNodeCards(nodes){
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
     const cafea=n.cafea_metrics||{};
 
+    const pingMs=n.ping_ms ?? n.latency_ms ?? null;
+    const pingText=Number.isFinite(Number(pingMs))?`${Number(pingMs)} ms`:'n/a';
+
     const card=document.createElement('article');
     card.className='card';
     card.innerHTML=`
       <div class="node-head">
         <div>
-          <div class="node-title mono">${name}</div>
+          <div class="node-title mono">${name} <span class="ping-inline">[${pingText}]</span></div>
           <div class="node-meta">${n.country||'-'} • mode=${n.mode||'-'} • recovery=${String(!!n.in_recovery)}</div>
         </div>
         <span class="badge ${n.postgresql_active==='active'?'ok':'bad'}"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span>
@@ -245,6 +257,11 @@ function renderNodeCards(nodes){
         <div class="metric"><div class="mkey">Databases</div><div class="mval mono">${n.database_count??0}</div></div>
         <div class="metric"><div class="mkey">Replication Clients</div><div class="mval mono">${n.replication_clients??0}</div></div>
         <div class="metric"><div class="mkey">Uptime</div><div class="mval mono">${uptime(n.postgres_uptime_sec||0)}</div></div>
+      </div>
+      <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">Node Ping</div><div class="mval mono">${pingText}</div></div>
+        <div class="metric"><div class="mkey">TailScale IP</div><div class="mval mono">${n.tailscale_ip||'-'}</div></div>
+        <div class="metric"><div class="mkey">Reachable</div><div class="mval mono">${n.reachable===true?'yes':'no'}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
         <div class="metric"><div class="mkey">cafea.users</div><div class="mval mono">${cafea.users??'-'}</div></div>
@@ -405,15 +422,31 @@ async function refresh(){
   }
 }
 
+function shouldPauseAutoRefresh(){
+  const sel=window.getSelection?.();
+  if(sel && !sel.isCollapsed) return true;
+  const ae=document.activeElement;
+  if(!ae) return false;
+  const tag=String(ae.tagName||'').toLowerCase();
+  if(tag==='input' || tag==='textarea' || tag==='select') return true;
+  if(ae.isContentEditable) return true;
+  return false;
+}
+
 el('refreshBtn').addEventListener('click',refresh);
 el('rangeValue').addEventListener('change',applyTimeFilter);
 el('rangeUnit').addEventListener('change',applyTimeFilter);
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
 el('incidentScroll').addEventListener('scroll',renderVirtualIncidents);
+el('toggleContentMismatch').addEventListener('click',()=>{
+  const card=el('contentMismatchCard');
+  card.classList.toggle('collapsed');
+  el('toggleContentMismatch').textContent=card.classList.contains('collapsed')?'Expand':'Collapse';
+});
 
 refresh();
 drawChart();
-setInterval(refresh,10000);
+setInterval(()=>{ if(!shouldPauseAutoRefresh()) refresh(); },10000);
 </script>
 </body>
 </html>
