@@ -238,6 +238,7 @@ function renderNodeCards(nodes){
     const tablesByDb=n.table_counts_by_db||{};
     const schemaLines=Object.entries(schemasByDb).map(([db,list])=>`${db}: [${(list||[]).join(', ')}]`).join('\n');
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
+    const probeLines=((n.external_probe?.probes||[]).map(p=>`${p.city||'-'}, ${p.country||'-'}: avg=${p.avg_ms ?? 'n/a'} ms, loss=${p.loss_pct ?? 'n/a'}%`).join('\n')) || '-';
     const cafea=n.cafea_metrics||{};
 
     const fmtMs=v=>{
@@ -281,7 +282,7 @@ function renderNodeCards(nodes){
         <div class="metric"><div class="mkey">cafea.stock_settings</div><div class="mval mono">${cafea.stock_settings??'-'}</div></div>
       </div>
       <div style="margin-top:10px" class="row">${dbs||'<span class="mono" style="color:var(--muted)">no namespaces</span>'}</div>
-      <div class="mono-box"><strong>Schemas by DB</strong>\n${schemaLines||'-'}\n\n<strong>Tables by DB</strong>\n${tableLines||'-'}</div>
+      <div class="mono-box"><strong>External Probes (Tokyo/Frankfurt/New York)</strong>\n${probeLines}\n\n<strong>Schemas by DB</strong>\n${schemaLines||'-'}\n\n<strong>Tables by DB</strong>\n${tableLines||'-'}</div>
     `;
     root.appendChild(card);
   });
