@@ -50,6 +50,22 @@
     .method{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid #2d5878;border-radius:999px;color:#bcefff;background:#0d2733;font-size:11px}
     .region-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .region-chip{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #2f4c70;border-radius:999px;background:#0d1f35;color:#d8e8ff;font-size:12px}
+    .controls{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+    .ctrl-box{grid-column:span 12;background:linear-gradient(180deg,#0d1729,#0a1323);border:1px solid #2b436a;border-radius:14px;padding:10px}
+    .ctrl-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .switch-btn{background:#132238;border:1px solid #35557f;color:#d4e5ff;padding:7px 11px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer}
+    .switch-btn.active{background:linear-gradient(180deg,#1d3e66,#153251);border-color:#4f7fb9;color:#f2f7ff}
+    .chip-check{display:inline-flex;align-items:center;gap:6px;border:1px solid #2f4f79;border-radius:999px;padding:5px 9px;background:#0f1e34;color:#d7e9ff;cursor:pointer;user-select:none}
+    .chip-check input{accent-color:#4dc2ff}
+    .chip-check.dim{opacity:.55}
+    .node-grid.view-list{grid-template-columns:1fr}
+    .node-grid.view-list .card{padding:12px}
+    .node-grid.view-list .metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .shine{position:relative;overflow:hidden}
+    .shine::after{content:"";position:absolute;inset:-60% auto -60% -140%;width:120%;transform:rotate(12deg);background:linear-gradient(90deg,#ffffff00,#ffffff17,#ffffff00);animation:slide 8s linear infinite;pointer-events:none}
+    @keyframes slide{0%{left:-140%}100%{left:180%}}
+    .reveal{animation:rise .35s ease}
+    @keyframes rise{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     .mono-box{margin-top:10px;background:#0a1426;border:1px solid #263a60;border-radius:10px;padding:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
     .mismatch-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:10px}
     .mismatch-item{border:1px solid #2a4066;border-radius:10px;padding:10px;background:#0d1a2e}
@@ -66,7 +82,7 @@
     .incident-row:last-child{border-bottom:none}
     .incident-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
     .footer{margin-top:12px;color:var(--muted);font-size:12px}
-    @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}.probe-grid{grid-template-columns:1fr}}
+    @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}.probe-grid{grid-template-columns:1fr}.node-grid.view-list .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
   </style>
 </head>
 <body>
@@ -94,6 +110,27 @@
       <article class="card span-4"><div class="k">Last Update UTC</div><div id="updated" class="v small mono">-</div></article>
 
       <article class="card span-12"><div class="k">Health Reason</div><div id="reason" class="reason mono">-</div></article>
+      <article class="card span-12 shine">
+        <div class="k">Interactive Controls</div>
+        <div class="controls" style="margin-top:8px">
+          <div class="ctrl-box">
+            <div class="ctrl-row">
+              <span class="k" style="margin-right:4px">View</span>
+              <button id="viewCardBtn" class="switch-btn active mono">Cards</button>
+              <button id="viewListBtn" class="switch-btn mono">List</button>
+              <span id="selectionMeta" class="pill mono">selected: -</span>
+            </div>
+            <div class="ctrl-row" style="margin-top:9px">
+              <span class="k" style="margin-right:4px">Servers</span>
+              <div id="nodeFilters" class="ctrl-row"></div>
+            </div>
+            <div class="ctrl-row" style="margin-top:9px">
+              <span class="k" style="margin-right:4px">Regions</span>
+              <div id="regionFilters" class="ctrl-row"></div>
+            </div>
+          </div>
+        </div>
+      </article>
       <article class="card span-12">
         <div class="section-head">
           <div class="k">External Probes</div>
@@ -158,14 +195,15 @@
       </article>
     </section>
 
-    <div class="footer mono">auto-refresh every 10s • per-node metrics are shown separately (no merged latency average across nodes)</div>
+    <div class="footer mono">auto-refresh every 10s • client-side latency recalculation by selected nodes/regions • card/list mode</div>
   </main>
 
 <script>
 const STATUS='https://pg.axxa.dev/api/health';
 const HISTORY='https://pg.axxa.dev/api/history';
 const OUTAGES='https://pg.axxa.dev/api/outage';
-const CACHE={s:'ax_pg_health_v3',h:'ax_pg_history_v3',o:'ax_pg_outage_v3'};
+const CACHE={s:'ax_pg_health_v4',h:'ax_pg_history_v4',o:'ax_pg_outage_v4'};
+const UI_KEY='ax_pg_ui_state_v1';
 let pointsAll=[];
 let points=[];
 let incidentsAll=[];
@@ -173,13 +211,41 @@ let phase=0;
 let fromTs=0;
 let toTs=0;
 let refreshInFlight=false;
+let lastStatus=null;
 const rowH=126;
 const overscan=4;
+const uiState={view:'cards',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
 const nowTs=()=>Math.floor(Date.now()/1000);
 const uptime=s=>{s=Number(s||0);const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);return `${d}d ${h}h ${m}m`;};
+const norm=x=>String(x||'').trim().toLowerCase();
+const titleCase=s=>{s=String(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):'-';};
+
+function loadUiState(){
+  const raw=asJson(localStorage.getItem(UI_KEY));
+  if(!raw) return;
+  if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
+  if(Array.isArray(raw.nodes)) raw.nodes.forEach(x=>uiState.selectedNodes.add(String(x)));
+  if(Array.isArray(raw.regions)) raw.regions.forEach(x=>uiState.selectedRegions.add(norm(x)));
+}
+
+function saveUiState(){
+  const payload={
+    view:uiState.view,
+    nodes:[...uiState.selectedNodes],
+    regions:[...uiState.selectedRegions],
+  };
+  localStorage.setItem(UI_KEY,JSON.stringify(payload));
+}
+
+function percentile(values,p){
+  if(!values.length) return null;
+  const arr=[...values].sort((a,b)=>a-b);
+  const idx=Math.min(arr.length-1,Math.max(0,Math.ceil(p*arr.length)-1));
+  return arr[idx];
+}
 
 function getRangeSec(){
   const v=Math.max(1,Number(el('rangeValue').value||1));
@@ -219,6 +285,46 @@ function setBadge(state){
   b.innerHTML=`<span class="dot"></span>${String(state||'unknown').toUpperCase()}`;
 }
 
+function syncSelections(status){
+  const nodeNames=Object.keys(status?.nodes||{});
+  const nodeSet=new Set(nodeNames);
+  uiState.selectedNodes=new Set([...uiState.selectedNodes].filter(n=>nodeSet.has(n)));
+  if(!uiState.selectedNodes.size) nodeNames.forEach(n=>uiState.selectedNodes.add(n));
+
+  const regions=((status?.external_probes?.regions)||[]).map(norm).filter(Boolean);
+  const regionSet=new Set(regions);
+  uiState.selectedRegions=new Set([...uiState.selectedRegions].filter(r=>regionSet.has(r)));
+  if(!uiState.selectedRegions.size) regions.forEach(r=>uiState.selectedRegions.add(r));
+  saveUiState();
+}
+
+function calcLatencyFromNode(node, regionOrder){
+  const probes=node?.external_probe?.probes||[];
+  const pmap={};
+  probes.forEach(p=>{ pmap[norm(p.city)]=p; });
+  const selected=(regionOrder.length?regionOrder:[...Object.keys(pmap)]).filter(r=>uiState.selectedRegions.has(r));
+  const vals=[];
+  selected.forEach(r=>{
+    const p=pmap[r];
+    const v=Number(p?.avg_ms);
+    if(Number.isFinite(v) && v>0) vals.push(v);
+  });
+  if(!vals.length) return {avg:null,min:null,max:null,p95:null,selected};
+  return {
+    avg:Math.round(vals.reduce((a,b)=>a+b,0)/vals.length),
+    min:Math.round(Math.min(...vals)),
+    max:Math.round(Math.max(...vals)),
+    p95:Math.round(percentile(vals,0.95)),
+    selected,
+  };
+}
+
+function fmtMs(v){
+  if(v===null || v===undefined || v==='') return 'n/a';
+  const x=Number(v);
+  return Number.isFinite(x) && x >= 1 ? `${x} ms` : 'n/a';
+}
+
 function drawChart(){
   const c=el('chart'); if(!c) return;
   const ctx=c.getContext('2d');
@@ -249,9 +355,14 @@ function drawChart(){
 function renderNodeCards(nodes, externalMeta){
   const root=el('nodeCards');
   root.innerHTML='';
-  const regionOrder=(externalMeta?.regions||[]).map(r=>String(r||'').toLowerCase()).filter(Boolean);
-  const titleRegion=(x)=>x?x.charAt(0).toUpperCase()+x.slice(1):'-';
-  Object.entries(nodes||{}).forEach(([name,n])=>{
+  root.className='node-grid '+(uiState.view==='list'?'view-list':'');
+  const regionOrder=(externalMeta?.regions||[]).map(norm).filter(Boolean);
+  const entries=Object.entries(nodes||{}).filter(([name])=>uiState.selectedNodes.has(name));
+  if(!entries.length){
+    root.innerHTML='<article class="card"><div class="mono" style="color:var(--muted)">No selected servers</div></article>';
+    return;
+  }
+  entries.forEach(([name,n])=>{
     const dbs=(n.namespace_names||[]).map(x=>`<span class="pill mono">${x}</span>`).join(' ');
     const schemasByDb=n.schemas_by_db||{};
     const tablesByDb=n.table_counts_by_db||{};
@@ -259,32 +370,27 @@ function renderNodeCards(nodes, externalMeta){
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
     const probeList=n.external_probe?.probes||[];
     const probeMap={};
-    probeList.forEach(p=>{ probeMap[String(p.city||'').toLowerCase()]=p; });
-    const ordered=(regionOrder.length?regionOrder:[...Object.keys(probeMap)]);
-    const probeHtml=(ordered.length?ordered:['tokyo','amsterdam','new york']).map(r=>{
+    probeList.forEach(p=>{ probeMap[norm(p.city)]=p; });
+    const ordered=(regionOrder.length?regionOrder:[...Object.keys(probeMap)]).filter(r=>uiState.selectedRegions.has(r));
+    const probeHtml=(ordered.length?ordered:[...uiState.selectedRegions]).map(r=>{
       const p=probeMap[r]||null;
       const avg=(p && p.avg_ms!==null && p.avg_ms!==undefined && Number(p.avg_ms)>0)?`${Number(p.avg_ms).toFixed(1)} ms`:'n/a';
       const loss=(p && p.loss_pct!==null && p.loss_pct!==undefined)?`${p.loss_pct}%`:'n/a';
       return `<div class="probe-item">
-        <div class="probe-city mono">${titleRegion(r)}</div>
+        <div class="probe-city mono">${titleCase(r)}</div>
         <div class="probe-val mono">${avg}</div>
         <div class="probe-loss mono">loss: ${loss}</div>
       </div>`;
     }).join('');
     const cafea=n.cafea_metrics||{};
-
-    const fmtMs=v=>{
-      if(v===null || v===undefined || v==='') return 'n/a';
-      const x=Number(v);
-      return Number.isFinite(x) && x >= 1 ? `${x} ms` : 'n/a';
-    };
-    const latAvg=fmtMs(n.lat_avg);
-    const latP95=fmtMs(n.lat_p95);
-    const latMin=fmtMs(n.lat_min);
-    const latMax=fmtMs(n.lat_max);
+    const computed=calcLatencyFromNode(n, regionOrder);
+    const latAvg=fmtMs(computed.avg);
+    const latP95=fmtMs(computed.p95);
+    const latMin=fmtMs(computed.min);
+    const latMax=fmtMs(computed.max);
 
     const card=document.createElement('article');
-    card.className='card';
+    card.className='card reveal shine';
     card.innerHTML=`
       <div class="node-head">
         <div>
@@ -329,22 +435,28 @@ function renderProbeMeta(ext){
   el('probeMetaMode').textContent=`${ext?.mode||'unknown'} • ttl ${ext?.ttl_sec??'-'}s`;
   const wrap=el('probeMetaRegions');
   const regions=(ext?.regions||[]);
-  wrap.innerHTML=(regions.length?regions:['Tokyo','Amsterdam','New York']).map(r=>`<span class="region-chip mono">${r}</span>`).join('');
+  wrap.innerHTML=(regions.length?regions:['Tokyo','Amsterdam','London','New York']).map(r=>`<span class="region-chip mono">${r}</span>`).join('');
 }
 
 function renderNamespaceMismatch(ns){
   const root=el('nsMismatch');
   root.innerHTML='';
-  const all=(ns?.all_namespace_names||[]).join(', ');
-  el('namespaceUnionCount').textContent=String((ns?.all_namespace_names||[]).length);
-  el('namespaceMismatchFlag').textContent=ns?.has_mismatch?'YES':'NO';
+  const selectedEntries=Object.entries(ns?.per_node||{}).filter(([name])=>uiState.selectedNodes.has(name));
+  const unionSet=new Set();
+  selectedEntries.forEach(([,v])=>{(v.present||[]).forEach(x=>unionSet.add(x));});
+  const all=[...unionSet].sort().join(', ');
+  el('namespaceUnionCount').textContent=String(unionSet.size);
 
-  if(!ns?.per_node){
+  let mismatch=false;
+  selectedEntries.forEach(([,v])=>{ if((v.missing||[]).length || (v.extra||[]).length) mismatch=true; });
+  el('namespaceMismatchFlag').textContent=mismatch?'YES':'NO';
+
+  if(!selectedEntries.length){
     root.innerHTML='<div class="mismatch-item mono">no namespace data</div>';
     return;
   }
 
-  Object.entries(ns.per_node).forEach(([name,v])=>{
+  selectedEntries.forEach(([name,v])=>{
     const item=document.createElement('div');
     item.className='mismatch-item mono';
     item.innerHTML=`<strong>${name}</strong><br/>present: ${(v.present||[]).join(', ')||'-'}<br/>missing: ${(v.missing||[]).join(', ')||'-'}<br/>extra: ${(v.extra||[]).join(', ')||'-'}`;
@@ -361,13 +473,15 @@ function renderContentMismatch(cm){
   const root=el('contentMismatch');
   root.innerHTML='';
   const data=cm?.cafea_metrics_by_node||{};
-  const keys=Object.keys(data);
+  const keys=Object.keys(data).filter(k=>uiState.selectedNodes.has(k));
   if(!keys.length){
     root.innerHTML='<div class="mismatch-item mono">No cafea metrics available</div>';
     return;
   }
+  const fingerprints=new Set();
   keys.forEach(name=>{
     const m=data[name]||{};
+    fingerprints.add(`${m.users??'-'}|${m.coffee_logs??'-'}|${m.stock_settings??'-'}`);
     const item=document.createElement('div');
     item.className='mismatch-item mono';
     item.innerHTML=`<strong>${name}</strong><br/>users=${m.users??'-'}<br/>coffee_logs=${m.coffee_logs??'-'}<br/>stock_settings=${m.stock_settings??'-'}`;
@@ -375,8 +489,61 @@ function renderContentMismatch(cm){
   });
   const flag=document.createElement('div');
   flag.className='mismatch-item mono';
-  flag.innerHTML=`<strong>Mismatch</strong><br/>${cm?.has_mismatch?'YES':'NO'}`;
+  flag.innerHTML=`<strong>Mismatch (selected)</strong><br/>${fingerprints.size>1?'YES':'NO'}`;
   root.appendChild(flag);
+}
+
+function renderFilters(status){
+  const nodeWrap=el('nodeFilters');
+  const regionWrap=el('regionFilters');
+  const nodes=Object.keys(status?.nodes||{});
+  const regions=(status?.external_probes?.regions||[]).map(norm);
+
+  nodeWrap.innerHTML=nodes.map(n=>`<label class="chip-check mono ${uiState.selectedNodes.has(n)?'':'dim'}" data-node="${n}"><input type="checkbox" ${uiState.selectedNodes.has(n)?'checked':''}/> ${n}</label>`).join('');
+  regionWrap.innerHTML=regions.map(r=>`<label class="chip-check mono ${uiState.selectedRegions.has(r)?'':'dim'}" data-region="${r}"><input type="checkbox" ${uiState.selectedRegions.has(r)?'checked':''}/> ${titleCase(r)}</label>`).join('');
+  el('selectionMeta').textContent=`selected: ${uiState.selectedNodes.size}/${nodes.length} nodes • ${uiState.selectedRegions.size}/${regions.length} regions`;
+
+  nodeWrap.querySelectorAll('[data-node]').forEach(lbl=>{
+    lbl.addEventListener('change',()=>{
+      const node=lbl.getAttribute('data-node');
+      const checked=lbl.querySelector('input')?.checked;
+      if(checked) uiState.selectedNodes.add(node); else uiState.selectedNodes.delete(node);
+      if(!uiState.selectedNodes.size){ uiState.selectedNodes.add(node); lbl.querySelector('input').checked=true; }
+      saveUiState();
+      renderStatus(lastStatus);
+    });
+  });
+  regionWrap.querySelectorAll('[data-region]').forEach(lbl=>{
+    lbl.addEventListener('change',()=>{
+      const rg=lbl.getAttribute('data-region');
+      const checked=lbl.querySelector('input')?.checked;
+      if(checked) uiState.selectedRegions.add(rg); else uiState.selectedRegions.delete(rg);
+      if(!uiState.selectedRegions.size){ uiState.selectedRegions.add(rg); lbl.querySelector('input').checked=true; }
+      saveUiState();
+      renderStatus(lastStatus);
+    });
+  });
+}
+
+function setView(view){
+  uiState.view=view;
+  saveUiState();
+  el('viewCardBtn').classList.toggle('active',view==='cards');
+  el('viewListBtn').classList.toggle('active',view==='list');
+  renderStatus(lastStatus);
+}
+
+function renderStatus(s){
+  if(!s) return;
+  const nodes=s.nodes||{};
+  const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
+  const reachable=selected.filter(([,n])=>n.reachable===true).length;
+  el('reach').textContent=`${reachable}/${selected.length||0}`;
+  renderNodeCards(nodes, s.external_probes||{});
+  renderProbeMeta(s.external_probes||{});
+  renderNamespaceMismatch(s.namespace_mismatch||{});
+  renderContentMismatch(s.content_mismatch||{});
+  renderFilters(s);
 }
 
 function applyTimeFilter(){
@@ -450,19 +617,12 @@ async function refresh(){
     el('primary').textContent=String(s.primary_node||'-');
     el('mode').textContent=String(s.cluster_mode||'-');
     el('backend').textContent=String(s.backend||'postgresql');
-
-    const nodes=s.nodes||{};
-    const vals=Object.values(nodes);
-    const reachable=vals.filter(n=>n.reachable===true).length;
-    el('reach').textContent=`${reachable}/${vals.length||0}`;
-
     el('updated').textContent=String(s.updated_at_utc||'-');
     el('reason').textContent=String(s.health_reason||'-');
 
-    renderNodeCards(nodes, s.external_probes||{});
-    renderProbeMeta(s.external_probes||{});
-    renderNamespaceMismatch(s.namespace_mismatch||{});
-    renderContentMismatch(s.content_mismatch||{});
+    lastStatus=s;
+    syncSelections(s);
+    renderStatus(s);
 
     pointsAll=(h.points||[]).slice(-4000);
     incidentsAll=[];
@@ -490,6 +650,12 @@ function shouldPauseAutoRefresh(){
   if(ae.isContentEditable) return true;
   return false;
 }
+
+loadUiState();
+el('viewCardBtn').addEventListener('click',()=>setView('cards'));
+el('viewListBtn').addEventListener('click',()=>setView('list'));
+el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
+el('viewListBtn').classList.toggle('active',uiState.view==='list');
 
 el('refreshBtn').addEventListener('click',refresh);
 el('rangeValue').addEventListener('change',applyTimeFilter);
