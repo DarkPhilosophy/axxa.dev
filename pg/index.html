@@ -86,12 +86,46 @@
     .list-table tr:last-child td{border-bottom:none}
     .list-pills{display:flex;gap:5px;flex-wrap:wrap}
     .tiny-pill{display:inline-flex;padding:2px 7px;border:1px solid #bcd0f8;border-radius:999px;background:#f0f6ff;color:#2c57a8;font-size:11px}
+    .theme-btn{background:#e8f1ff;border:1px solid #b9cdf7;color:#234f9f;padding:8px 10px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer}
+    .theme-btn.active{background:linear-gradient(180deg,#1f67ff,#0049dc);border-color:#2b5fcb;color:#fff}
     .incident-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
     .footer{margin-top:12px;color:var(--muted);font-size:12px}
+
+    body[data-theme="amoled"]{
+      --bg:#000000;--panel:#060606;--panel2:#0c0c0c;--line:#1f1f1f;--text:#f0f0f0;--muted:#a0a0a0;--accent:#5da8ff
+    }
+    body[data-theme="amoled"]{background:radial-gradient(1200px 520px at 0% -10%,#0f1f3d 0%,transparent 52%),radial-gradient(1000px 500px at 100% 0%,#082426 0%,transparent 50%),#000}
+    body[data-theme="amoled"] .btn{background:linear-gradient(180deg,#1f67ff,#0049dc);border-color:#2b5fcb;color:#fff}
+    body[data-theme="amoled"] .card{background:linear-gradient(180deg,#050505,#0b0b0b);border-color:#1d1d1d;box-shadow:0 14px 30px #00000055}
+    body[data-theme="amoled"] .card:hover{border-color:#3a3a3a}
+    body[data-theme="amoled"] .reason{background:#0b0b0b;border-color:#232323;color:#d8d8d8}
+    body[data-theme="amoled"] .pill{background:#0d0d0d;border-color:#2a2a2a;color:#d8d8d8}
+    body[data-theme="amoled"] .ping-inline{background:#0d0d0d;border-color:#2a2a2a;color:#d8d8d8}
+    body[data-theme="amoled"] .metric,
+    body[data-theme="amoled"] .probe-item,
+    body[data-theme="amoled"] .mono-box,
+    body[data-theme="amoled"] .mismatch-item{background:#0b0b0b;border-color:#222;color:#e4e4e4}
+    body[data-theme="amoled"] .method{background:#07141f;border-color:#20374a;color:#bcefff}
+    body[data-theme="amoled"] .region-chip,
+    body[data-theme="amoled"] .chip-check,
+    body[data-theme="amoled"] .switch-btn,
+    body[data-theme="amoled"] .toggle-btn,
+    body[data-theme="amoled"] .theme-btn{background:#0f0f0f;border-color:#2b2b2b;color:#d8d8d8}
+    body[data-theme="amoled"] .switch-btn.active,
+    body[data-theme="amoled"] .theme-btn.active{background:linear-gradient(180deg,#1f67ff,#0049dc);border-color:#2b5fcb;color:#fff}
+    body[data-theme="amoled"] .ctrl-box{background:linear-gradient(180deg,#070707,#0b0b0b);border-color:#1f1f1f}
+    body[data-theme="amoled"] canvas{background:#060606;border-color:#222}
+    body[data-theme="amoled"] .incident-scroll{background:#0a0a0a;border-color:#222}
+    body[data-theme="amoled"] .incident-row{border-bottom-color:#1c1c1c}
+    body[data-theme="amoled"] .list-table{background:#070707;border-color:#1f1f1f;color:#e9e9e9}
+    body[data-theme="amoled"] .list-table th{background:#0f0f0f;color:#d6d6d6}
+    body[data-theme="amoled"] .list-table th,
+    body[data-theme="amoled"] .list-table td{border-bottom-color:#1b1b1b}
+    body[data-theme="amoled"] .tiny-pill{background:#101010;border-color:#2b2b2b;color:#d8d8d8}
     @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}.probe-grid{grid-template-columns:1fr}.node-grid.view-list .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
   </style>
 </head>
-<body>
+<body data-theme="amoled">
   <main class="container">
     <header class="topbar">
       <div>
@@ -100,6 +134,8 @@
       </div>
       <div class="actions">
         <span id="apiLatency" class="pill mono">api: - ms</span>
+        <button id="themeAmoledBtn" class="theme-btn mono active">AMOLED</button>
+        <button id="themeLightBtn" class="theme-btn mono">Light</button>
         <span id="overallBadge" class="badge warn"><span class="dot"></span>LOADING</span>
         <button id="refreshBtn" class="btn">Refresh</button>
       </div>
@@ -220,7 +256,7 @@ let refreshInFlight=false;
 let lastStatus=null;
 const rowH=126;
 const overscan=4;
-const uiState={view:'cards',selectedNodes:new Set(),selectedRegions:new Set()};
+const uiState={view:'cards',theme:'amoled',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
@@ -233,6 +269,7 @@ function loadUiState(){
   const raw=asJson(localStorage.getItem(UI_KEY));
   if(!raw) return;
   if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
+  if(raw.theme==='amoled' || raw.theme==='light') uiState.theme=raw.theme;
   if(Array.isArray(raw.nodes)) raw.nodes.forEach(x=>uiState.selectedNodes.add(String(x)));
   if(Array.isArray(raw.regions)) raw.regions.forEach(x=>uiState.selectedRegions.add(norm(x)));
 }
@@ -240,10 +277,19 @@ function loadUiState(){
 function saveUiState(){
   const payload={
     view:uiState.view,
+    theme:uiState.theme,
     nodes:[...uiState.selectedNodes],
     regions:[...uiState.selectedRegions],
   };
   localStorage.setItem(UI_KEY,JSON.stringify(payload));
+}
+
+function applyTheme(theme){
+  uiState.theme=(theme==='light'?'light':'amoled');
+  document.body.setAttribute('data-theme',uiState.theme);
+  el('themeAmoledBtn').classList.toggle('active',uiState.theme==='amoled');
+  el('themeLightBtn').classList.toggle('active',uiState.theme==='light');
+  saveUiState();
 }
 
 function percentile(values,p){
@@ -692,6 +738,9 @@ function shouldPauseAutoRefresh(){
 }
 
 loadUiState();
+applyTheme(uiState.theme);
+el('themeAmoledBtn').addEventListener('click',()=>applyTheme('amoled'));
+el('themeLightBtn').addEventListener('click',()=>applyTheme('light'));
 el('viewCardBtn').addEventListener('click',()=>setView('cards'));
 el('viewListBtn').addEventListener('click',()=>setView('list'));
 el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
