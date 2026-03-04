@@ -141,6 +141,7 @@
         <button id="themeAmoledBtn" class="theme-btn mono active">AMOLED</button>
         <button id="themeLightBtn" class="theme-btn mono">Light</button>
         <span id="overallBadge" class="badge warn"><span class="dot"></span>LOADING</span>
+        <button id="autoRefreshBtn" class="theme-btn mono active">Auto ON</button>
         <button id="refreshBtn" class="btn">Refresh</button>
       </div>
     </header>
@@ -272,9 +273,11 @@ let fromTs=0;
 let toTs=0;
 let refreshInFlight=false;
 let lastStatus=null;
+let lastRenderFingerprint='';
+let uiInteractionUntil=0;
 const rowH=126;
 const overscan=4;
-const uiState={view:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
+const uiState={view:'cards',theme:'amoled',autoRefresh:true,sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
@@ -288,6 +291,7 @@ function loadUiState(){
   if(!raw) return;
   if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
   if(raw.theme==='amoled' || raw.theme==='light') uiState.theme=raw.theme;
+  if(typeof raw.autoRefresh==='boolean') uiState.autoRefresh=raw.autoRefresh;
   if(typeof raw.sortKey==='string') uiState.sortKey=raw.sortKey;
   if(raw.sortDir==='asc' || raw.sortDir==='desc') uiState.sortDir=raw.sortDir;
   if(Array.isArray(raw.nodes)) raw.nodes.forEach(x=>uiState.selectedNodes.add(String(x)));
@@ -298,6 +302,7 @@ function saveUiState(){
   const payload={
     view:uiState.view,
     theme:uiState.theme,
+    autoRefresh:uiState.autoRefresh,
     sortKey:uiState.sortKey,
     sortDir:uiState.sortDir,
     nodes:[...uiState.selectedNodes],
@@ -312,6 +317,17 @@ function applyTheme(theme){
   el('themeAmoledBtn').classList.toggle('active',uiState.theme==='amoled');
   el('themeLightBtn').classList.toggle('active',uiState.theme==='light');
   saveUiState();
+}
+
+function setAutoRefresh(on){
+  uiState.autoRefresh=!!on;
+  el('autoRefreshBtn').textContent=uiState.autoRefresh?'Auto ON':'Auto OFF';
+  el('autoRefreshBtn').classList.toggle('active',uiState.autoRefresh);
+  saveUiState();
+}
+
+function markUiInteraction(ms=12000){
+  uiInteractionUntil=Date.now()+ms;
 }
 
 function percentile(values,p){
@@ -747,7 +763,7 @@ function renderVirtualIncidents(){
   el('incidentMeta').textContent=`${shown} initial, ${total} total`;
 }
 
-async function refresh(){
+async function refresh(force=false){
   if(refreshInFlight) return;
   refreshInFlight=true;
   const t0=performance.now();
@@ -757,16 +773,27 @@ async function refresh(){
     let o={events:[],open:null};
     try{ h=await getJson(HISTORY,CACHE.h); }catch(_){}
     try{ o=await getJson(OUTAGES,CACHE.o); }catch(_){}
-    setBadge(s.overall);
-    el('primary').textContent=String(s.primary_node||'-');
-    el('mode').textContent=String(s.cluster_mode||'-');
-    el('backend').textContent=String(s.backend||'postgresql');
-    el('updated').textContent=String(s.updated_at_utc||'-');
-    el('reason').textContent=String(s.health_reason||'-');
-
     lastStatus=s;
     syncSelections(s);
-    renderStatus(s);
+    const fp=[
+      s.updated_at_epoch||0,
+      s.overall||'',
+      s.primary_node||'',
+      s.health_reason||'',
+      s.content_mismatch?.has_mismatch?'1':'0',
+      s.namespace_mismatch?.has_mismatch?'1':'0',
+    ].join('|');
+    const hasUpdate=(fp!==lastRenderFingerprint);
+    if(force || hasUpdate){
+      setBadge(s.overall);
+      el('primary').textContent=String(s.primary_node||'-');
+      el('mode').textContent=String(s.cluster_mode||'-');
+      el('backend').textContent=String(s.backend||'postgresql');
+      el('updated').textContent=String(s.updated_at_utc||'-');
+      el('reason').textContent=String(s.health_reason||'-');
+      renderStatus(s);
+      lastRenderFingerprint=fp;
+    }
 
     pointsAll=(h.points||[]).slice(-4000);
     incidentsAll=[];
@@ -785,6 +812,9 @@ async function refresh(){
 }
 
 function shouldPauseAutoRefresh(){
+  if(!uiState.autoRefresh) return true;
+  if(document.hidden) return true;
+  if(Date.now()<uiInteractionUntil) return true;
   const sel=window.getSelection?.();
   if(sel && !sel.isCollapsed) return true;
   const ae=document.activeElement;
@@ -797,8 +827,10 @@ function shouldPauseAutoRefresh(){
 
 loadUiState();
 applyTheme(uiState.theme);
+setAutoRefresh(uiState.autoRefresh);
 el('themeAmoledBtn').addEventListener('click',()=>applyTheme('amoled'));
 el('themeLightBtn').addEventListener('click',()=>applyTheme('light'));
+el('autoRefreshBtn').addEventListener('click',()=>setAutoRefresh(!uiState.autoRefresh));
 el('viewCardBtn').addEventListener('click',()=>setView('cards'));
 el('viewListBtn').addEventListener('click',()=>setView('list'));
 el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
@@ -817,7 +849,7 @@ el('sortDirBtn').addEventListener('click',()=>{
   renderStatus(lastStatus);
 });
 
-el('refreshBtn').addEventListener('click',refresh);
+el('refreshBtn').addEventListener('click',()=>refresh(true));
 el('rangeValue').addEventListener('change',applyTimeFilter);
 el('rangeUnit').addEventListener('change',applyTimeFilter);
 document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
@@ -827,10 +859,16 @@ el('toggleContentMismatch').addEventListener('click',()=>{
   card.classList.toggle('collapsed');
   el('toggleContentMismatch').textContent=card.classList.contains('collapsed')?'Expand':'Collapse';
 });
+['nodeCards','incidentScroll','nodeFilters','regionFilters','sortKey'].forEach(id=>{
+  const target=el(id);
+  if(!target) return;
+  target.addEventListener('pointerdown',()=>markUiInteraction());
+  target.addEventListener('wheel',()=>markUiInteraction(),{passive:true});
+});
 
-refresh();
+refresh(true);
 drawChart();
-setInterval(()=>{ if(!shouldPauseAutoRefresh()) refresh(); },10000);
+setInterval(()=>{ if(!shouldPauseAutoRefresh()) refresh(false); },10000);
 </script>
 </body>
 </html>
