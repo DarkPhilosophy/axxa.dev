@@ -86,6 +86,8 @@
     .list-table tr:last-child td{border-bottom:none}
     .list-pills{display:flex;gap:5px;flex-wrap:wrap}
     .tiny-pill{display:inline-flex;padding:2px 7px;border:1px solid #bcd0f8;border-radius:999px;background:#f0f6ff;color:#2c57a8;font-size:11px}
+    .node-stage{margin-top:8px;padding:12px;border:1px solid #bfd3ff;border-radius:16px;background:linear-gradient(135deg,#f6f9ff,#edf4ff)}
+    .node-stage::before{content:"OPERATIONS DECK";display:block;font-size:10px;letter-spacing:.14em;color:#3d5f9f;margin-bottom:8px}
     .theme-btn{background:#e8f1ff;border:1px solid #b9cdf7;color:#234f9f;padding:8px 10px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer}
     .theme-btn.active{background:linear-gradient(180deg,#1f67ff,#0049dc);border-color:#2b5fcb;color:#fff}
     .incident-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
@@ -122,6 +124,8 @@
     body[data-theme="amoled"] .list-table th,
     body[data-theme="amoled"] .list-table td{border-bottom-color:#1b1b1b}
     body[data-theme="amoled"] .tiny-pill{background:#101010;border-color:#2b2b2b;color:#d8d8d8}
+    body[data-theme="amoled"] .node-stage{background:linear-gradient(135deg,#090909,#050505);border-color:#1f1f1f}
+    body[data-theme="amoled"] .node-stage::before{color:#7faeff}
     @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}.probe-grid{grid-template-columns:1fr}.node-grid.view-list .metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
   </style>
 </head>
@@ -163,6 +167,20 @@
               <span id="selectionMeta" class="pill mono">selected: -</span>
             </div>
             <div class="ctrl-row" style="margin-top:9px">
+              <span class="k" style="margin-right:4px">Sort</span>
+              <select id="sortKey" class="input mono">
+                <option value="lat_avg">Latency Avg</option>
+                <option value="lat_p95">Latency P95</option>
+                <option value="lat_min">Latency Min</option>
+                <option value="lat_max">Latency Max</option>
+                <option value="database_count">Databases</option>
+                <option value="replication_clients">Replication Clients</option>
+                <option value="state">State</option>
+                <option value="name">Name</option>
+              </select>
+              <button id="sortDirBtn" class="switch-btn mono">ASC ↑</button>
+            </div>
+            <div class="ctrl-row" style="margin-top:9px">
               <span class="k" style="margin-right:4px">Servers</span>
               <div id="nodeFilters" class="ctrl-row"></div>
             </div>
@@ -182,8 +200,8 @@
       </article>
 
       <article class="card span-12">
-        <div class="k">Nodes (Cards)</div>
-        <div id="nodeCards" class="node-grid"></div>
+        <div class="k">Nodes</div>
+        <div class="node-stage"><div id="nodeCards" class="node-grid"></div></div>
       </article>
 
       <article class="card span-12">
@@ -256,7 +274,7 @@ let refreshInFlight=false;
 let lastStatus=null;
 const rowH=126;
 const overscan=4;
-const uiState={view:'cards',theme:'amoled',selectedNodes:new Set(),selectedRegions:new Set()};
+const uiState={view:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
@@ -270,6 +288,8 @@ function loadUiState(){
   if(!raw) return;
   if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
   if(raw.theme==='amoled' || raw.theme==='light') uiState.theme=raw.theme;
+  if(typeof raw.sortKey==='string') uiState.sortKey=raw.sortKey;
+  if(raw.sortDir==='asc' || raw.sortDir==='desc') uiState.sortDir=raw.sortDir;
   if(Array.isArray(raw.nodes)) raw.nodes.forEach(x=>uiState.selectedNodes.add(String(x)));
   if(Array.isArray(raw.regions)) raw.regions.forEach(x=>uiState.selectedRegions.add(norm(x)));
 }
@@ -278,6 +298,8 @@ function saveUiState(){
   const payload={
     view:uiState.view,
     theme:uiState.theme,
+    sortKey:uiState.sortKey,
+    sortDir:uiState.sortDir,
     nodes:[...uiState.selectedNodes],
     regions:[...uiState.selectedRegions],
   };
@@ -409,14 +431,50 @@ function renderNodeCards(nodes, externalMeta){
   root.innerHTML='';
   root.className='node-grid '+(uiState.view==='list'?'view-list':'');
   const regionOrder=(externalMeta?.regions||[]).map(norm).filter(Boolean);
-  const entries=Object.entries(nodes||{}).filter(([name])=>uiState.selectedNodes.has(name));
-  if(!entries.length){
+  const entriesBase=Object.entries(nodes||{}).filter(([name])=>uiState.selectedNodes.has(name));
+  if(!entriesBase.length){
     root.innerHTML='<article class="card"><div class="mono" style="color:var(--muted)">No selected servers</div></article>';
     return;
   }
+  const computedByName={};
+  entriesBase.forEach(([name,n])=>{ computedByName[name]=calcLatencyFromNode(n, regionOrder); });
+
+  const stateWeight=s=>s==='active'?2:s==='unknown'?1:0;
+  const getSortValue=(name,n)=>{
+    const c=computedByName[name]||{};
+    switch(uiState.sortKey){
+      case 'lat_avg': return c.avg;
+      case 'lat_p95': return c.p95;
+      case 'lat_min': return c.min;
+      case 'lat_max': return c.max;
+      case 'database_count': return Number(n.database_count??0);
+      case 'replication_clients': return Number(n.replication_clients??0);
+      case 'state': return stateWeight(String(n.postgresql_active||'unknown').toLowerCase());
+      case 'name': return String(name).toLowerCase();
+      default: return c.avg;
+    }
+  };
+  const entries=[...entriesBase].sort((a,b)=>{
+    const [nameA,nodeA]=a;
+    const [nameB,nodeB]=b;
+    const va=getSortValue(nameA,nodeA);
+    const vb=getSortValue(nameB,nodeB);
+    if(typeof va==='string' || typeof vb==='string'){
+      const sa=String(va??'');
+      const sb=String(vb??'');
+      return uiState.sortDir==='asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
+    }
+    const na=Number.isFinite(va)?va:null;
+    const nb=Number.isFinite(vb)?vb:null;
+    if(na===null && nb===null) return 0;
+    if(na===null) return 1;
+    if(nb===null) return -1;
+    return uiState.sortDir==='asc' ? na-nb : nb-na;
+  });
+
   if(uiState.view==='list'){
     const rows=entries.map(([name,n])=>{
-      const computed=calcLatencyFromNode(n, regionOrder);
+      const computed=computedByName[name]||calcLatencyFromNode(n, regionOrder);
       const cafea=n.cafea_metrics||{};
       const probes=(n.external_probe?.probes||[])
         .filter(p=>uiState.selectedRegions.has(norm(p.city)))
@@ -469,7 +527,7 @@ function renderNodeCards(nodes, externalMeta){
       </div>`;
     }).join('');
     const cafea=n.cafea_metrics||{};
-    const computed=calcLatencyFromNode(n, regionOrder);
+    const computed=computedByName[name]||calcLatencyFromNode(n, regionOrder);
     const latAvg=fmtMs(computed.avg);
     const latP95=fmtMs(computed.p95);
     const latMin=fmtMs(computed.min);
@@ -587,7 +645,7 @@ function renderFilters(status){
 
   nodeWrap.innerHTML=nodes.map(n=>`<label class="chip-check mono ${uiState.selectedNodes.has(n)?'':'dim'}" data-node="${n}"><input type="checkbox" ${uiState.selectedNodes.has(n)?'checked':''}/> ${n}</label>`).join('');
   regionWrap.innerHTML=regions.map(r=>`<label class="chip-check mono ${uiState.selectedRegions.has(r)?'':'dim'}" data-region="${r}"><input type="checkbox" ${uiState.selectedRegions.has(r)?'checked':''}/> ${titleCase(r)}</label>`).join('');
-  el('selectionMeta').textContent=`selected: ${uiState.selectedNodes.size}/${nodes.length} nodes • ${uiState.selectedRegions.size}/${regions.length} regions`;
+  el('selectionMeta').textContent=`selected: ${uiState.selectedNodes.size}/${nodes.length} nodes • ${uiState.selectedRegions.size}/${regions.length} regions • sort ${uiState.sortKey} ${uiState.sortDir}`;
 
   nodeWrap.querySelectorAll('[data-node]').forEach(lbl=>{
     lbl.addEventListener('change',()=>{
@@ -745,6 +803,19 @@ el('viewCardBtn').addEventListener('click',()=>setView('cards'));
 el('viewListBtn').addEventListener('click',()=>setView('list'));
 el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
 el('viewListBtn').classList.toggle('active',uiState.view==='list');
+el('sortKey').value=uiState.sortKey;
+el('sortDirBtn').textContent=uiState.sortDir==='asc'?'ASC ↑':'DESC ↓';
+el('sortKey').addEventListener('change',()=>{
+  uiState.sortKey=el('sortKey').value;
+  saveUiState();
+  renderStatus(lastStatus);
+});
+el('sortDirBtn').addEventListener('click',()=>{
+  uiState.sortDir=uiState.sortDir==='asc'?'desc':'asc';
+  el('sortDirBtn').textContent=uiState.sortDir==='asc'?'ASC ↑':'DESC ↓';
+  saveUiState();
+  renderStatus(lastStatus);
+});
 
 el('refreshBtn').addEventListener('click',refresh);
 el('rangeValue').addEventListener('change',applyTimeFilter);
