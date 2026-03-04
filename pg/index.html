@@ -240,10 +240,15 @@ function renderNodeCards(nodes){
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
     const cafea=n.cafea_metrics||{};
 
-    const latAvg=(Number.isFinite(Number(n.lat_avg)) ? `${Number(n.lat_avg)} ms` : 'n/a');
-    const latP95=(Number.isFinite(Number(n.lat_p95)) ? `${Number(n.lat_p95)} ms` : 'n/a');
-    const latMin=(Number.isFinite(Number(n.lat_min)) ? `${Number(n.lat_min)} ms` : 'n/a');
-    const latMax=(Number.isFinite(Number(n.lat_max)) ? `${Number(n.lat_max)} ms` : 'n/a');
+    const fmtMs=v=>{
+      if(v===null || v===undefined || v==='') return 'n/a';
+      const x=Number(v);
+      return Number.isFinite(x) && x >= 1 ? `${x} ms` : 'n/a';
+    };
+    const latAvg=fmtMs(n.lat_avg);
+    const latP95=fmtMs(n.lat_p95);
+    const latMin=fmtMs(n.lat_min);
+    const latMax=fmtMs(n.lat_max);
 
     const card=document.createElement('article');
     card.className='card';
