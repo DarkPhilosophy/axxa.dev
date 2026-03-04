@@ -240,8 +240,9 @@ function renderNodeCards(nodes){
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
     const cafea=n.cafea_metrics||{};
 
-    const pingMs=n.ping_ms ?? n.latency_ms ?? null;
-    const pingText=Number.isFinite(Number(pingMs))?`${Number(pingMs)} ms`:'n/a';
+    const pingRaw=n.ping_ms ?? n.latency_ms;
+    const pingNum=(pingRaw===null || pingRaw===undefined || pingRaw==='') ? NaN : Number(pingRaw);
+    const pingText=Number.isFinite(pingNum) && pingNum>=0 ? `${pingNum} ms` : 'n/a';
 
     const card=document.createElement('article');
     card.className='card';
