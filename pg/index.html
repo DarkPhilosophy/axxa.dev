@@ -141,7 +141,7 @@
       </article>
     </section>
 
-    <div class="footer mono">auto-refresh every 10s • direct requester ping per node disabled until dedicated direct endpoints exist</div>
+    <div class="footer mono">auto-refresh every 10s • per-node metrics are shown separately (no merged latency average across nodes)</div>
   </main>
 
 <script>
@@ -240,14 +240,17 @@ function renderNodeCards(nodes){
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
     const cafea=n.cafea_metrics||{};
 
-    const pingText='n/a';
+    const latAvg=(Number.isFinite(Number(n.lat_avg)) ? `${Number(n.lat_avg)} ms` : 'n/a');
+    const latP95=(Number.isFinite(Number(n.lat_p95)) ? `${Number(n.lat_p95)} ms` : 'n/a');
+    const latMin=(Number.isFinite(Number(n.lat_min)) ? `${Number(n.lat_min)} ms` : 'n/a');
+    const latMax=(Number.isFinite(Number(n.lat_max)) ? `${Number(n.lat_max)} ms` : 'n/a');
 
     const card=document.createElement('article');
     card.className='card';
     card.innerHTML=`
       <div class="node-head">
         <div>
-          <div class="node-title mono">${name} <span class="ping-inline">[${pingText}]</span></div>
+          <div class="node-title mono">${name} <span class="ping-inline">[avg ${latAvg}]</span></div>
           <div class="node-meta">${n.country||'-'} • mode=${n.mode||'-'} • recovery=${String(!!n.in_recovery)}</div>
         </div>
         <span class="badge ${n.postgresql_active==='active'?'ok':'bad'}"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span>
@@ -258,9 +261,14 @@ function renderNodeCards(nodes){
         <div class="metric"><div class="mkey">Uptime</div><div class="mval mono">${uptime(n.postgres_uptime_sec||0)}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
-        <div class="metric"><div class="mkey">Requester Ping (Direct)</div><div class="mval mono">${pingText}</div></div>
+        <div class="metric"><div class="mkey">Latency p95</div><div class="mval mono">${latP95}</div></div>
+        <div class="metric"><div class="mkey">Latency Min</div><div class="mval mono">${latMin}</div></div>
+        <div class="metric"><div class="mkey">Latency Max</div><div class="mval mono">${latMax}</div></div>
+      </div>
+      <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">Last Update</div><div class="mval mono">${n.last_update||'-'}</div></div>
+        <div class="metric"><div class="mkey">Last Seen Online</div><div class="mval mono">${n.last_seen_online||'-'}</div></div>
         <div class="metric"><div class="mkey">TailScale IP</div><div class="mval mono">${n.tailscale_ip||'-'}</div></div>
-        <div class="metric"><div class="mkey">Reachable</div><div class="mval mono">${n.reachable===true?'yes':'no'}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
         <div class="metric"><div class="mkey">cafea.users</div><div class="mval mono">${cafea.users??'-'}</div></div>
