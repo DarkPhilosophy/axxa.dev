@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#05070c;--panel:#0f1522;--panel2:#131e33;--line:#243658;--text:#eef4ff;--muted:#95a9cd;--ok:#1fbe6b;--warn:#eea22c;--bad:#e24a5d;--accent:#4dc2ff}
+    :root{--bg:#05070c;--panel:#0f1522;--panel2:#131e33;--line:#243658;--text:#eef4ff;--muted:#95a9cd;--ok:#1fbe6b;--warn:#eea22c;--bad:#e24a5d;--accent:#4dc2ff;--teal:#13c7c6}
     *{box-sizing:border-box}
     body{margin:0;color:var(--text);font-family:"Space Grotesk",sans-serif;background:radial-gradient(1200px 520px at 10% -15%,#2f89ff33 0%,transparent 55%),radial-gradient(900px 420px at 110% 0%,#11b37a24 0%,transparent 45%),var(--bg);min-height:100vh}
     .container{max-width:1380px;margin:0 auto;padding:20px}
@@ -24,7 +24,8 @@
     .warn{background:#3a2a0f;color:#ffe0ae}.warn .dot{background:var(--warn)}
     .bad{background:#3d1620;color:#ffc2cb}.bad .dot{background:var(--bad)}
     .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:14px}
-    .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:inset 0 1px 0 #ffffff0d}
+    .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:inset 0 1px 0 #ffffff0d,0 8px 24px #0000001f;transition:transform .18s ease,border-color .18s ease}
+    .card:hover{transform:translateY(-1px);border-color:#335791}
     .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
     .v{margin-top:7px;font-size:30px;font-weight:700;line-height:1.1}.v.small{font-size:17px}
     .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
@@ -40,6 +41,15 @@
     .metric{padding:9px;border:1px solid #2a4066;border-radius:10px;background:#0d1a2e}
     .metric .mkey{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
     .metric .mval{font-size:16px;font-weight:700;margin-top:4px}
+    .probe-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+    .probe-item{padding:8px;border:1px solid #2a4066;border-radius:10px;background:#0b1730}
+    .probe-city{font-size:11px;color:#9ec0ff;text-transform:uppercase;letter-spacing:.08em}
+    .probe-val{margin-top:4px;font-size:14px;font-weight:700}
+    .probe-loss{margin-top:2px;font-size:11px;color:var(--muted)}
+    .probe-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .method{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid #2d5878;border-radius:999px;color:#bcefff;background:#0d2733;font-size:11px}
+    .region-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .region-chip{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #2f4c70;border-radius:999px;background:#0d1f35;color:#d8e8ff;font-size:12px}
     .mono-box{margin-top:10px;background:#0a1426;border:1px solid #263a60;border-radius:10px;padding:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
     .mismatch-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:10px}
     .mismatch-item{border:1px solid #2a4066;border-radius:10px;padding:10px;background:#0d1a2e}
@@ -56,7 +66,7 @@
     .incident-row:last-child{border-bottom:none}
     .incident-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
     .footer{margin-top:12px;color:var(--muted);font-size:12px}
-    @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}}
+    @media (max-width:1000px){.span-3,.span-4,.span-6,.span-8{grid-column:span 12}h1{font-size:24px}.v{font-size:24px}.incident-scroll{height:380px}.probe-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -84,6 +94,13 @@
       <article class="card span-4"><div class="k">Last Update UTC</div><div id="updated" class="v small mono">-</div></article>
 
       <article class="card span-12"><div class="k">Health Reason</div><div id="reason" class="reason mono">-</div></article>
+      <article class="card span-12">
+        <div class="section-head">
+          <div class="k">External Probes</div>
+          <span id="probeMetaMode" class="method mono">-</span>
+        </div>
+        <div id="probeMetaRegions" class="region-strip"></div>
+      </article>
 
       <article class="card span-12">
         <div class="k">Nodes (Cards)</div>
@@ -229,16 +246,31 @@ function drawChart(){
   requestAnimationFrame(drawChart);
 }
 
-function renderNodeCards(nodes){
+function renderNodeCards(nodes, externalMeta){
   const root=el('nodeCards');
   root.innerHTML='';
+  const regionOrder=(externalMeta?.regions||[]).map(r=>String(r||'').toLowerCase()).filter(Boolean);
+  const titleRegion=(x)=>x?x.charAt(0).toUpperCase()+x.slice(1):'-';
   Object.entries(nodes||{}).forEach(([name,n])=>{
     const dbs=(n.namespace_names||[]).map(x=>`<span class="pill mono">${x}</span>`).join(' ');
     const schemasByDb=n.schemas_by_db||{};
     const tablesByDb=n.table_counts_by_db||{};
     const schemaLines=Object.entries(schemasByDb).map(([db,list])=>`${db}: [${(list||[]).join(', ')}]`).join('\n');
     const tableLines=Object.entries(tablesByDb).map(([db,c])=>`${db}: tables=${c}`).join('\n');
-    const probeLines=((n.external_probe?.probes||[]).map(p=>`${p.city||'-'}, ${p.country||'-'}: avg=${p.avg_ms ?? 'n/a'} ms, loss=${p.loss_pct ?? 'n/a'}%`).join('\n')) || '-';
+    const probeList=n.external_probe?.probes||[];
+    const probeMap={};
+    probeList.forEach(p=>{ probeMap[String(p.city||'').toLowerCase()]=p; });
+    const ordered=(regionOrder.length?regionOrder:[...Object.keys(probeMap)]);
+    const probeHtml=(ordered.length?ordered:['tokyo','amsterdam','new york']).map(r=>{
+      const p=probeMap[r]||null;
+      const avg=(p && p.avg_ms!==null && p.avg_ms!==undefined && Number(p.avg_ms)>0)?`${Number(p.avg_ms).toFixed(1)} ms`:'n/a';
+      const loss=(p && p.loss_pct!==null && p.loss_pct!==undefined)?`${p.loss_pct}%`:'n/a';
+      return `<div class="probe-item">
+        <div class="probe-city mono">${titleRegion(r)}</div>
+        <div class="probe-val mono">${avg}</div>
+        <div class="probe-loss mono">loss: ${loss}</div>
+      </div>`;
+    }).join('');
     const cafea=n.cafea_metrics||{};
 
     const fmtMs=v=>{
@@ -261,6 +293,11 @@ function renderNodeCards(nodes){
         </div>
         <span class="badge ${n.postgresql_active==='active'?'ok':'bad'}"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span>
       </div>
+      <div class="probe-top" style="margin-top:9px">
+        <div class="k">External Probe Latency</div>
+        <span class="method mono">${n.external_probe?.method||'n/a'}</span>
+      </div>
+      <div class="probe-grid">${probeHtml}</div>
       <div class="metrics">
         <div class="metric"><div class="mkey">Databases</div><div class="mval mono">${n.database_count??0}</div></div>
         <div class="metric"><div class="mkey">Replication Clients</div><div class="mval mono">${n.replication_clients??0}</div></div>
@@ -282,10 +319,17 @@ function renderNodeCards(nodes){
         <div class="metric"><div class="mkey">cafea.stock_settings</div><div class="mval mono">${cafea.stock_settings??'-'}</div></div>
       </div>
       <div style="margin-top:10px" class="row">${dbs||'<span class="mono" style="color:var(--muted)">no namespaces</span>'}</div>
-      <div class="mono-box"><strong>External Probes (Tokyo/Frankfurt/New York)</strong>\n${probeLines}\n\n<strong>Schemas by DB</strong>\n${schemaLines||'-'}\n\n<strong>Tables by DB</strong>\n${tableLines||'-'}</div>
+      <div class="mono-box"><strong>Schemas by DB</strong>\n${schemaLines||'-'}\n\n<strong>Tables by DB</strong>\n${tableLines||'-'}</div>
     `;
     root.appendChild(card);
   });
+}
+
+function renderProbeMeta(ext){
+  el('probeMetaMode').textContent=`${ext?.mode||'unknown'} • ttl ${ext?.ttl_sec??'-'}s`;
+  const wrap=el('probeMetaRegions');
+  const regions=(ext?.regions||[]);
+  wrap.innerHTML=(regions.length?regions:['Tokyo','Amsterdam','New York']).map(r=>`<span class="region-chip mono">${r}</span>`).join('');
 }
 
 function renderNamespaceMismatch(ns){
@@ -415,7 +459,8 @@ async function refresh(){
     el('updated').textContent=String(s.updated_at_utc||'-');
     el('reason').textContent=String(s.health_reason||'-');
 
-    renderNodeCards(nodes);
+    renderNodeCards(nodes, s.external_probes||{});
+    renderProbeMeta(s.external_probes||{});
     renderNamespaceMismatch(s.namespace_mismatch||{});
     renderContentMismatch(s.content_mismatch||{});
 
