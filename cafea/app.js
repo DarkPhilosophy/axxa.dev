@@ -28,6 +28,7 @@
     selectedUserHistory: [],
     userConsumption: {},
     pendingRequests: 0,
+    activeRequestStartedAt: null,
     lastRequestMs: 0,
     historyWindowStart: 0,
     historyWindowSize: 15,
@@ -47,6 +48,7 @@
   let liveSyncBackoffMs = 1000;
   let liveSyncBusy = false;
   let mutationReconcileTimer = null;
+  let networkUiTicker = null;
   const numericPrevValues = new Map();
 
   function scheduleMutationReconcile() {
@@ -112,11 +114,20 @@
     root?.classList.toggle('is-busy', busy);
     if (!busy) {
       el.classList.add('hidden');
+      if (networkUiTicker) {
+        clearInterval(networkUiTicker);
+        networkUiTicker = null;
+      }
       return;
     }
-    const t = state.lastRequestMs > 0 ? ` (${(state.lastRequestMs / 1000).toFixed(1)}s ultima)` : '';
+    if (!networkUiTicker) {
+      networkUiTicker = setInterval(updateNetworkUi, 150);
+    }
+    const liveMs = state.activeRequestStartedAt != null ? Math.max(0, performance.now() - state.activeRequestStartedAt) : 0;
+    const liveText = ` (${(liveMs / 1000).toFixed(1)}s curentă)`;
+    const t = state.lastRequestMs > 0 ? ` • ${(state.lastRequestMs / 1000).toFixed(1)}s ultima` : '';
     const textEl = el.querySelector('.cafea-global-loading__text');
-    if (textEl) textEl.textContent = `Se procesează cererea...${t}`;
+    if (textEl) textEl.textContent = `Se procesează cererea...${liveText}${t}`;
     el.classList.remove('hidden');
   }
 
@@ -128,6 +139,9 @@
 
     const runReq = (async () => {
       const startedAt = performance.now();
+      if (state.activeRequestStartedAt == null || startedAt < state.activeRequestStartedAt) {
+        state.activeRequestStartedAt = startedAt;
+      }
       state.pendingRequests += 1;
       updateNetworkUi();
       const headers = { 'Content-Type': 'application/json' };
@@ -170,6 +184,9 @@
         state.lastRequestMs = Math.max(0, performance.now() - startedAt);
         clearTimeout(timeout);
         state.pendingRequests = Math.max(0, state.pendingRequests - 1);
+        if (state.pendingRequests === 0) {
+          state.activeRequestStartedAt = null;
+        }
         updateNetworkUi();
       }
     })();
