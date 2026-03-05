@@ -156,8 +156,16 @@
       <article class="card span-4"><div class="k">Last Update UTC</div><div id="updated" class="v small mono">-</div></article>
 
       <article class="card span-12"><div class="k">Health Reason</div><div id="reason" class="reason mono">-</div></article>
-      <article class="card span-12 shine">
-        <div class="k">Interactive Controls</div>
+      <article class="card span-12">
+        <div class="section-head">
+          <div class="k">External Probes</div>
+          <span id="probeMetaMode" class="method mono">-</span>
+        </div>
+        <div id="probeMetaRegions" class="region-strip"></div>
+      </article>
+
+      <article class="card span-12">
+        <div class="k">Nodes</div>
         <div class="controls" style="margin-top:8px">
           <div class="ctrl-box">
             <div class="ctrl-row">
@@ -190,22 +198,17 @@
             </div>
           </div>
         </div>
-      </article>
-      <article class="card span-12">
-        <div class="section-head">
-          <div class="k">External Probes</div>
-          <span id="probeMetaMode" class="method mono">-</span>
-        </div>
-        <div id="probeMetaRegions" class="region-strip"></div>
-      </article>
-
-      <article class="card span-12">
-        <div class="k">Nodes</div>
         <div class="node-stage"><div id="nodeCards" class="node-grid"></div></div>
       </article>
 
       <article class="card span-12">
-        <div class="k">Namespace Mismatch Details</div>
+        <div class="section-head">
+          <div class="k">Namespace Mismatch Details</div>
+          <div class="ctrl-row">
+            <button id="nsViewCardBtn" class="switch-btn active mono">Cards</button>
+            <button id="nsViewListBtn" class="switch-btn mono">List</button>
+          </div>
+        </div>
         <div id="nsMismatch" class="mismatch-list"></div>
       </article>
 
@@ -276,7 +279,7 @@ let lastRenderFingerprint='';
 let lastStructureFingerprint='';
 const rowH=126;
 const overscan=4;
-const uiState={view:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
+const uiState={view:'cards',nsView:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
@@ -314,6 +317,7 @@ function loadUiState(){
   const raw=asJson(localStorage.getItem(UI_KEY));
   if(!raw) return;
   if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
+  if(raw.nsView==='cards' || raw.nsView==='list') uiState.nsView=raw.nsView;
   if(raw.theme==='amoled' || raw.theme==='light') uiState.theme=raw.theme;
   if(typeof raw.sortKey==='string') uiState.sortKey=raw.sortKey;
   if(raw.sortDir==='asc' || raw.sortDir==='desc') uiState.sortDir=raw.sortDir;
@@ -324,6 +328,7 @@ function loadUiState(){
 function saveUiState(){
   const payload={
     view:uiState.view,
+    nsView:uiState.nsView,
     theme:uiState.theme,
     sortKey:uiState.sortKey,
     sortDir:uiState.sortDir,
@@ -636,6 +641,20 @@ function renderNamespaceMismatch(ns){
     return;
   }
 
+  if(uiState.nsView==='list'){
+    const rows=selectedEntries.map(([name,v])=>`<tr>
+      <td class="mono">${name}</td>
+      <td class="mono">${(v.present||[]).join(', ')||'-'}</td>
+      <td class="mono">${(v.missing||[]).join(', ')||'-'}</td>
+      <td class="mono">${(v.extra||[]).join(', ')||'-'}</td>
+    </tr>`).join('');
+    root.innerHTML=`<div style="max-height:420px;overflow:auto"><table class="list-table">
+      <thead><tr><th>Node</th><th>Present</th><th>Missing</th><th>Extra</th></tr></thead>
+      <tbody>${rows}<tr><td class="mono"><strong>Union</strong></td><td class="mono" colspan="3">${all||'-'}</td></tr></tbody>
+    </table></div>`;
+    return;
+  }
+
   selectedEntries.forEach(([name,v])=>{
     const item=document.createElement('div');
     item.className='mismatch-item mono';
@@ -732,6 +751,14 @@ function setView(view){
   el('viewListBtn').classList.toggle('active',view==='list');
   renderStatus(lastStatus);
   if(lastStatus) lastStructureFingerprint=getStructureFingerprint(lastStatus);
+}
+
+function setNsView(view){
+  uiState.nsView=view;
+  saveUiState();
+  el('nsViewCardBtn').classList.toggle('active',view==='cards');
+  el('nsViewListBtn').classList.toggle('active',view==='list');
+  if(lastStatus) renderNamespaceMismatch(lastStatus.namespace_mismatch||{});
 }
 
 function renderStatus(s){
@@ -962,8 +989,12 @@ el('themeAmoledBtn').addEventListener('click',()=>applyTheme('amoled'));
 el('themeLightBtn').addEventListener('click',()=>applyTheme('light'));
 el('viewCardBtn').addEventListener('click',()=>setView('cards'));
 el('viewListBtn').addEventListener('click',()=>setView('list'));
+el('nsViewCardBtn').addEventListener('click',()=>setNsView('cards'));
+el('nsViewListBtn').addEventListener('click',()=>setNsView('list'));
 el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
 el('viewListBtn').classList.toggle('active',uiState.view==='list');
+el('nsViewCardBtn').classList.toggle('active',uiState.nsView==='cards');
+el('nsViewListBtn').classList.toggle('active',uiState.nsView==='list');
 el('sortKey').value=uiState.sortKey;
 el('sortDirBtn').textContent=uiState.sortDir==='asc'?'ASC ↑':'DESC ↓';
 el('sortKey').addEventListener('change',()=>{
