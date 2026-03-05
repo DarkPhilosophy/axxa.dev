@@ -69,6 +69,14 @@
     .mono-box{margin-top:10px;background:#f2f7ff;border:1px solid #c7d8f7;border-radius:10px;padding:10px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
     .mismatch-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:10px}
     .mismatch-item{border:1px solid #c6d7f6;border-radius:10px;padding:10px;background:#f5f9ff}
+    .mismatch-item.full-line{grid-column:1/-1}
+    .mismatch-item.ok-state{border-color:#9fdcb9;background:#ecfff4}
+    .mismatch-item.bad-state{border-color:#f0a8b4;background:#fff1f4}
+    .mismatch-flag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;border:1px solid transparent}
+    .mismatch-flag.ok{color:#0f7d45;background:#e8fff2;border-color:#92d9b2}
+    .mismatch-flag.bad{color:#b3273a;background:#ffe8ed;border-color:#e9a4af}
+    .list-table tr.row-bad td{background:#fff2f5}
+    .list-table tr.row-ok td{background:#eefff5}
     .section-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .toggle-btn{background:#e8f1ff;border:1px solid #b8cdf6;color:#2452a4;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
     .collapsed .section-body{display:none}
@@ -107,6 +115,12 @@
     body[data-theme="amoled"] .probe-item,
     body[data-theme="amoled"] .mono-box,
     body[data-theme="amoled"] .mismatch-item{background:#0b0b0b;border-color:#222;color:#e4e4e4}
+    body[data-theme="amoled"] .mismatch-item.ok-state{background:#08150d;border-color:#235336}
+    body[data-theme="amoled"] .mismatch-item.bad-state{background:#1a0a0d;border-color:#5a2430}
+    body[data-theme="amoled"] .mismatch-flag.ok{background:#0c2b17;border-color:#2e6d47;color:#8df0bc}
+    body[data-theme="amoled"] .mismatch-flag.bad{background:#3a1219;border-color:#7f3543;color:#ff98ab}
+    body[data-theme="amoled"] .list-table tr.row-bad td{background:#190b0f}
+    body[data-theme="amoled"] .list-table tr.row-ok td{background:#08140d}
     body[data-theme="amoled"] .method{background:#07141f;border-color:#20374a;color:#bcefff}
     body[data-theme="amoled"] .region-chip,
     body[data-theme="amoled"] .chip-check,
@@ -622,7 +636,7 @@ function renderContentMismatch(status){
   const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
   if(!selected.length){
     el('namespaceUnionCount').textContent='0';
-    el('namespaceMismatchFlag').textContent='NO';
+    el('namespaceMismatchFlag').innerHTML='<span class="mismatch-flag ok">NO</span>';
     root.innerHTML='<div class="mismatch-item mono">No node data available</div>';
     return;
   }
@@ -632,26 +646,10 @@ function renderContentMismatch(status){
   selectedNsEntries.forEach(([,v])=>{(v.present||[]).forEach(x=>unionSet.add(x));});
   const nsAll=[...unionSet].sort();
   el('namespaceUnionCount').textContent=String(nsAll.length);
-  const nsMismatch=selectedNsEntries.some(([,v])=>((v.missing||[]).length || (v.extra||[]).length));
-  el('namespaceMismatchFlag').textContent=nsMismatch?'YES':'NO';
-
-  const nsBlock=document.createElement('div');
-  nsBlock.className='mismatch-item mono';
-  if(selectedNsEntries.length){
-    const nsLines=selectedNsEntries.map(([name,v])=>`${name}: present=${(v.present||[]).join(', ')||'-'} | missing=${(v.missing||[]).join(', ')||'-'} | extra=${(v.extra||[]).join(', ')||'-'}`).join('<br/>');
-    nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/>${nsLines}<br/><br/><strong>Union</strong>: ${nsAll.join(', ')||'-'}`;
-  }else{
-    nsBlock.innerHTML='<strong>Namespace Presence Details</strong><br/>no namespace data';
-  }
-  root.appendChild(nsBlock);
 
   const namespaces=new Set();
   selected.forEach(([,node])=>(node.namespace_names||[]).forEach(ns=>namespaces.add(ns)));
   const ordered=[...namespaces].sort((a,b)=>a.localeCompare(b));
-  if(!ordered.length){
-    root.innerHTML+='<div class="mismatch-item mono">No namespaces found on selected nodes</div>';
-    return;
-  }
 
   let totalMismatch=0;
   const nsRows=ordered.map(ns=>{
@@ -669,12 +667,33 @@ function renderContentMismatch(status){
     if(mismatch) totalMismatch++;
     return {ns,byNode,mismatch};
   });
+  const nsMismatch=selectedNsEntries.some(([,v])=>((v.missing||[]).length || (v.extra||[]).length)) || totalMismatch>0;
+  el('namespaceMismatchFlag').innerHTML=`<span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${nsMismatch?'YES':'NO'}</span>`;
+
+  const summaryLabel=`${nsMismatch?'YES':'NO'} (${totalMismatch}/${ordered.length||0})`;
+  const nsBlock=document.createElement('div');
+  nsBlock.className=`mismatch-item full-line mono ${nsMismatch?'bad-state':'ok-state'}`;
+  if(selectedNsEntries.length){
+    const nsLines=selectedNsEntries.map(([name,v])=>{
+      const hasDiff=((v.missing||[]).length || (v.extra||[]).length);
+      return `<span class="mismatch-flag ${hasDiff?'bad':'ok'}">${name}</span> present=${(v.present||[]).join(', ')||'-'} | missing=${(v.missing||[]).join(', ')||'-'} | extra=${(v.extra||[]).join(', ')||'-'}`;
+    }).join('<br/>');
+    nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${summaryLabel}</span><br/><br/>${nsLines}<br/><br/><strong>Union</strong>: ${nsAll.join(', ')||'-'}`;
+  }else{
+    nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${summaryLabel}</span><br/><br/>no namespace data`;
+  }
+  root.appendChild(nsBlock);
+
+  if(!ordered.length){
+    root.innerHTML+='<div class="mismatch-item mono">No namespaces found on selected nodes</div>';
+    return;
+  }
 
   if(uiState.contentView==='list'){
     const nodeHeaders=selected.map(([name])=>`<th>${name}</th>`).join('');
     const rows=nsRows.map(row=>{
       const cells=row.byNode.map(x=>`<td class="mono">t=${x.t}, s=${x.s}</td>`).join('');
-      return `<tr><td class="mono">${row.ns}</td>${cells}<td class="mono">${row.mismatch?'YES':'NO'}</td></tr>`;
+      return `<tr class="${row.mismatch?'row-bad':'row-ok'}"><td class="mono">${row.ns}</td>${cells}<td class="mono"><span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'YES':'NO'}</span></td></tr>`;
     }).join('');
     root.innerHTML+=`<div style="max-height:520px;overflow:auto"><table class="list-table">
       <thead><tr><th>Namespace</th>${nodeHeaders}<th>Mismatch</th></tr></thead>
@@ -684,16 +703,11 @@ function renderContentMismatch(status){
     nsRows.forEach(row=>{
       const lines=row.byNode.map(x=>`${x.name}: tables=${x.t}, schemas=${x.s}`);
       const item=document.createElement('div');
-      item.className='mismatch-item mono';
-      item.innerHTML=`<strong>${row.ns}</strong><br/>${lines.join('<br/>')}<br/>mismatch=${row.mismatch?'YES':'NO'}`;
+      item.className=`mismatch-item mono ${row.mismatch?'bad-state':'ok-state'}`;
+      item.innerHTML=`<strong>${row.ns}</strong> <span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'MISMATCH':'OK'}</span><br/>${lines.join('<br/>')}`;
       root.appendChild(item);
     });
   }
-
-  const flag=document.createElement('div');
-  flag.className='mismatch-item mono';
-  flag.innerHTML=`<strong>Mismatch Summary (selected)</strong><br/>${totalMismatch>0?'YES':'NO'} (${totalMismatch}/${ordered.length})`;
-  root.appendChild(flag);
 }
 
 function renderFilters(status){
