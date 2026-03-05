@@ -195,6 +195,14 @@
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function syncDebugTerminal() {
+    const debugEl = document.getElementById('debug-terminal');
+    if (!debugEl) return;
+    debugEl.innerHTML = logs.length ? logs.map((l) => esc(l)).join('<br>') : '--- logs will appear here ---';
+    const detailsEl = document.getElementById('debug-details');
+    if (detailsEl && (state.error || logs.length)) detailsEl.open = true;
+  }
+
   function userRoleLabel(role) {
     return role === ROLE_ADMIN ? 'Șef' : 'coleg';
   }
@@ -241,7 +249,7 @@
           ${state.error ? `<div class="bg-red-500/10 border border-red-500/50 p-3 rounded-lg mt-4 text-red-500 font-bold whitespace-pre-wrap">${esc(state.error)}</div>` : ''}
           
           <div class="mt-8 border-t border-white/10 pt-4">
-            <details>
+            <details id="debug-details" open>
               <summary class="text-xs text-slate-500 cursor-pointer uppercase tracking-widest">Debug Traffic Log</summary>
               <div id="debug-terminal" class="mt-2 p-2 bg-black/50 rounded font-mono text-[10px] text-emerald-400 overflow-y-auto max-h-48 whitespace-pre-wrap">
                 --- logs will appear here ---
@@ -251,6 +259,8 @@
         </div>
       </div>
     `;
+
+    syncDebugTerminal();
 
     document.getElementById('tab-login').onclick = () => {
       state.error = '';
@@ -280,7 +290,6 @@
           state.user = d.user; 
           localStorage.setItem('cafea_token', d.token);
           try {
-            await loadMe();
             await loadDashboard();
           } catch (loadErr) {
             log(`Post-login load failed: ${loadErr.message}`, 'warn');
@@ -1442,14 +1451,8 @@
     connect();
   }
 
-  async function loadMe() {
-    const d = await api('/api/auth/me');
-    state.user = d.user;
-  }
-
   async function loadDashboard(opts = {}) {
     const preserveHistoryWindow = Boolean(opts.preserveHistoryWindow);
-    if (!state.user) return;
     const prevSelectedId = state.selectedAdminUserId == null ? null : Number(state.selectedAdminUserId);
     const selected = state.selectedAdminUserId != null ? `&selected_user_id=${encodeURIComponent(state.selectedAdminUserId)}` : '';
     const snap = await api(`/api/coffee/snapshot?limit=1000${selected}`);
@@ -1493,7 +1496,6 @@
       return;
     }
     try {
-      await loadMe();
       await loadDashboard();
       renderApp();
       startLiveSync();
