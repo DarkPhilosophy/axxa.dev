@@ -695,7 +695,7 @@ function renderContentMismatch(status){
       const cells=row.byNode.map(x=>`<td class="mono">t=${x.t}, s=${x.s}</td>`).join('');
       return `<tr class="${row.mismatch?'row-bad':'row-ok'}"><td class="mono">${row.ns}</td>${cells}<td class="mono"><span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'YES':'NO'}</span></td></tr>`;
     }).join('');
-    root.innerHTML+=`<div style="max-height:520px;overflow:auto"><table class="list-table">
+    root.innerHTML+=`<div class="mismatch-item full-line" style="max-height:520px;overflow:auto;overflow-x:auto"><table class="list-table">
       <thead><tr><th>Namespace</th>${nodeHeaders}<th>Mismatch</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>`;
