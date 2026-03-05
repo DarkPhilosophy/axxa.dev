@@ -134,7 +134,7 @@
     <header class="topbar">
       <div>
         <h1>AXXA PostgreSQL Operations</h1>
-        <div class="subtitle">Live from <a href="https://axxa.dev/api/pg/health" target="_blank" style="color:var(--accent)">/api/pg/health</a></div>
+        <div class="subtitle">Live from <a href="https://pg.axxa.dev/api/health" target="_blank" style="color:var(--accent)">/api/health</a></div>
       </div>
       <div class="actions">
         <span id="apiLatency" class="pill mono">api: - ms</span>
@@ -259,9 +259,9 @@
   </main>
 
 <script>
-const STATUS='https://axxa.dev/api/pg/health';
-const HISTORY='https://axxa.dev/api/pg/history';
-const OUTAGES='https://axxa.dev/api/pg/outage';
+const STATUS='https://pg.axxa.dev/api/health';
+const HISTORY='https://pg.axxa.dev/api/history';
+const OUTAGES='https://pg.axxa.dev/api/outage';
 const CACHE={s:'ax_pg_health_v4',h:'ax_pg_history_v4',o:'ax_pg_outage_v4'};
 const UI_KEY='ax_pg_ui_state_v1';
 let pointsAll=[];
