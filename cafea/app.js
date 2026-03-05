@@ -285,19 +285,20 @@
           const submitBtn = document.getElementById('auth-submit');
           if (submitBtn) submitBtn.textContent = 'Autentificare...';
           const d = await api('/api/auth/login', { method: 'POST', body: { email, password } });
-          log('Login success, fetching user patterns...');
+          log('Login success, bootstrapping app...');
           state.token = d.token;
           state.user = d.user; 
           localStorage.setItem('cafea_token', d.token);
+          startLiveSync();
+          renderApp();
           try {
             await loadDashboard();
+            renderApp();
           } catch (loadErr) {
             log(`Post-login load failed: ${loadErr.message}`, 'warn');
             if (!state.user) throw loadErr;
           }
-          log('Transitioning to App...');
-          startLiveSync();
-          renderApp();
+          log('Dashboard loaded.');
           return;
         }
         log('Registering...');
