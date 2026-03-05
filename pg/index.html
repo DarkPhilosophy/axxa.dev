@@ -459,6 +459,47 @@ function computeRecommendedPrimary(status){
   return ranked.length ? ranked[0] : null;
 }
 
+function computeNodeTotalCost(status, nodeName){
+  const nodes=status?.nodes||{};
+  const node=nodes?.[nodeName];
+  if(!node) return null;
+  const regionOrder=(status?.external_probes?.regions||[]).map(norm).filter(Boolean);
+  const lat=calcLatencyFromNode(node, regionOrder);
+  const avg=Number(lat?.avg);
+  const db=nodeDbPingMs(status,nodeName,node);
+  if(!Number.isFinite(avg) || !Number.isFinite(db)) return null;
+  return Math.round(avg+db);
+}
+
+function renderRecommendedPrimary(status){
+  const rec=computeRecommendedPrimary(status);
+  const root=el('recommendedPrimary');
+  if(!root){
+    return;
+  }
+  if(!rec){
+    root.textContent='n/a';
+    return;
+  }
+  const primaryName=String(status?.primary_node||'').trim();
+  const primaryCost=primaryName ? computeNodeTotalCost(status, primaryName) : null;
+  const sameNode=primaryName && primaryName===rec.name;
+  let line2='<span class="mismatch-flag ok">n/a</span>';
+  if(sameNode){
+    line2='<span class="mismatch-flag ok">PERFECT</span>';
+  }else if(Number.isFinite(primaryCost)){
+    const delta=primaryCost-rec.score;
+    if(delta>0){
+      line2=`<span class="mismatch-flag bad">OVERHEAT +${delta} ms</span>`;
+    }else if(delta<0){
+      line2=`<span class="mismatch-flag ok">BETTER ${Math.abs(delta)} ms</span>`;
+    }else{
+      line2='<span class="mismatch-flag ok">PERFECT</span>';
+    }
+  }
+  root.innerHTML=`<strong>${rec.name}</strong><br/>${rec.score} ms (${rec.avg}+${rec.db})<br/>${line2}`;
+}
+
 function fmtMs(v){
   if(v===null || v===undefined || v==='') return 'n/a';
   const x=Number(v);
@@ -789,10 +830,7 @@ function renderStatus(s){
   const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
   const reachable=selected.filter(([,n])=>n.reachable===true).length;
   el('reach').textContent=`${reachable}/${selected.length||0}`;
-  const rec=computeRecommendedPrimary(s);
-  el('recommendedPrimary').innerHTML=rec
-    ? `<strong>${rec.name}</strong><br/>${rec.score} ms (${rec.avg}+${rec.db})`
-    : 'n/a';
+  renderRecommendedPrimary(s);
   renderNodeCards(nodes, s.external_probes||{});
   renderProbeMeta(s.external_probes||{});
   renderContentMismatch(s||{});
@@ -975,10 +1013,7 @@ async function refresh(force=false){
       renderStatus(s);
       lastStructureFingerprint=structureFp;
     }else if(hasUpdate){
-      const rec=computeRecommendedPrimary(s);
-      el('recommendedPrimary').innerHTML=rec
-        ? `<strong>${rec.name}</strong><br/>${rec.score} ms (${rec.avg}+${rec.db})`
-        : 'n/a';
+      renderRecommendedPrimary(s);
       patchLiveValues(s);
       renderProbeMeta(s.external_probes||{});
       renderContentMismatch(s||{});
