@@ -841,11 +841,15 @@ async function refresh(force=false){
   refreshInFlight=true;
   const t0=performance.now();
   try{
-    const s=await getJson(STATUS,CACHE.s);
-    let h={points:[]};
-    let o={events:[],open:null};
-    try{ h=await getJson(HISTORY,CACHE.h); }catch(_){}
-    try{ o=await getJson(OUTAGES,CACHE.o); }catch(_){}
+    const [sRes, hRes, oRes] = await Promise.allSettled([
+      getJson(STATUS, CACHE.s),
+      getJson(HISTORY, CACHE.h),
+      getJson(OUTAGES, CACHE.o),
+    ]);
+    if(sRes.status!=='fulfilled') throw sRes.reason || new Error('health unavailable');
+    const s=sRes.value;
+    const h=(hRes.status==='fulfilled' && hRes.value) ? hRes.value : {points:[]};
+    const o=(oRes.status==='fulfilled' && oRes.value) ? oRes.value : {events:[],open:null};
     lastStatus=s;
     syncSelections(s);
     const fp=[
