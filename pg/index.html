@@ -286,6 +286,29 @@ const norm=x=>String(x||'').trim().toLowerCase();
 const titleCase=s=>{s=String(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):'-';};
 const bestLastUpdate=n=>n?.last_update||n?.last_seen_online||'-';
 const nodeApiPing=(name)=>{const v=lastStatus?.api_ping_ms_by_node?.[name];return Number.isFinite(v)?`${v} ms`:'n/a';};
+const TOOLTIP_MAP={
+  'DB Query Ping':'Real DB query/connect latency measured by collector on that node, not external probe average.',
+  'Avg':'Average external probe latency across selected regions.',
+  'P95':'95th percentile of external probe latency across selected regions.',
+  'Min / Max':'Minimum and maximum external probe latency across selected regions.',
+  'Databases':'Count of non-template PostgreSQL databases seen by this node.',
+  'Replication Clients':'Number of current replication clients connected to this node.',
+  'Uptime':'PostgreSQL process uptime on node.',
+  'Last Update':'Latest collector snapshot timestamp for node data.',
+  'Last Seen Online':'Last timestamp when node was reachable by collector.',
+  'TailScale IP':'Node Tailscale IP used for cluster connectivity.',
+  'External Probe Latency':'Internet probe latency from neutral regions (Tokyo/Amsterdam/London/New York).',
+  'Namespace Mismatch Details':'Differences in namespace presence across selected nodes.',
+  'Content Mismatch (namespaces)':'Per-namespace table/schema count comparison across selected nodes.'
+};
+
+function applyTooltips(){
+  document.querySelectorAll('.mkey,.k,th').forEach((elm)=>{
+    const key=(elm.textContent||'').trim();
+    const tip=TOOLTIP_MAP[key];
+    if(tip) elm.title=tip;
+  });
+}
 
 function loadUiState(){
   const raw=asJson(localStorage.getItem(UI_KEY));
@@ -722,6 +745,7 @@ function renderStatus(s){
   renderNamespaceMismatch(s.namespace_mismatch||{});
   renderContentMismatch(s||{});
   renderFilters(s);
+  applyTooltips();
 }
 
 function getStructureFingerprint(s){
