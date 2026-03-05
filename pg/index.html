@@ -204,7 +204,11 @@
       <article id="contentMismatchCard" class="card span-12 collapsed">
         <div class="section-head">
           <div class="k">Content Mismatch (namespaces)</div>
-          <button id="toggleContentMismatch" class="toggle-btn mono">Expand</button>
+          <div class="ctrl-row">
+            <button id="cmViewCardBtn" class="switch-btn active mono">Cards</button>
+            <button id="cmViewListBtn" class="switch-btn mono">List</button>
+            <button id="toggleContentMismatch" class="toggle-btn mono">Expand</button>
+          </div>
         </div>
         <div class="section-body">
           <div id="contentMismatch" class="mismatch-list"></div>
@@ -268,7 +272,7 @@ let lastRenderFingerprint='';
 let lastStructureFingerprint='';
 const rowH=126;
 const overscan=4;
-const uiState={view:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
+const uiState={view:'cards',contentView:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selectedNodes:new Set(),selectedRegions:new Set()};
 
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
@@ -305,6 +309,7 @@ function loadUiState(){
   const raw=asJson(localStorage.getItem(UI_KEY));
   if(!raw) return;
   if(raw.view==='cards' || raw.view==='list') uiState.view=raw.view;
+  if(raw.contentView==='cards' || raw.contentView==='list') uiState.contentView=raw.contentView;
   if(raw.theme==='amoled' || raw.theme==='light') uiState.theme=raw.theme;
   if(typeof raw.sortKey==='string') uiState.sortKey=raw.sortKey;
   if(raw.sortDir==='asc' || raw.sortDir==='desc') uiState.sortDir=raw.sortDir;
@@ -315,6 +320,7 @@ function loadUiState(){
 function saveUiState(){
   const payload={
     view:uiState.view,
+    contentView:uiState.contentView,
     theme:uiState.theme,
     sortKey:uiState.sortKey,
     sortDir:uiState.sortDir,
@@ -648,24 +654,41 @@ function renderContentMismatch(status){
   }
 
   let totalMismatch=0;
-  ordered.forEach(ns=>{
+  const nsRows=ordered.map(ns=>{
     const fingerprints=new Set();
-    const lines=selected.map(([name,node])=>{
+    const byNode=selected.map(([name,node])=>{
       const tableCount=node?.table_counts_by_db?.[ns];
       const schemaList=node?.schemas_by_db?.[ns];
       const schemaCount=Array.isArray(schemaList)?schemaList.length:null;
       const t=(tableCount===0||tableCount)?String(tableCount):'-';
       const s=(schemaCount===0||schemaCount)?String(schemaCount):'-';
       fingerprints.add(`${t}|${s}`);
-      return `${name}: tables=${t}, schemas=${s}`;
+      return {name,t,s};
     });
     const mismatch=fingerprints.size>1;
     if(mismatch) totalMismatch++;
-    const item=document.createElement('div');
-    item.className='mismatch-item mono';
-    item.innerHTML=`<strong>${ns}</strong><br/>${lines.join('<br/>')}<br/>mismatch=${mismatch?'YES':'NO'}`;
-    root.appendChild(item);
+    return {ns,byNode,mismatch};
   });
+
+  if(uiState.contentView==='list'){
+    const nodeHeaders=selected.map(([name])=>`<th>${name}</th>`).join('');
+    const rows=nsRows.map(row=>{
+      const cells=row.byNode.map(x=>`<td class="mono">t=${x.t}, s=${x.s}</td>`).join('');
+      return `<tr><td class="mono">${row.ns}</td>${cells}<td class="mono">${row.mismatch?'YES':'NO'}</td></tr>`;
+    }).join('');
+    root.innerHTML+=`<div style="max-height:520px;overflow:auto"><table class="list-table">
+      <thead><tr><th>Namespace</th>${nodeHeaders}<th>Mismatch</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  }else{
+    nsRows.forEach(row=>{
+      const lines=row.byNode.map(x=>`${x.name}: tables=${x.t}, schemas=${x.s}`);
+      const item=document.createElement('div');
+      item.className='mismatch-item mono';
+      item.innerHTML=`<strong>${row.ns}</strong><br/>${lines.join('<br/>')}<br/>mismatch=${row.mismatch?'YES':'NO'}`;
+      root.appendChild(item);
+    });
+  }
 
   const flag=document.createElement('div');
   flag.className='mismatch-item mono';
@@ -714,6 +737,14 @@ function setView(view){
   if(lastStatus) lastStructureFingerprint=getStructureFingerprint(lastStatus);
 }
 
+function setContentView(view){
+  uiState.contentView=view;
+  saveUiState();
+  el('cmViewCardBtn').classList.toggle('active',view==='cards');
+  el('cmViewListBtn').classList.toggle('active',view==='list');
+  if(lastStatus) renderContentMismatch(lastStatus||{});
+}
+
 function renderStatus(s){
   if(!s) return;
   const nodes=s.nodes||{};
@@ -733,7 +764,7 @@ function getStructureFingerprint(s){
   const selectedNodes=[...uiState.selectedNodes].sort().join(',');
   const selectedRegions=[...uiState.selectedRegions].sort().join(',');
   return [
-    uiState.view,uiState.sortKey,uiState.sortDir,uiState.theme,
+    uiState.view,uiState.contentView,uiState.sortKey,uiState.sortDir,uiState.theme,
     nodeKeys,regions,selectedNodes,selectedRegions
   ].join('|');
 }
@@ -942,8 +973,12 @@ el('themeAmoledBtn').addEventListener('click',()=>applyTheme('amoled'));
 el('themeLightBtn').addEventListener('click',()=>applyTheme('light'));
 el('viewCardBtn').addEventListener('click',()=>setView('cards'));
 el('viewListBtn').addEventListener('click',()=>setView('list'));
+el('cmViewCardBtn').addEventListener('click',()=>setContentView('cards'));
+el('cmViewListBtn').addEventListener('click',()=>setContentView('list'));
 el('viewCardBtn').classList.toggle('active',uiState.view==='cards');
 el('viewListBtn').classList.toggle('active',uiState.view==='list');
+el('cmViewCardBtn').classList.toggle('active',uiState.contentView==='cards');
+el('cmViewListBtn').classList.toggle('active',uiState.contentView==='list');
 el('sortKey').value=uiState.sortKey;
 el('sortDirBtn').textContent=uiState.sortDir==='asc'?'ASC ↑':'DESC ↓';
 el('sortKey').addEventListener('change',()=>{
