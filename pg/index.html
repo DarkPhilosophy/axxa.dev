@@ -342,8 +342,10 @@ function setPreset(p){
 }
 
 async function getJson(url,key){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(), 8000);
   try{
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await fetch(url,{cache:'no-store', signal: ctrl.signal});
     if(!r.ok) throw new Error(`http ${r.status}`);
     const data=await r.json();
     localStorage.setItem(key,JSON.stringify(data));
@@ -352,6 +354,8 @@ async function getJson(url,key){
     const cached=asJson(localStorage.getItem(key));
     if(cached) return cached;
     throw e;
+  }finally{
+    clearTimeout(t);
   }
 }
 
@@ -861,7 +865,6 @@ async function refresh(force=false){
     }else if(hasUpdate){
       patchLiveValues(s);
       renderProbeMeta(s.external_probes||{});
-      renderFilters(s);
     }
     if(force || hasUpdate || structureChanged){
       setBadge(s.overall);
