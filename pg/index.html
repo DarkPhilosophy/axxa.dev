@@ -165,9 +165,10 @@
       <article class="card span-3"><div class="k">Backend</div><div id="backend" class="v small mono">-</div></article>
       <article class="card span-3"><div class="k">Reachable Nodes</div><div id="reach" class="v mono">-</div></article>
 
-      <article class="card span-4"><div class="k">Namespace Union</div><div id="namespaceUnionCount" class="v mono">-</div></article>
-      <article class="card span-4"><div class="k">Namespace Mismatch</div><div id="namespaceMismatchFlag" class="v small mono">-</div></article>
-      <article class="card span-4"><div class="k">Last Update UTC</div><div id="updated" class="v small mono">-</div></article>
+      <article class="card span-3"><div class="k">Namespace Union</div><div id="namespaceUnionCount" class="v mono">-</div></article>
+      <article class="card span-3"><div class="k">Namespace Mismatch</div><div id="namespaceMismatchFlag" class="v small mono">-</div></article>
+      <article class="card span-3"><div class="k">Recommended Primary</div><div id="recommendedPrimary" class="v small mono">-</div></article>
+      <article class="card span-3"><div class="k">Last Update UTC</div><div id="updated" class="v small mono">-</div></article>
 
       <article class="card span-12"><div class="k">Health Reason</div><div id="reason" class="reason mono">-</div></article>
       <article class="card span-12">
@@ -299,6 +300,7 @@ const nodeApiPing=(name)=>{const v=lastStatus?.api_ping_ms_by_node?.[name];retur
 const TOOLTIP_MAP={
   'DB Query Ping':'Real DB query/connect latency measured by collector on that node, not external probe average.',
   'Avg':'Average external probe latency across selected regions.',
+  'Recommended Primary':'Best node by total response cost: Avg external latency + DB Query Ping (for selected nodes/regions).',
   'P95':'95th percentile of external probe latency across selected regions.',
   'Min / Max':'Minimum and maximum external probe latency across selected regions.',
   'Databases':'Count of non-template PostgreSQL databases seen by this node.',
@@ -433,6 +435,28 @@ function calcLatencyFromNode(node, regionOrder){
     p95:Math.round(percentile(vals,0.95)),
     selected,
   };
+}
+
+function nodeDbPingMs(status, name, node){
+  const byNode=status?.api_ping_ms_by_node?.[name];
+  if(Number.isFinite(byNode) && byNode >= 0) return Number(byNode);
+  const raw=node?.db_query_ping_ms;
+  if(Number.isFinite(raw) && raw >= 0) return Number(raw);
+  return null;
+}
+
+function computeRecommendedPrimary(status){
+  const nodes=status?.nodes||{};
+  const regionOrder=(status?.external_probes?.regions||[]).map(norm).filter(Boolean);
+  const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
+  const ranked=selected.map(([name,node])=>{
+    const lat=calcLatencyFromNode(node, regionOrder);
+    const avg=Number(lat?.avg);
+    const db=nodeDbPingMs(status,name,node);
+    const score=(Number.isFinite(avg) && Number.isFinite(db)) ? Math.round(avg+db) : null;
+    return {name,avg,db,score};
+  }).filter(x=>Number.isFinite(x.score)).sort((a,b)=>a.score-b.score);
+  return ranked.length ? ranked[0] : null;
 }
 
 function fmtMs(v){
@@ -765,6 +789,10 @@ function renderStatus(s){
   const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
   const reachable=selected.filter(([,n])=>n.reachable===true).length;
   el('reach').textContent=`${reachable}/${selected.length||0}`;
+  const rec=computeRecommendedPrimary(s);
+  el('recommendedPrimary').innerHTML=rec
+    ? `<strong>${rec.name}</strong><br/>${rec.score} ms (${rec.avg}+${rec.db})`
+    : 'n/a';
   renderNodeCards(nodes, s.external_probes||{});
   renderProbeMeta(s.external_probes||{});
   renderContentMismatch(s||{});
@@ -947,6 +975,10 @@ async function refresh(force=false){
       renderStatus(s);
       lastStructureFingerprint=structureFp;
     }else if(hasUpdate){
+      const rec=computeRecommendedPrimary(s);
+      el('recommendedPrimary').innerHTML=rec
+        ? `<strong>${rec.name}</strong><br/>${rec.score} ms (${rec.avg}+${rec.db})`
+        : 'n/a';
       patchLiveValues(s);
       renderProbeMeta(s.external_probes||{});
       renderContentMismatch(s||{});
