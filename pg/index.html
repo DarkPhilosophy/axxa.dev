@@ -211,7 +211,7 @@
 
       <article id="contentMismatchCard" class="card span-12 collapsed">
         <div class="section-head">
-          <div class="k">Content Mismatch (cafea)</div>
+          <div class="k">Content Mismatch (namespaces)</div>
           <button id="toggleContentMismatch" class="toggle-btn mono">Expand</button>
         </div>
         <div class="section-body">
@@ -281,7 +281,7 @@ const uiState={view:'cards',theme:'amoled',sortKey:'lat_avg',sortDir:'asc',selec
 const el=id=>document.getElementById(id);
 const asJson=x=>{try{return JSON.parse(x)}catch{return null}};
 const nowTs=()=>Math.floor(Date.now()/1000);
-const uptime=s=>{s=Number(s||0);const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);return `${d}d ${h}h ${m}m`;};
+const uptime=s=>{s=Number(s||0);if(!Number.isFinite(s)||s<=0)return 'n/a';const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60);return `${d}d ${h}h ${m}m`;};
 const norm=x=>String(x||'').trim().toLowerCase();
 const titleCase=s=>{s=String(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):'-';};
 const bestLastUpdate=n=>n?.last_update||n?.last_seen_online||'-';
@@ -506,7 +506,7 @@ function renderNodeCards(nodes, externalMeta){
         <table class="list-table mono">
           <thead>
             <tr>
-              <th>Node</th><th>State</th><th>Mode</th><th>API Ping</th><th>Avg</th><th>P95</th><th>Min / Max</th><th>DB</th><th>Repl</th><th>cafea u/l/s</th><th>Regions</th>
+              <th>Node</th><th>State</th><th>Mode</th><th>DB Query Ping</th><th>Avg</th><th>P95</th><th>Min / Max</th><th>DB</th><th>Repl</th><th>cafea u/l/s</th><th>Regions</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -553,6 +553,11 @@ function renderNodeCards(nodes, externalMeta){
         </div>
         <span class="badge ${n.postgresql_active==='active'?'ok':'bad'}" data-field="state"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span>
       </div>
+      <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">DB Query Ping</div><div class="mval mono" data-field="api_ping">${nodeApiPing(name)}</div></div>
+        <div class="metric"><div class="mkey">Last Update</div><div class="mval mono" data-field="last_update">${bestLastUpdate(n)}</div></div>
+        <div class="metric"><div class="mkey">Last Seen Online</div><div class="mval mono" data-field="last_seen">${n.last_seen_online||'-'}</div></div>
+      </div>
       <div class="probe-top" style="margin-top:9px">
         <div class="k">External Probe Latency</div>
         <span class="method mono" data-field="method">${n.external_probe?.method||'n/a'}</span>
@@ -567,11 +572,6 @@ function renderNodeCards(nodes, externalMeta){
         <div class="metric"><div class="mkey">Latency p95</div><div class="mval mono" data-field="lat_p95">${latP95}</div></div>
         <div class="metric"><div class="mkey">Latency Min</div><div class="mval mono" data-field="lat_min">${latMin}</div></div>
         <div class="metric"><div class="mkey">Latency Max</div><div class="mval mono" data-field="lat_max">${latMax}</div></div>
-      </div>
-      <div class="metrics" style="margin-top:8px">
-        <div class="metric"><div class="mkey">Last Update</div><div class="mval mono" data-field="last_update">${bestLastUpdate(n)}</div></div>
-        <div class="metric"><div class="mkey">Last Seen Online</div><div class="mval mono" data-field="last_seen">${n.last_seen_online||'-'}</div></div>
-        <div class="metric"><div class="mkey">API Ping</div><div class="mval mono" data-field="api_ping">${nodeApiPing(name)}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
         <div class="metric"><div class="mkey">TailScale IP</div><div class="mval mono" data-field="tailscale">${n.tailscale_ip||'-'}</div></div>
@@ -626,27 +626,47 @@ function renderNamespaceMismatch(ns){
   root.appendChild(union);
 }
 
-function renderContentMismatch(cm){
+function renderContentMismatch(status){
   const root=el('contentMismatch');
   root.innerHTML='';
-  const data=cm?.cafea_metrics_by_node||{};
-  const keys=Object.keys(data).filter(k=>uiState.selectedNodes.has(k));
-  if(!keys.length){
-    root.innerHTML='<div class="mismatch-item mono">No cafea metrics available</div>';
+  const nodes=status?.nodes||{};
+  const selected=Object.entries(nodes).filter(([name])=>uiState.selectedNodes.has(name));
+  if(!selected.length){
+    root.innerHTML='<div class="mismatch-item mono">No node data available</div>';
     return;
   }
-  const fingerprints=new Set();
-  keys.forEach(name=>{
-    const m=data[name]||{};
-    fingerprints.add(`${m.users??'-'}|${m.coffee_logs??'-'}|${m.stock_settings??'-'}`);
+
+  const namespaces=new Set();
+  selected.forEach(([,node])=>(node.namespace_names||[]).forEach(ns=>namespaces.add(ns)));
+  const ordered=[...namespaces].sort((a,b)=>a.localeCompare(b));
+  if(!ordered.length){
+    root.innerHTML='<div class="mismatch-item mono">No namespaces found on selected nodes</div>';
+    return;
+  }
+
+  let totalMismatch=0;
+  ordered.forEach(ns=>{
+    const fingerprints=new Set();
+    const lines=selected.map(([name,node])=>{
+      const tableCount=node?.table_counts_by_db?.[ns];
+      const schemaList=node?.schemas_by_db?.[ns];
+      const schemaCount=Array.isArray(schemaList)?schemaList.length:null;
+      const t=(tableCount===0||tableCount)?String(tableCount):'-';
+      const s=(schemaCount===0||schemaCount)?String(schemaCount):'-';
+      fingerprints.add(`${t}|${s}`);
+      return `${name}: tables=${t}, schemas=${s}`;
+    });
+    const mismatch=fingerprints.size>1;
+    if(mismatch) totalMismatch++;
     const item=document.createElement('div');
     item.className='mismatch-item mono';
-    item.innerHTML=`<strong>${name}</strong><br/>users=${m.users??'-'}<br/>coffee_logs=${m.coffee_logs??'-'}<br/>stock_settings=${m.stock_settings??'-'}`;
+    item.innerHTML=`<strong>${ns}</strong><br/>${lines.join('<br/>')}<br/>mismatch=${mismatch?'YES':'NO'}`;
     root.appendChild(item);
   });
+
   const flag=document.createElement('div');
   flag.className='mismatch-item mono';
-  flag.innerHTML=`<strong>Mismatch (selected)</strong><br/>${fingerprints.size>1?'YES':'NO'}`;
+  flag.innerHTML=`<strong>Mismatch Summary (selected)</strong><br/>${totalMismatch>0?'YES':'NO'} (${totalMismatch}/${ordered.length})`;
   root.appendChild(flag);
 }
 
@@ -700,7 +720,7 @@ function renderStatus(s){
   renderNodeCards(nodes, s.external_probes||{});
   renderProbeMeta(s.external_probes||{});
   renderNamespaceMismatch(s.namespace_mismatch||{});
-  renderContentMismatch(s.content_mismatch||{});
+  renderContentMismatch(s||{});
   renderFilters(s);
 }
 
