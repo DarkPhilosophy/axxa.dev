@@ -296,7 +296,20 @@ const uptime=s=>{s=Number(s||0);if(!Number.isFinite(s)||s<=0)return 'n/a';const 
 const norm=x=>String(x||'').trim().toLowerCase();
 const titleCase=s=>{s=String(s||'').trim();return s?s.charAt(0).toUpperCase()+s.slice(1):'-';};
 const bestLastUpdate=n=>n?.last_update||n?.last_seen_online||'-';
-const nodeApiPing=(name)=>{const v=lastStatus?.api_ping_ms_by_node?.[name];return Number.isFinite(v)?`${v} ms`:'n/a';};
+const nodeApiPing=(name,node)=>{
+  const target=node || lastStatus?.nodes?.[name];
+  const v=nodeDbPingMs(lastStatus,name,target);
+  return Number.isFinite(v)?`${v} ms`:'n/a';
+};
+const nodeIps=(node)=>({
+  ygg: node?.ips?.ygg || node?.yggdrasil_ip || '-',
+  nb: node?.ips?.nb || node?.netbird_ip || '-',
+  ts: node?.ips?.ts || node?.tailscale_ip || '-',
+  sh: node?.ips?.sh || node?.shadow_ip || '-',
+});
+const patroniTimeline=(node)=>node?.patroni?.timeline ?? '-';
+const patroniState=(node)=>node?.patroni?.state || node?.patroni_active || node?.postgresql_active || '-';
+const patroniReplayTs=(node)=>node?.patroni?.xlog?.replayed_timestamp || '-';
 const TOOLTIP_MAP={
   'DB Query Ping':'Real DB query/connect latency measured by collector on that node, not external probe average.',
   'Avg':'Average external probe latency across selected regions.',
@@ -590,7 +603,7 @@ function renderNodeCards(nodes, externalMeta){
         <td class="mono"><strong>${name}</strong></td>
         <td><span class="badge ${n.postgresql_active==='active'?'ok':'bad'}" data-field="state"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span></td>
         <td class="mono" data-field="mode">${n.mode||'-'}</td>
-        <td class="mono" data-field="api_ping">${nodeApiPing(name)}</td>
+        <td class="mono" data-field="api_ping">${nodeApiPing(name,n)}</td>
         <td class="mono" data-field="lat_avg">${fmtMs(computed.avg)}</td>
         <td class="mono" data-field="lat_p95">${fmtMs(computed.p95)}</td>
         <td class="mono" data-field="lat_minmax">${fmtMs(computed.min)} / ${fmtMs(computed.max)}</td>
@@ -653,7 +666,7 @@ function renderNodeCards(nodes, externalMeta){
         <span class="badge ${n.postgresql_active==='active'?'ok':'bad'}" data-field="state"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span>
       </div>
       <div class="metrics" style="margin-top:8px">
-        <div class="metric"><div class="mkey">DB Query Ping</div><div class="mval mono" data-field="api_ping">${nodeApiPing(name)}</div></div>
+        <div class="metric"><div class="mkey">DB Query Ping</div><div class="mval mono" data-field="api_ping">${nodeApiPing(name,n)}</div></div>
         <div class="metric"><div class="mkey">Last Update</div><div class="mval mono" data-field="last_update">${bestLastUpdate(n)}</div></div>
         <div class="metric"><div class="mkey">Last Seen Online</div><div class="mval mono" data-field="last_seen">${n.last_seen_online||'-'}</div></div>
       </div>
@@ -673,11 +686,22 @@ function renderNodeCards(nodes, externalMeta){
         <div class="metric"><div class="mkey">Latency Max</div><div class="mval mono" data-field="lat_max">${latMax}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
-        <div class="metric"><div class="mkey">TailScale IP</div><div class="mval mono" data-field="tailscale">${n.tailscale_ip||'-'}</div></div>
-        <div class="metric"><div class="mkey">cafea.users</div><div class="mval mono" data-field="cafea_users">${cafea.users??'-'}</div></div>
-        <div class="metric"><div class="mkey">cafea.coffee_logs</div><div class="mval mono" data-field="cafea_logs">${cafea.coffee_logs??'-'}</div></div>
+        <div class="metric"><div class="mkey">Yggdrasil IP</div><div class="mval mono" data-field="ip_ygg">${nodeIps(n).ygg}</div></div>
+        <div class="metric"><div class="mkey">NetBird IP</div><div class="mval mono" data-field="ip_nb">${nodeIps(n).nb}</div></div>
+        <div class="metric"><div class="mkey">Tailscale IP</div><div class="mval mono" data-field="ip_ts">${nodeIps(n).ts}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">Shadow IP</div><div class="mval mono" data-field="ip_sh">${nodeIps(n).sh}</div></div>
+        <div class="metric"><div class="mkey">Patroni State</div><div class="mval mono" data-field="patroni_state">${patroniState(n)}</div></div>
+        <div class="metric"><div class="mkey">Timeline</div><div class="mval mono" data-field="timeline">${patroniTimeline(n)}</div></div>
+      </div>
+      <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">Replay State</div><div class="mval mono" data-field="wal_state">${n.wal_receiver_status||n?.patroni?.replication_state||'-'}</div></div>
+        <div class="metric"><div class="mkey">Replay Timestamp</div><div class="mval mono" data-field="replay_ts">${patroniReplayTs(n)}</div></div>
+        <div class="metric"><div class="mkey">cafea.users</div><div class="mval mono" data-field="cafea_users">${cafea.users??'-'}</div></div>
+      </div>
+      <div class="metrics" style="margin-top:8px">
+        <div class="metric"><div class="mkey">cafea.coffee_logs</div><div class="mval mono" data-field="cafea_logs">${cafea.coffee_logs??'-'}</div></div>
         <div class="metric"><div class="mkey">cafea.stock_settings</div><div class="mval mono" data-field="cafea_stock">${cafea.stock_settings??'-'}</div></div>
       </div>
       <div style="margin-top:10px" class="row">${dbs||'<span class="mono" style="color:var(--muted)">no namespaces</span>'}</div>
@@ -912,15 +936,23 @@ function patchLiveValues(s){
     set('lat_max',fmtMs(computed.max));
     set('last_update',bestLastUpdate(n));
     set('last_seen',n.last_seen_online||'-');
-    set('api_ping',nodeApiPing(name));
-    set('tailscale',n.tailscale_ip||'-');
+    const ips=nodeIps(n);
+    set('api_ping',nodeApiPing(name,n));
+    set('ip_ygg',ips.ygg);
+    set('ip_nb',ips.nb);
+    set('ip_ts',ips.ts);
+    set('ip_sh',ips.sh);
+    set('patroni_state',patroniState(n));
+    set('timeline',String(patroniTimeline(n)));
+    set('wal_state',n.wal_receiver_status||n?.patroni?.replication_state||'-');
+    set('replay_ts',patroniReplayTs(n));
     set('cafea_users',String(cafea.users??'-'));
     set('cafea_logs',String(cafea.coffee_logs??'-'));
     set('cafea_stock',String(cafea.stock_settings??'-'));
     const row=el('nodeCards').querySelector(`[data-node-row="${name}"]`);
     if(row){
       const e=row.querySelector('[data-field="api_ping"]');
-      if(e) e.textContent=nodeApiPing(name);
+      if(e) e.textContent=nodeApiPing(name,n);
     }
   });
 }
