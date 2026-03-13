@@ -783,7 +783,10 @@ function renderContentMismatch(status){
         .join('<br/>');
       nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag bad">${summaryLabel}</span><br/><br/>${nsLines}<br/><br/><strong>Mismatched Namespaces</strong>: ${mismatchNamespaces.join(', ')||'-'}`;
     }else{
-      nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ok">${summaryLabel}</span><br/><br/>All selected nodes expose the same namespace inventory.`;
+      const nsLines=selectedNsEntries
+        .map(([name,v])=>`<span class="mismatch-flag ok">${name}</span> present=${(v.present||[]).join(', ')||'-'}`)
+        .join('<br/>');
+      nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ok">${summaryLabel}</span><br/><br/>${nsLines}`;
     }
   }else{
     nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${summaryLabel}</span><br/><br/>no namespace data`;
@@ -796,7 +799,7 @@ function renderContentMismatch(status){
   }
 
   if(!nsMismatch){
-    root.innerHTML+='<div class="mismatch-item full-line mono ok-state"><strong>No namespace mismatch detected.</strong><br/>All selected nodes expose the same namespace inventory.</div>';
+    root.innerHTML+=`<div class="mismatch-item full-line mono ok-state"><strong>No namespace mismatch detected.</strong><br/>Namespaces: ${(nsAll.map(ns=>`<span class="mismatch-flag ok">${ns}</span>`).join(' ')||'-')}</div>`;
     return;
   }
 
@@ -1072,17 +1075,8 @@ async function refresh(force=false){
     const structureFp=getStructureFingerprint(s);
     const hasUpdate=(fp!==lastRenderFingerprint);
     const structureChanged=(structureFp!==lastStructureFingerprint);
-    if(force || structureChanged){
-      renderStatus(s);
-      lastStructureFingerprint=structureFp;
-    }else{
-      renderRecommendedPrimary(s);
-      patchLiveValues(s);
-      renderProbeMeta(s.external_probes||{});
-      if(hasUpdate){
-        renderContentMismatch(s||{});
-      }
-    }
+    renderStatus(s);
+    lastStructureFingerprint=structureFp;
     setBadge(s.overall);
     el('primary').textContent=String(s.primary_node||'-');
     el('mode').textContent=String(s.cluster_mode||'-');
