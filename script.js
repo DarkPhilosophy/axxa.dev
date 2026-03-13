@@ -2020,8 +2020,18 @@ function initContact() {
                 .then(async (res) => {
                     if (!res.ok) {
                         const errText = await res.text().catch(() => '');
-                        console.error('Server Error:', errText);
-                        throw new Error(errText || `HTTP ${res.status}`);
+                        let errJson = null;
+                        try {
+                            errJson = errText ? JSON.parse(errText) : null;
+                        } catch {}
+                        console.error('Server Error:', errJson || errText);
+                        const detail = errJson?.detail
+                            ? (Array.isArray(errJson.detail) ? errJson.detail.join(', ') : (typeof errJson.detail === 'object' ? JSON.stringify(errJson.detail) : String(errJson.detail)))
+                            : '';
+                        const message = errJson?.error
+                            ? `${errJson.error}${detail ? `: ${detail}` : ''}`
+                            : (errText || `HTTP ${res.status}`);
+                        throw new Error(message);
                     }
                 })
                 .then(() => {
@@ -2039,7 +2049,10 @@ function initContact() {
                 })
                 .catch((error) => {
                     console.error('FAILED...', error);
-                    showToast(t('contact.form.send_fail', 'Failed to send message. Please try again.'), 'error');
+                    const msg = error?.message
+                        ? `${t('contact.form.send_fail', 'Failed to send message. Please try again.')} (${error.message})`
+                        : t('contact.form.send_fail', 'Failed to send message. Please try again.');
+                    showToast(msg, 'error');
                 })
                 .finally(() => {
                     btn.innerHTML = originalText;
