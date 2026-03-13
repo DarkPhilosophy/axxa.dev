@@ -1075,19 +1075,21 @@ async function refresh(force=false){
     if(force || structureChanged){
       renderStatus(s);
       lastStructureFingerprint=structureFp;
-    }else if(hasUpdate){
+    }else{
       renderRecommendedPrimary(s);
       patchLiveValues(s);
       renderProbeMeta(s.external_probes||{});
-      renderContentMismatch(s||{});
+      if(hasUpdate){
+        renderContentMismatch(s||{});
+      }
     }
+    setBadge(s.overall);
+    el('primary').textContent=String(s.primary_node||'-');
+    el('mode').textContent=String(s.cluster_mode||'-');
+    el('backend').textContent=String(s.backend||'postgresql');
+    el('updated').textContent=String(s.updated_at_utc||'-');
+    el('reason').textContent=String(s.health_reason||'-');
     if(force || hasUpdate || structureChanged){
-      setBadge(s.overall);
-      el('primary').textContent=String(s.primary_node||'-');
-      el('mode').textContent=String(s.cluster_mode||'-');
-      el('backend').textContent=String(s.backend||'postgresql');
-      el('updated').textContent=String(s.updated_at_utc||'-');
-      el('reason').textContent=String(s.health_reason||'-');
       lastRenderFingerprint=fp;
     }
 
