@@ -310,6 +310,20 @@ const nodeIps=(node)=>({
 const patroniTimeline=(node)=>node?.patroni?.timeline ?? '-';
 const patroniState=(node)=>node?.patroni?.state || node?.patroni_active || node?.postgresql_active || '-';
 const patroniReplayTs=(node)=>node?.patroni?.xlog?.replayed_timestamp || '-';
+function nodeSyncMode(status,name,node){
+  const nodeName=String(name||'');
+  const primaryName=String(status?.primary_node||'');
+  if(nodeName===primaryName) return 'primary';
+  if(node?.patroni?.tags?.nosync) return 'nosync';
+  const repl=status?.nodes?.[primaryName]?.patroni?.replication;
+  if(Array.isArray(repl)){
+    const match=repl.find(r=>String(r?.application_name||'').toLowerCase()===nodeName.toLowerCase());
+    if(match?.sync_state) return String(match.sync_state);
+  }
+  if(node?.patroni?.sync_standby===true) return 'sync';
+  if(node?.mode==='replica') return 'replica';
+  return 'n/a';
+}
 const TOOLTIP_MAP={
   'DB Query Ping':'Real DB query/connect latency measured by collector on that node, not external probe average.',
   'Avg':'Average external probe latency across selected regions.',
@@ -603,6 +617,7 @@ function renderNodeCards(nodes, externalMeta){
         <td class="mono"><strong>${name}</strong></td>
         <td><span class="badge ${n.postgresql_active==='active'?'ok':'bad'}" data-field="state"><span class="dot"></span>${(n.postgresql_active||'unknown').toUpperCase()}</span></td>
         <td class="mono" data-field="mode">${n.mode||'-'}</td>
+        <td class="mono" data-field="sync">${nodeSyncMode(lastStatus,name,n)}</td>
         <td class="mono" data-field="api_ping">${nodeApiPing(name,n)}</td>
         <td class="mono" data-field="lat_avg">${fmtMs(computed.avg)}</td>
         <td class="mono" data-field="lat_p95">${fmtMs(computed.p95)}</td>
@@ -618,7 +633,7 @@ function renderNodeCards(nodes, externalMeta){
         <table class="list-table mono">
           <thead>
             <tr>
-              <th>Node</th><th>State</th><th>Mode</th><th>DB Query Ping</th><th>Avg</th><th>P95</th><th>Min / Max</th><th>DB</th><th>Repl</th><th>cafea u/l/s</th><th>Regions</th>
+              <th>Node</th><th>State</th><th>Mode</th><th>Sync</th><th>DB Query Ping</th><th>Avg</th><th>P95</th><th>Min / Max</th><th>DB</th><th>Repl</th><th>cafea u/l/s</th><th>Regions</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -678,6 +693,7 @@ function renderNodeCards(nodes, externalMeta){
       <div class="metrics">
         <div class="metric"><div class="mkey">Databases</div><div class="mval mono" data-field="database_count">${n.database_count??0}</div></div>
         <div class="metric"><div class="mkey">Replication Clients</div><div class="mval mono" data-field="repl">${n.replication_clients??0}</div></div>
+        <div class="metric"><div class="mkey">Sync Mode</div><div class="mval mono" data-field="sync">${nodeSyncMode(lastStatus,name,n)}</div></div>
         <div class="metric"><div class="mkey">Uptime</div><div class="mval mono" data-field="uptime">${uptime(n.postgres_uptime_sec||0)}</div></div>
       </div>
       <div class="metrics" style="margin-top:8px">
@@ -756,6 +772,7 @@ function renderContentMismatch(status){
     if(mismatch) totalMismatch++;
     return {ns,byNode,mismatch};
   });
+  const mismatchRows=nsRows.filter(row=>row.mismatch);
   const nsMismatch=selectedNsEntries.some(([,v])=>((v.missing||[]).length || (v.extra||[]).length)) || totalMismatch>0;
   el('namespaceMismatchFlag').innerHTML=`<span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${nsMismatch?'YES':'NO'}</span>`;
 
@@ -778,9 +795,14 @@ function renderContentMismatch(status){
     return;
   }
 
+  if(!nsMismatch){
+    root.innerHTML+='<div class="mismatch-item full-line mono ok-state"><strong>No namespace mismatch detected.</strong><br/>All selected nodes expose the same namespace inventory.</div>';
+    return;
+  }
+
   if(uiState.contentView==='list'){
     const nodeHeaders=selected.map(([name])=>`<th>${name}</th>`).join('');
-    const rows=nsRows.map(row=>{
+    const rows=mismatchRows.map(row=>{
       const cells=row.byNode.map(x=>`<td class="mono">t=${x.t}, s=${x.s}</td>`).join('');
       return `<tr class="${row.mismatch?'row-bad':'row-ok'}"><td class="mono">${row.ns}</td>${cells}<td class="mono"><span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'YES':'NO'}</span></td></tr>`;
     }).join('');
@@ -789,7 +811,7 @@ function renderContentMismatch(status){
       <tbody>${rows}</tbody>
     </table></div>`;
   }else{
-    nsRows.forEach(row=>{
+    mismatchRows.forEach(row=>{
       const lines=row.byNode.map(x=>`${x.name}: tables=${x.t}, schemas=${x.s}`);
       const item=document.createElement('div');
       item.className=`mismatch-item mono ${row.mismatch?'bad-state':'ok-state'}`;
@@ -894,6 +916,7 @@ function patchLiveValues(s){
       }
       const set=(k,v)=>{const e=row.querySelector(`[data-field="${k}"]`); if(e) e.textContent=v;};
       set('mode',n.mode||'-');
+      set('sync',nodeSyncMode(lastStatus,name,n));
       set('lat_avg',fmtMs(computed.avg));
       set('lat_p95',fmtMs(computed.p95));
       set('lat_minmax',`${fmtMs(computed.min)} / ${fmtMs(computed.max)}`);
@@ -930,6 +953,7 @@ function patchLiveValues(s){
     const probesEl=card.querySelector('[data-field="probes"]'); if(probesEl) probesEl.innerHTML=probeHtml;
     set('database_count',String(n.database_count??0));
     set('repl',String(n.replication_clients??0));
+    set('sync',nodeSyncMode(lastStatus,name,n));
     set('uptime',uptime(n.postgres_uptime_sec||0));
     set('lat_p95',fmtMs(computed.p95));
     set('lat_min',fmtMs(computed.min));
