@@ -290,6 +290,10 @@ body.overlay-open #nav-reveal-hint {
     z-index: 2;
 }
 
+#toast-container {
+    z-index: 13050 !important;
+}
+
 .nav-divider {
     width: 1px;
     height: 18px;

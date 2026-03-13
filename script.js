@@ -18,6 +18,7 @@ let activeOverlay = null;
 let timeTicker = null;
 let softNavBound = false;
 let softNavLoading = false;
+const ADMIN_UNLOCK_ENDPOINT = '/api/contact/admin/unlock';
 
 function normalizeAssetUrl(url) {
     const value = String(url || '').trim();
@@ -611,6 +612,7 @@ function initNavigation() {
                 setOverlayLock(false);
             }, 250);
         };
+        window.__axxaCloseContactModal = closeContact;
         document.addEventListener('click', (e) => {
             const opener = e.target.closest('[data-open-contact]');
             if (opener) {
@@ -1125,16 +1127,49 @@ function initAdmin() {
         adminUnlocked = false;
     });
 
-    // Login Logic
-    loginBtn.addEventListener('click', () => {
-        if (passInput.value === 'admin123') { // Secret Password
+    const unlockAdmin = async () => {
+        const password = passInput.value.trim();
+        if (!password) {
+            errorMsg.classList.remove('hidden');
+            passInput.classList.add('border-red-500');
+            return;
+        }
+
+        loginBtn.disabled = true;
+        const originalText = loginBtn.innerHTML;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        errorMsg.classList.add('hidden');
+        passInput.classList.remove('border-red-500');
+
+        try {
+            const res = await fetch(ADMIN_UNLOCK_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data?.error || `HTTP ${res.status}`);
             loginForm.classList.add('hidden');
             editor.classList.remove('hidden');
             adminUnlocked = true;
             renderAdminEditor(baseConfig, container);
-        } else {
+            showToast('Admin unlocked.', 'success');
+        } catch (err) {
             errorMsg.classList.remove('hidden');
             passInput.classList.add('border-red-500');
+            showToast('Admin unlock failed.', 'error');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = originalText;
+        }
+    };
+
+    // Login Logic
+    loginBtn.addEventListener('click', () => { void unlockAdmin(); });
+    passInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            void unlockAdmin();
         }
     });
 
@@ -1874,7 +1909,9 @@ function initContact() {
     const contactEndpoint = '/api/contact';
 
     const form = document.getElementById('contact-form');
+    if (form?.dataset.boundContact === 'true') return;
     if (form) {
+        form.dataset.boundContact = 'true';
         form.addEventListener('submit', function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -1988,7 +2025,6 @@ function initContact() {
                     }
                 })
                 .then(() => {
-                    showToast(t('contact.form.send_success', 'Message sent successfully!'), 'success');
                     // Set Timestamp on Success
                     console.log(`[RateLimit] Setting timestamp: ${Date.now()}`);
                     localStorage.setItem('axxa_msg_ts', Date.now().toString());
@@ -1996,6 +2032,10 @@ function initContact() {
                     if (window.turnstile && window.turnstile.reset) {
                         window.turnstile.reset();
                     }
+                    if (typeof window.__axxaCloseContactModal === 'function') {
+                        window.__axxaCloseContactModal();
+                    }
+                    showToast(t('contact.form.send_success', 'Message sent successfully!'), 'success');
                 })
                 .catch((error) => {
                     console.error('FAILED...', error);
