@@ -748,49 +748,49 @@ function renderContentMismatch(status){
 
   const selectedNsEntries=Object.entries(status?.namespace_mismatch?.per_node||{}).filter(([name])=>uiState.selectedNodes.has(name));
   const unionSet=new Set();
-  selectedNsEntries.forEach(([,v])=>{(v.present||[]).forEach(x=>unionSet.add(x));});
+  const mismatchSet=new Set();
+  selectedNsEntries.forEach(([,v])=>{
+    (v.present||[]).forEach(x=>unionSet.add(x));
+    (v.missing||[]).forEach(x=>mismatchSet.add(x));
+    (v.extra||[]).forEach(x=>mismatchSet.add(x));
+  });
   const nsAll=[...unionSet].sort();
+  const mismatchNamespaces=[...mismatchSet].sort((a,b)=>a.localeCompare(b));
   el('namespaceUnionCount').textContent=String(nsAll.length);
 
-  const namespaces=new Set();
-  selected.forEach(([,node])=>(node.namespace_names||[]).forEach(ns=>namespaces.add(ns)));
-  const ordered=[...namespaces].sort((a,b)=>a.localeCompare(b));
-
-  let totalMismatch=0;
-  const nsRows=ordered.map(ns=>{
-    const fingerprints=new Set();
-    const byNode=selected.map(([name,node])=>{
-      const tableCount=node?.table_counts_by_db?.[ns];
-      const schemaList=node?.schemas_by_db?.[ns];
-      const schemaCount=Array.isArray(schemaList)?schemaList.length:null;
-      const t=(tableCount===0||tableCount)?String(tableCount):'-';
-      const s=(schemaCount===0||schemaCount)?String(schemaCount):'-';
-      fingerprints.add(`${t}|${s}`);
-      return {name,t,s};
-    });
-    const mismatch=fingerprints.size>1;
-    if(mismatch) totalMismatch++;
-    return {ns,byNode,mismatch};
+  const mismatchRows=mismatchNamespaces.map(ns=>{
+    const byNode=selectedNsEntries
+      .map(([name,v])=>{
+        const missing=(v.missing||[]).includes(ns);
+        const extra=(v.extra||[]).includes(ns);
+        if(!missing && !extra) return null;
+        return {name,missing,extra};
+      })
+      .filter(Boolean);
+    return {ns,byNode,mismatch:true};
   });
-  const mismatchRows=nsRows.filter(row=>row.mismatch);
-  const nsMismatch=selectedNsEntries.some(([,v])=>((v.missing||[]).length || (v.extra||[]).length)) || totalMismatch>0;
+  const nsMismatch=mismatchRows.length>0;
   el('namespaceMismatchFlag').innerHTML=`<span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${nsMismatch?'YES':'NO'}</span>`;
 
-  const summaryLabel=`${nsMismatch?'YES':'NO'} (${totalMismatch}/${ordered.length||0})`;
+  const summaryLabel=`${nsMismatch?'YES':'NO'} (${mismatchRows.length}/${nsAll.length||0})`;
   const nsBlock=document.createElement('div');
   nsBlock.className=`mismatch-item full-line mono ${nsMismatch?'bad-state':'ok-state'}`;
   if(selectedNsEntries.length){
-    const nsLines=selectedNsEntries.map(([name,v])=>{
-      const hasDiff=((v.missing||[]).length || (v.extra||[]).length);
-      return `<span class="mismatch-flag ${hasDiff?'bad':'ok'}">${name}</span> present=${(v.present||[]).join(', ')||'-'} | missing=${(v.missing||[]).join(', ')||'-'} | extra=${(v.extra||[]).join(', ')||'-'}`;
-    }).join('<br/>');
-    nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${summaryLabel}</span><br/><br/>${nsLines}<br/><br/><strong>Union</strong>: ${nsAll.join(', ')||'-'}`;
+    if(nsMismatch){
+      const nsLines=selectedNsEntries
+        .filter(([,v])=>((v.missing||[]).length || (v.extra||[]).length))
+        .map(([name,v])=>`<span class="mismatch-flag bad">${name}</span> missing=${(v.missing||[]).join(', ')||'-'} | extra=${(v.extra||[]).join(', ')||'-'}`)
+        .join('<br/>');
+      nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag bad">${summaryLabel}</span><br/><br/>${nsLines}<br/><br/><strong>Mismatched Namespaces</strong>: ${mismatchNamespaces.join(', ')||'-'}`;
+    }else{
+      nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ok">${summaryLabel}</span><br/><br/>All selected nodes expose the same namespace inventory.`;
+    }
   }else{
     nsBlock.innerHTML=`<strong>Namespace Presence Details</strong><br/><strong>Mismatch Summary (selected)</strong>: <span class="mismatch-flag ${nsMismatch?'bad':'ok'}">${summaryLabel}</span><br/><br/>no namespace data`;
   }
   root.appendChild(nsBlock);
 
-  if(!ordered.length){
+  if(!nsAll.length){
     root.innerHTML+='<div class="mismatch-item mono">No namespaces found on selected nodes</div>';
     return;
   }
@@ -803,8 +803,15 @@ function renderContentMismatch(status){
   if(uiState.contentView==='list'){
     const nodeHeaders=selected.map(([name])=>`<th>${name}</th>`).join('');
     const rows=mismatchRows.map(row=>{
-      const cells=row.byNode.map(x=>`<td class="mono">t=${x.t}, s=${x.s}</td>`).join('');
-      return `<tr class="${row.mismatch?'row-bad':'row-ok'}"><td class="mono">${row.ns}</td>${cells}<td class="mono"><span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'YES':'NO'}</span></td></tr>`;
+      const cells=selected.map(([name])=>{
+        const state=row.byNode.find(x=>x.name===name);
+        if(!state) return '<td class="mono">OK</td>';
+        const parts=[];
+        if(state.missing) parts.push('<span class="mismatch-flag bad">missing</span>');
+        if(state.extra) parts.push('<span class="mismatch-flag bad">extra</span>');
+        return `<td class="mono">${parts.join(' ')}</td>`;
+      }).join('');
+      return `<tr class="row-bad"><td class="mono">${row.ns}</td>${cells}<td class="mono"><span class="mismatch-flag bad">YES</span></td></tr>`;
     }).join('');
     root.innerHTML+=`<div class="mismatch-item full-line" style="max-height:520px;overflow:auto;overflow-x:auto"><table class="list-table">
       <thead><tr><th>Namespace</th>${nodeHeaders}<th>Mismatch</th></tr></thead>
@@ -812,10 +819,10 @@ function renderContentMismatch(status){
     </table></div>`;
   }else{
     mismatchRows.forEach(row=>{
-      const lines=row.byNode.map(x=>`${x.name}: tables=${x.t}, schemas=${x.s}`);
+      const lines=row.byNode.map(x=>`${x.name}: ${x.missing?'missing':''}${x.missing&&x.extra?' / ':''}${x.extra?'extra':''}`);
       const item=document.createElement('div');
-      item.className=`mismatch-item mono ${row.mismatch?'bad-state':'ok-state'}`;
-      item.innerHTML=`<strong>${row.ns}</strong> <span class="mismatch-flag ${row.mismatch?'bad':'ok'}">${row.mismatch?'MISMATCH':'OK'}</span><br/>${lines.join('<br/>')}`;
+      item.className='mismatch-item mono bad-state';
+      item.innerHTML=`<strong>${row.ns}</strong> <span class="mismatch-flag bad">MISMATCH</span><br/>${lines.join('<br/>')}`;
       root.appendChild(item);
     });
   }
